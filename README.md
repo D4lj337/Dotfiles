@@ -4,6 +4,7 @@ Here are some details about my setup:
     OS: Arch Linux
     WM: qtile
     Terminal: kitty
+    Browser: librewolf
     Shell: bash/nushell
     Editor: emacs
     Compositor: none
