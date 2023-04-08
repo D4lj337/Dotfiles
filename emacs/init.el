@@ -1,5 +1,3 @@
-;Author: kazuya
-
 (defalias 'yes-or-no-p 'y-or-n-p) ; yes or no to y or n
 (setq
 make-backup-files nil
