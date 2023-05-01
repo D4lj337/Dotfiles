@@ -4,20 +4,21 @@ make-backup-files nil
 auto-save-default t ;; autosave
 confirm-kill-emacs 'y-or-n-p ; confirm before exiting emacs
 enable-local-variables :safe ; host security
-custom-file "~/.config/emacs/custom.el" ; clean init.el file
-ido-vertical-define-keys 'C-n-and-C-p-only
+custom-file (expand-file-name "custom.el" user-emacs-directory) ; clean init.el file
+global-display-line-number-mode 1
+display-line-numbers-type 'relative
 )
 (load custom-file) 
 (add-hook 'prog-mode-hook 'display-line-numbers-mode) ; Only use line-numbers in major modes
 (add-hook 'text-mode-hook 'display-line-numbers-mode)
 (show-paren-mode 1) ;; Show parent parentheses
-(setq x-select-enable-clipboard t) ;; Copy and Paste outside of Emacs
+(setq select-enable-clipboard t) ;; Copy and Paste outside of Emacs
 (windmove-default-keybindings)
 
 ; Visit the config
 (defun visit-init ()
   (interactive)
-  (find-file "~/.config/emacs/init.el"))
+  (find-file (expand-file-name "init.el" user-emacs-directory)))
 
 ; visit the qtile config
 (defun visit-qtile ()
@@ -27,7 +28,7 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 ; Reload config
 (defun config-reload()
   (interactive)
-  (load-file "~/.config/emacs/init.el"))
+  (load-file (expand-file-name "init.el" user-emacs-directory)))
 
 ;; Keybindings
 (global-set-key (kbd "C-c e") 'visit-init) ; vist the config
@@ -44,6 +45,7 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 (global-set-key (kbd "C-c n") 'neotree-toggle)
 (global-set-key (kbd "C-s") 'swiper)
 (global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "C-c c") 'compile)
 
 ;; Initialize package sources
 (require'package)
@@ -87,7 +89,6 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 
 ;; Which key
 (use-package which-key
-  :defer 0
   :ensure t)
 (which-key-mode)
 
@@ -102,7 +103,7 @@ ido-vertical-define-keys 'C-n-and-C-p-only
   :after all-the-icons
   :init (doom-modeline-mode)
   :custom
-  ;; Don't compact font caches during GC. Windows Laggy Issue
+ ;; Don't compact font caches during GC. Windows Laggy Issue
   (inhibit-compacting-font-caches t)
   (doom-modeline-major-mode-icon t)
   (doom-modeline-major-mode-color-icon t)
@@ -114,8 +115,11 @@ ido-vertical-define-keys 'C-n-and-C-p-only
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-buffer-state-icon t)
   (doom-modeline-flycheck-icon t)
-  (doom-modeline-height 35))
-  (set-face-background 'mode-line nil)
+  (doom-modeline-height 25)
+  (doom-modeline-bar-width 4)
+  (doom-modeline-window-width-limit 85)
+  (doom-modeline-project-detection 'auto)
+  (doom-modeline-minor-modes))
 
 ;; icons
 (use-package all-the-icons
@@ -143,12 +147,10 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 
 ; Search
 (use-package swiper
-  :defer t
   :ensure t)
 
 ; Projectile
 (use-package projectile
-  :defer t
   :ensure t
   :init
   (projectile-mode 1))
@@ -159,40 +161,33 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 (ido-mode 1)
 
 (use-package ido-vertical-mode
-  :defer t
   :ensure t
   :init
   (ido-vertical-mode 1))
 
 (use-package smex
-  :defer t
   :ensure t
   :init (smex-initialize))
 
-;(use-package doom-themes
-;  :ensure 
-;  :config
-  ;; Global settings (defaults)
-;  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-;        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-;  (load-theme 'catppuccin t)
-;  ;; Enable flashing mode-line on errors
-;;  (doom-themes-visual-bell-config)
-;  ;; Enable custom neotree theme (all-the-icons must be installed!)
-;  (doom-themes-neotree-config)
-;  ;; or for treemacs users
-;  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-;  (doom-themes-treemacs-config)
-;  ;; Corrects (and improves) org-mode's native fontification.
-;  (doom-themes-org-config))
+(use-package doom-themes
+  :ensure 
+  :config
+ ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-ir-black t)
+  ;; Enable flashing mode-line on errors
+;  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "doom-ir-black") ; use "doom-colors" for less minimal icon theme
+  (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
-;Catppuccin theme
-(load-theme 'catppuccin t)
-(setq catppuccin-flavour 'mocha)
-(catppuccin-set-color 'base "#000000")
-(catppuccin-set-color 'mantle "#010101")
-(catppuccin-set-color 'crust "#020202")
-(catppuccin-reload)
+; Custom background color
+(custom-set-faces '(default ((t (:background "#000000")))))
 
 ; Font
 (set-face-attribute 'default nil :font "JetBrains Mono Nerd Font" :height 110 :weight 'medium)
@@ -285,34 +280,29 @@ ido-vertical-define-keys 'C-n-and-C-p-only
 
 ;; C and C++ 
 (use-package company-c-headers
-  :defer nil
   :ensure t)
 
 (use-package company-irony
-  :defer nil
   :ensure t
   :config
   (setq company-backends '((company-c-headers
                             company-dabbrev-code
                             company-irony))))
 
-(setq-default c-basic-offset 4) ; gnu style indenting of c
+; Indent 
+(setq-default c-basic-offset 4
+	      tab-width 4
+	      indent-tabs-mode t) 
 (setq c-default-style "linux"
       c-basic-offset 4)
 (electric-pair-mode 1) ; electric pair mode
 
 (use-package irony
-  :defer nil
   :ensure t
   :config
   :hook
   ((c++-mode c-mode) . irony-mode)
   ('irony-mode-hook) . 'irony-cdb-autosetup-compile-options)
-
-; Lua
-(use-package lua-mode
-  :ensure t
-  )
 
 (use-package neotree
   :ensure t
@@ -355,3 +345,64 @@ Version 2022-05-21"
         (put-text-property xWordBegin xBoldEndPos
                            'font-lock-face infu-bionic-reading-face)))))
 
+; GDB layout
+(setq gdb-many-windows nil)
+
+(defun set-gdb-layout(&optional c-buffer)
+  (if (not c-buffer)
+      (setq c-buffer (window-buffer (selected-window)))) ;; save current buffer
+
+  ;; from http://stackoverflow.com/q/39762833/846686
+  (set-window-dedicated-p (selected-window) nil) ;; unset dedicate state if needed
+  (switch-to-buffer gud-comint-buffer)
+  (delete-other-windows) ;; clean all
+
+  (let* (
+         (w-source (selected-window)) ;; left top
+         (w-gdb (split-window w-source nil 'right)) ;; right bottom
+         (w-locals (split-window w-gdb nil 'above)) ;; right middle bottom
+         (w-stack (split-window w-locals nil 'above)) ;; right middle top
+         (w-breakpoints (split-window w-stack nil 'above)) ;; right top
+         (w-io (split-window w-source (floor(* 0.9 (window-body-height)))
+                             'below)) ;; left bottom
+         )
+    (set-window-buffer w-io (gdb-get-buffer-create 'gdb-inferior-io))
+    (set-window-dedicated-p w-io t)
+    (set-window-buffer w-breakpoints (gdb-get-buffer-create 'gdb-breakpoints-buffer))
+    (set-window-dedicated-p w-breakpoints t)
+    (set-window-buffer w-locals (gdb-get-buffer-create 'gdb-locals-buffer))
+    (set-window-dedicated-p w-locals t)
+    (set-window-buffer w-stack (gdb-get-buffer-create 'gdb-stack-buffer))
+    (set-window-dedicated-p w-stack t)
+
+    (set-window-buffer w-gdb gud-comint-buffer)
+
+    (select-window w-source)
+    (set-window-buffer w-source c-buffer)
+    ))
+(defadvice gdb (around args activate)
+  "Change the way to gdb works."
+  (setq global-config-editing (current-window-configuration)) ;; to restore: (set-window-configuration c-editing)
+  (let (
+        (c-buffer (window-buffer (selected-window))) ;; save current buffer
+        )
+    ad-do-it
+    (set-gdb-layout c-buffer))
+  )
+(defadvice gdb-reset (around args activate)
+  "Change the way to gdb exit."
+  ad-do-it
+  (set-window-configuration global-config-editing))
+
+; defer packages
+(use-package neotree                                      :defer t)
+(use-package which-key                                    :defer t)
+(use-package swiper                                       :defer t)
+(use-package projectile                                   :defer t)
+(use-package smex                                         :defer t)
+(use-package auto-package-update                          :defer t)
+(use-package general                                      :defer t)
+(use-package org                                          :defer t)
+(use-package company-c-headers                            :defer t)
+(use-package company-irony                                :defer t)
+(use-package irony                                        :defer t)
