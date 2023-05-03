@@ -6,16 +6,17 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (tooltip-mode -1)
-(set-fringe-mode 10)
 (scroll-bar-mode -1)
-(global-subword-mode 1)
+(set-fringe-mode -1)
+(global-tab-line-mode t)
+(global-visual-line-mode t) ; don't let the text to go horizontal
 
-;(setq
-; package-enable-at-startup nil ; don't auto-initialize!
-; package-enable-imenu-support t  
-; package--init-file-ensured t ; don't add that `custom-set-variables' block to init
-; package-quickstart nil ; prevent `package.el' loading packages prior to their init-file
-; package-archives nil)
+(setq
+ package-enable-at-startup nil ; don't auto-initialize!
+ package-enable-imenu-support t  
+ package--init-file-ensured t ; don't add that `custom-set-variables' block to init
+ package-quickstart nil ; prevent `package.el' loading packages prior to their init-file
+ package-archives nil)
 
 (setq gc-cons-threshold (expt 2 32)) ; you can remove it
 
@@ -36,6 +37,10 @@
               nil t)))
 
 (setq
+ tab-line-new-button-show nil
+ tab-line-close-button-show nil
+ tab-line-separator " "
+ line-move-visual nil
  site-run-file nil ; unset SRF
  use-file-dialog nil
  mode-line-format nil ; don't want a mode line while loading init
@@ -81,5 +86,3 @@
 ;; compiled ahead-of-time when they are installed and site files are compiled
 ;; when gccemacs is installed.
 (setq comp-deferred-compilation nil)
-
-
