@@ -109,7 +109,8 @@ layouts = [
 ]
 
 widget_defaults = dict(
-    font="JetBrains Nerd Font Mono Medium",
+    font="UbuntuMono NFM Medium",
+  #  font="JetBrainsMono NFM Medium",
     fontsize=11,
     padding=5,
     background=bg,
@@ -155,7 +156,8 @@ def init_widgets_list():
                 widget.ThermalSensor(
                     foreground="#ffffff",
                     fmt = '{}',
-                    padding = 5,
+                    padding=5,
+                    threshold=70,
                     ),
                 widget.Volume(fmt = '{}',
                     foreground="#ffffff",
@@ -233,6 +235,7 @@ floating_layout = layout.Floating(
         # Run the utility of `xprop` to see the wm class and name of an X client.
         *layout.Floating.default_float_rules,
         Match(wm_class="confirmreset"),  # gitk
+        Match(wm_class="librewolf --profilemanager"),  # gitk
         Match(wm_class="makebranch"),  # gitk
         Match(wm_class="maketag"),  # gitk
         Match(wm_class="ssh-askpass"),  # ssh-askpass
