@@ -1,5 +1,5 @@
 # Dotfiles
-Here are some details about my setup:
+# Here are some details about my setup:
 
     OS: Arch Linux
     WM: qtile
