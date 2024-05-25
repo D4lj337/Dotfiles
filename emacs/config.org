@@ -5,7 +5,7 @@
 
 * Xresources
 #+begin_src sh :tangle "~/.Xresources"
-#Emacs.font: JetBrainsMono Nerd Font Mono-10
+Emacs.font: JetBrainsMono Nerd Font Mono-10
 
   Xft.autohint: 0
   Xft.lcdfilter: lcddefault
@@ -256,7 +256,7 @@
 ** Fonts
 #+BEGIN_SRC elisp :tangle "early-init.el"
   (custom-set-faces
-   '(default ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal)))) ;; Impact startup time, Xresources will handle the default font.
+;   '(default ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal)))) ;; Impact startup time, Xresources will handle the default font.
    '(fixed-pitch ((t (:font "JetBrainsMono NFM" :weight medium :height 90 :slant normal))))
    '(variable-pitch ((t (:font "UbuntuMono Nerd Font" :weight medium :height 110 :slant normal))))
    '(font-lock-comment-face ((t (:font "JetBrainsMono NFM" :height 100 :weight medium :slant italic))))
@@ -271,6 +271,8 @@
 * Init
 
 ** Maximum native eln speed.
+[[https://www.reddit.com/r/emacs/comments/131354i/guide_compile_your_own_emacs_to_make_it_really/][[Guide] Compile your own Emacs to make it really really fast, on Windows]]
+[[https://github.com/enzuru/native-comp-elisp-benchmarks/blob/master/cpu/amd-ryzen-7950x.org][amd-ryzen-7950x.org]]
 #+BEGIN_SRC elisp
   ;; -*- lexical-binding: t;-*-
     (setq native-comp-speed 3)
