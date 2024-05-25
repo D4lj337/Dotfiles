@@ -5,7 +5,7 @@
 
 * Xresources
 #+begin_src sh :tangle "~/.Xresources"
-Emacs.font: JetBrainsMono Nerd Font Mono-10
+#Emacs.font: JetBrainsMono Nerd Font Mono-10
 
   Xft.autohint: 0
   Xft.lcdfilter: lcddefault
