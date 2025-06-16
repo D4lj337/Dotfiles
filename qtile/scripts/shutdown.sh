@@ -1,9 +1,7 @@
 #!/usr/bin/sh
 
-. "${HOME}/.cache/wal/colors.sh"
-
 ACTIONS=("logout\nrestart\nshutdown\nlock\nsuspend")
-CHOICE="$(echo -e $ACTIONS | dmenu -p 'Action: ' -nb "$color0" -nf "$color15" -sb "$color1" -sf "$color15")"
+CHOICE="$(echo -e $ACTIONS | dmenu -p 'Action: ' -nb "#000000" -nf "#ffffff" -sb "#ffffff" -sf "#000000")"
 
 if [ "$CHOICE" == "logout" ]
 then
@@ -40,5 +38,3 @@ then
 	$HOME/.local/bin/suspend.sh
 
 fi
-
-
