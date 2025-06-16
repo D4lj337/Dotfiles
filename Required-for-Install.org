@@ -1,0 +1,130 @@
+#+TITLE: Required step for an new install.
+
+* Required fonts for firefox
+noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra
+
+* Qemu 3d acceleration needed
+opencl-mesa
+
+* create gcmh directory for emacs
+mkdir ~/.config/emacs/gcmh && touch .config/emacs/custom.el
+
+* Font for Emacs and Qtile bar
+M-x all-the-icons-install-fonts
+
+* To run windows 11 on Qemu 
+edk2-omf swtpm
+
+* swap capslock with ctrl (included in autostart.sh file of qtile)
+setxkbmap -option ctrl:nocaps -model pc105
+
+* Enable fstrim (SSD performance degradation over time can be problem, TRIM is the solution. This will perform TRIM weekly)
+sudo systemctl enable fstrim.timer
+
+* Required for wayland (sway, hyprland)
+#swaybg, swaylock, wofi, waybar, xdg-desktop-portal-hyprland
+
+* Fix headphone not working after plug-in
+options headset-mode-no-hp-mic
+
+* Miminal xorg setup
+xorg-server xorg-xinit xorg-xrdb xf86-video-amdgpu
+
+* font
+ttf-jetbrains-mono-nerd ttf-ubuntu-mono-nerd
+## kitty +list-fonts --psnames | grep fontname
+
+* Man pages
+man-db man-pages
+
+* All the kernel parameters
+GRUB_TIMEOUT=0
+GRUB_CMDLINE_LINUX_DEFAULT="amd_pstate=guided"
+GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,integrity,apparmor,bpf"
+
+* Hide kernel message when booting
+echo "kernel.printk = 3 3 3 3" > /etc/sysctl.d/20-quiet-printk.conf
+
+* Package required
+src_desktop
+qtile
+thunar
+alacritty
+librewolf-bin (aur)
+lxqt-policykit
+networkmanager
+dmenu
+ttf-jetbrains-mono-nerd
+alsa-utils
+neovim
+opendoas
+tmux
+python-psutils
+emacs (nativecomp)
+ranger
+all-repository-fonts (aur)
+mpv
+firejail
+opencl-clover-mesa
+rocm-opencl-runtime
+feh
+ttf-ubuntu-mono-nerd
+ttc-iosevka-aile
+ttf-iosevka-nerd 
+calibre
+udisks
+gvfs
+zathura
+zathura-cb
+zathura-djvu
+zathura-pdf-mupdf
+zathura-ps
+#+TITLE: System Performance Tweaks
+
+* Grub
+Adding amd_pstate in =etc/default/grub=
+#+begin_src desktop
+GRUB_CMDLINE_LINUX_DEFAULT="amd_pstate=passive"
+#+end_src
+
+* Package needed 
+#+begin_src bash
+libva-mesa-driver # for amd 
+libva-intel-driver # for intel
+opencl-clover-mesa 
+rocm-opencl-runtime
+#+end_src
+
+* Firefox/Librewolf
+firefox/librewolf =about:config=
+
+** Enabling gpu acceraltion
+#+begin_src desktop
+layers.acceleration.force-enabled to True
+media.hardware-video-decoding.enabled to True
+gfx.webrender.all to True
+media.ffmpeg.vaapi-drm-display.enabled to True
+media.ffmpeg.vaapi.enabled to True
+#gfx.webrender.software to True
+#gfx.webrender.software.opengl to True
+#+end_src
+
+* MPV
+Enable gpu accerlation =~/.config/mpv/mpv.conf=
+#+begin_src desktop
+hwdec=vaapi
+vo=gpu
+#+end_src
+
+* I/O schedular 
+Adding the below line in the =/etc/default/grub=. This schedular is optimized for modern storage technologies like SSDs and NVMe drivers, offerig better performance.
+#+begin_src desktop
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash elevator=kyber"
+#+end_src
+
+* Pacman
+Put them in the /etc/pacman.conf
+#+begin_src
+ILovecandly # pacman ester egg
+Color # enable color completion
+#+end_src
