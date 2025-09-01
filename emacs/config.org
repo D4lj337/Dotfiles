@@ -35,8 +35,6 @@ Link:https://www.reddit.com/r/emacs/comments/lkfuk5/comment/gnk42ta/?utm_source=
 
 * Xresources
 #+begin_src sh :tangle "~/.Xresources"
-Emacs.font: JetBrainsMono Nerd Font Mono:size=15
-
   Xft.autohint: 0
   Xft.lcdfilter: lcddefault
   Xft.hintstyle: hintslight
@@ -52,6 +50,20 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
 ; https://github.com/hlissner/doom-emacs/blob/58af4aef56469f3f495129b4e7d947553f420fca/core/core.el#L200
   (unless (daemonp)
     (advice-add #'display-startup-echo-area-message :override #'ignore))
+
+;; Disable "file-name-handler-alist" than enable it later for speed.
+(defvar startup/file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq file-name-handler-alist startup/file-name-handler-alist)
+            (makunbound 'startup/file-name-handler-alist)))
+
+;; Speed up package loading 
+(setq package-quickstart t)
+
+;; Loads packages only when needed
+(setq use-package-always-defer t)
 #+END_SRC
 
 ** Disable menu and scrollbar
@@ -65,7 +77,7 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
   (tab-bar-mode -1) ; tabs
   (global-visual-line-mode t) ; don't let the text to go horizontal.
   (global-hl-line-mode t) ; highlight the line you're on.
-  (global-display-line-numbers-mode t) ; global display line numbers.
+;  (global-display-line-numbers-mode t) ; Slow down with big files.
   (electric-pair-mode t) ;; auto brackets.
   (electric-indent-mode -1)
 #+END_SRC
@@ -110,20 +122,11 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
   '(show-paren-match ((t (:weight extra-bold)))))
 #+END_SRC
 
-** Reduce fanfare
-#+BEGIN_SRC elisp :tangle "early-init.el"
-  ;; TODO See https://yrh.dev/blog/rant-obfuscation-in-emacs/
-  (setq inhibit-startup-echo-area-message "angrybacon")
-#+END_SRC
-
 #+BEGIN_SRC elisp :tangle "early-init.el"
   (prefer-coding-system 'utf-8)
   (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
-
-;;  (setq gc-cons-threshold (expt 2 32)) ; you can remove it
-   (setq gc-cons-threshold (* 8 1024 1024))
 #+END_SRC
 
 ** Garbage collection
@@ -150,7 +153,6 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
    package-enable-at-startup nil ; don't auto-initialize!
    package-enable-imenu-support t
    package--init-file-ensured t ; don't add that `custom-set-variables' block to init
-   package-quickstart nil ; prevent `package.el' loading packages prior to their init-file
    package-archives nil
    load-prefer-newer t ; prefer newer package files.
    frame-resize-pixelwise t
@@ -167,7 +169,6 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
    tab-line-separator " "
    line-move-visual nil
    site-run-file nil ; unset SRF
-   file-name-handler-alist nil
    pixel-scroll-precision-mode t
    pixel-scroll-precision-use-momentum t
    scroll-conservatively 101 ;; scroll line by line.
@@ -176,10 +177,13 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
    create-lockfiles nil ; disable lockfiles
    make-backup-files nil ; disable backup file
    backup-directory-alist '((".*" . "~/.local/share/Trash/files"))
+
+   ;; Disable auto save alltogether.
    auto-save-list-file-prefix nil ; disable auto-save
    auto-save-default nil
    auto-save-mode nil
    delete-auto-save-files t ; delete auto save files
+
    auto-mode-case-fold nil ; use case-sensitive `auto-mode-alist' for performance
    default-input-method nil
    utf-translate-cjk-mode nil ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
@@ -192,10 +196,13 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
    inhibit-default-init t
    use-file-dialog nil
    redisplay-dont-pause t ; improve display engine
+
+   ;; Suppress the startup
    inhibit-splash-screen t
    inhibit-startup-screen t		; do not show the startup message
    inhibit-startup-message t      ; reduce noise at startup
    inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
+
    fast-but-imprecise-scrolling t ; more performant rapid scrolling over unfontified regions
    frame-inhibit-implied-resize t ; do not resize the frame at this early stage
    ffap-machine-p-known 'reject   ; don't ping things that look like domain names
@@ -206,12 +213,9 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
    select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings
    ad-redefinition-action 'accept ; disable warnings from legacy advice system
    initial-major-mode 'fundamental-mode
-   inhibit-startup-echo-area-message (user-login-name)
-   auto-save-default t ;; autosave
    confirm-kill-emacs 'y-or-n-p ; confirm before exiting emacs
    enable-local-variables :safe ; host security
    column-number-mode t
-   global-display-line-number-mode 1
    display-line-numbers-type 'relative)
 
   ;; Prevent unwanted runtime builds; packages are compiled ahead-of-time when
@@ -251,20 +255,6 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
   (setq-default history-length 1000)
   (setq-default prescient-history-length 1000)
 
-  (setq gc-cons-threshold most-positive-fixnum)
-
-  ;; Do not steal focus while doing asynccompilations.
-  (setq warning-suppress-types '((comp)))
-
-  (setq comp-deferred-compilation t)
-
-  (defvar startup/file-name-handler-alist file-name-handler-alist)
-  (setq file-name-handler-alist nil)
-
-  (defun startup/revert-file-name-handler-alist ()
-    (setq file-name-handler-alist startup/file-name-handler-alist))
-
-  (add-hook 'emacs-startup-hook 'startup/revert-file-name-handler-alist)
 #+END_SRC
 
 ** Making native compilation silent.
@@ -294,35 +284,58 @@ Emacs.font: JetBrainsMono Nerd Font Mono:size=15
 
 ** Fonts
 #+BEGIN_SRC elisp :tangle "early-init.el"
-  (custom-set-faces
-;;   '(default ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal)))) ;; Impact startup time, Xresources will handle the default font.
-   '(fixed-pitch ((t (:font "JetBrainsMono NFM" :weight medium :height 90 :slant normal))))
-   '(variable-pitch ((t (:font "UbuntuMono Nerd Font" :weight medium :height 110 :slant normal))))
-   '(font-lock-comment-face ((t (:font "JetBrainsMono NFM" :height 100 :weight medium :slant italic))))
-   '(mode-line ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
-   '(mode-line-active ((t (:font "JetBrainsMono NFM" :weight bold :height 100 :slant normal))))
-   '(mode-line-inactive ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic))))
-   '(centaur-tabs-default ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
-   '(centaur-tabs-selected ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
-   '(centaur-tabs-unselected ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic))))
-   '(org-link ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic)))))
+    (custom-set-faces
+     '(default ((t (:font "JetBrains Mono" :height 100))))) ;; Impact startup time, Xresources will handle the default font.
+  ;;   '(fixed-pitch ((t (:font "JetBrainsMono NFM" :weight medium :height 90 :slant normal))))
+  ;;   '(variable-pitch ((t (:font "UbuntuMono Nerd Font" :weight medium :height 110 :slant normal))))
+  ;;   '(font-lock-comment-face ((t (:font "JetBrainsMono NFM" :height 100 :weight medium :slant italic))))
+  ;;   '(mode-line ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
+  ;;   '(mode-line-active ((t (:font "JetBrainsMono NFM" :weight bold :height 100 :slant normal))))
+  ;;   '(mode-line-inactive ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic))))
+  ;;   '(centaur-tabs-default ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
+  ;;   '(centaur-tabs-selected ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant normal))))
+  ;;   '(centaur-tabs-unselected ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic))))
+  ;;   '(org-link ((t (:font "JetBrainsMono NFM" :weight medium :height 100 :slant italic)))))
 #+END_SRC
 
 ** Add frame borders and window dividers
 #+BEGIN_SRC elisp :tangle "early-init.el"
-
-(modify-all-frames-parameters
- '((right-divider-width . 10)
-   (internal-border-width . 10)))
-(dolist (face '(window-divider
-                window-divider-first-pixel
-                window-divider-last-pixel))
-  (face-spec-reset-face face)
-  (set-face-foreground face (face-attribute 'default :background)))
-(set-face-background 'fringe (face-attribute 'default :background))
+;;  (modify-all-frames-parameters
+;;   '((right-divider-width . 10)
+;;     (internal-border-width . 10)))
+;;  (dolist (face '(window-divider
+;;                  window-divider-first-pixel
+;;                  window-divider-last-pixel))
+;;    (face-spec-reset-face face)
+;;    (set-face-foreground face (face-attribute 'default :background)))
+;;  (set-face-background 'fringe (face-attribute 'default :background))
 #+END_SRC 
 
 * Init
+** lexical binding 
+#+BEGIN_SRC elisp
+  ;; init.el -*- lexical-binding: t; -*-
+#+END_SRC
+** Load theme
+#+BEGIN_SRC elisp
+(load-theme 'modus-vivendi)
+#+END_SRC
+
+** Indent and tabs
+#+BEGIN_SRC elisp
+;; Global tab width and use spaces
+(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil)
+(setq org-startup-indented nil)
+
+;; Language-specific tweaks
+(setq python-indent-offset 4)
+(setq c-basic-offset 4)
+(setq js-indent-level 4)
+(add-hook 'sh-mode-hook (lambda ()
+(setq sh-basic-offset 4 sh-indentation 4)))
+
+#+END_SRC
 
 ** Maximum native eln speed.
 Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
@@ -330,7 +343,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   ;; init.el -*- lexical-binding: t; -*-
   (setq native-comp-speed 3)
 
-;; (native-compile-async "/usr/lib/emacs/31.0.50/native-lisp" 'recursively)
+  (native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively)
   (setq native-comp-compiler-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
   (setq native-comp-driver-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
@@ -359,6 +372,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (custom-set-faces
   ;;  '(default ((t (:background "black")))) ;; background color (controlled by =doom theme=)
     '(fringe ((t (:background "white"))))
+    '(line-number-current-line((t (:foreground "yellow" :background nil :inherbit line-number))))
     '(mode-line-inactive ((t (:background "nil"))))) ;; Dim inactive modeline.
 
   (add-hook 'neotree-mode-hook (lambda ()
@@ -370,35 +384,41 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
       (buffer-face-mode 1)))
 #+END_SRC
 
-* Use package
-
-** Use-package.el is no longer needed at runtime.
-https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-longer-needed-at-runtime
+* Straight
 #+BEGIN_SRC elisp
-    (eval-when-compile
-      (require 'use-package))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 #+END_SRC
 
-** Use-package repo's
+* Use-package
 #+BEGIN_SRC elisp
-  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
 			   ("org" . "https://orgmode.org/elpa/")
 			   ("elpa" . "https://elpa.gnu.org/packages/")))
-
-  (package-initialize)
-  (unless package-archive-contents
-    (package-refresh-contents))
 #+END_SRC
 
-** Native compile external packages
+* 
 #+BEGIN_SRC elisp
-  (setq-default
-   package-native-compile t
-   use-package-always-ensure t
-   use-package-enable-imenu-support t)
+(defcustom ek-use-nerd-fonts t
+  "Configuration for using Nerd Fonts Symbols."
+  :type 'boolean
+  :group 'appearance)
 #+END_SRC
 
-* Welcome Screen
+* COMMENT Welcome Screen
 #+BEGIN_SRC elisp
   (defun show-welcome-screen-buffer ()
     "Show *Welcome-screen* buffer."
@@ -437,6 +457,23 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
 				      (show-welcome-screen-buffer)))))
 #+END_SRC
 
+* COMMENT Welcome screen
+#+BEGIN_SRC elisp
+  ;; Add a hook to run code after Emacs has fully initialized.
+(add-hook 'after-init-hook
+            (lambda ()
+              (message "Emacs has fully loaded.")
+              (with-current-buffer (get-buffer-create "*scratch*")
+                (insert (format
+                         ";;    Welcome to Emacs!
+;;
+;;    Loading time : %s
+;;    Packages     : %s
+"
+                         (emacs-init-time)
+                         (number-to-string (length package-activated-list)))))))
+#+END_SRC
+
 * Functions
 
 ** Emacs Frame title
@@ -461,11 +498,6 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
 ** Declare all themes as safe
 #+BEGIN_SRC elisp
   (setq custom-safe-themes t)
-#+END_SRC
-
-** Show the help buffer after startup
-#+BEGIN_SRC elisp
-  (add-hook 'after-init-hook 'help-quick)
 #+END_SRC
 
 ** Visible bell
@@ -586,7 +618,7 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
 		  pdf-view-mode-hook
 		  vterm-mode-hook
 		  eshell-mode-hook))
-    (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0) (rainbow-mode 0) (rainbow-delimiters-mode 0))))
+    (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0))))
 #+END_SRC
 
 ** custom-file to /tmp directory
@@ -598,7 +630,7 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
 #+BEGIN_SRC elisp
    ;; Escape
    (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+  ;(global-set-key (kbd "<escape> <escape>") 'keyboard-escape-quit)
 
    ;; Visiting files
    (global-set-key (kbd "C-c e") 'my/visit-init) ; vist the config
@@ -644,24 +676,14 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
    (global-set-key (kbd "<C-wheel-down>") 'text-scale-increase) ; zoom in with mouse
    (global-set-key (kbd "<C-wheel-up>") 'text-scale-decrease) ; zoom out with mouse
    (global-set-key (kbd "C-c n") 'neotree-toggle)
-   (global-set-key (kbd "C-s") 'swiper)
    (global-set-key (kbd "C-.") 'avy-goto-char)
    (global-set-key (kbd "C-c c") 'compile)
    (global-set-key (kbd "C-c b") 'nyan-mode)
    (global-set-key (kbd "C-c C-u") 'package-upgrade-all)
    (global-set-key (kbd "C-c g") #'gdb)
-   (global-set-key (kbd "C-x u") #'vundo)
    (global-set-key (kbd "M-y") #'popup-kill-ring)
-   (global-set-key (kbd "C-x d") #'dirvish)
   ; (global-set-key (kbd "C-x C-f") #'fzf-find-file)
   ; (global-set-key (kbd "C-x C-b") #'fzf-find-in-buffer)
-#+END_SRC
-
-* Avy
-#+BEGIN_SRC elisp
-  (use-package avy
-    :ensure t
-    :commands (avy-goto-char))
 #+END_SRC
 
 * Zone
@@ -671,354 +693,153 @@ https://github.com/jwiegley/use-package?tab=readme-ov-file#use-packageel-is-no-l
 ;  (setq zone-programs [zone-pgm-whack-chars])
 #+END_SRC
 
-* Async
-#+BEGIN_SRC elisp
-  (use-package async
-    :ensure t
-    :init (dired-async-mode 1)
-    :config
-    (async-bytecomp-package-mode 'all)
-    :init
-    (setq message-send-mail-function 'async-smtpmail-send-it))
-#+END_SRC
-
-* Avoid async user interaction
-Let Emacs manage your identification.
-#+BEGIN_SRC elisp
-  (use-package auth-source
-    :no-require t
-    :config (setq auth-sources '("~/.authinfo.gpg" "~/.netrc")))
-#+END_SRC
-
-* Dired rsync
-#+BEGIN_SRC elisp
-  (use-package dired-rsync
-    :ensure t
-    :defer t)
-#+END_SRC
-
-* Dirvish
-#+BEGIN_SRC elisp
-  (use-package dirvish
-    :ensure t
-    :commands (dirvish)
-    :config
-    (dirvish-override-dired-mode 1))
-#+END_SRC
-
 * Dired
 #+BEGIN_SRC elisp
   (use-package dired-open
-    :ensure t
+    :straight t
+    :defer t
     :commands dired-open-by-extensions)
   (setq dired-open-extensions '(("jpg" . "eog")
-				("png" . "eog")
-				("mkv" . "mpv")
-				("mp3" . "mpv")
-				("mpg" . "mpv")
-				("epub" . "zathura")
-				("mp4" . "mpv")))
+    			("png" . "eog")
+    			("pdf" . "zathura")
+    			("mkv" . "mpv")
+    			("mp3" . "mpv")
+    			("mpg" . "mpv")
+    			("epub" . "zathura")
+    			("mp4" . "mpv")))
 #+END_SRC
 
 * Icons
 #+BEGIN_SRC elisp
-  (use-package all-the-icons
-    :ensure t
-    :defer
-    :if (display-graphic-p)
-    :init (add-hook 'all-the-icons-hook 'all-the-icons-install-fonts))
+    (use-package nerd-icons
+      :straight t
+      :defer t)
 
-  (use-package all-the-icons-dired
-    :ensure t
-    :init (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
-
-  (use-package all-the-icons-ibuffer
-    :ensure t
-    :defer t
-    :init (all-the-icons-ibuffer-mode 1))
+    (use-package nerd-icons-dired
+      :if ek-use-nerd-fonts
+      :straight t
+      :defer t
+      :hook (dired-mode . nerd-icons-dired-mode))
+    
+  (use-package nerd-icons-completion
+      :if ek-use-nerd-fonts
+      :straight t
+      :after (marginalia)
+      :config
+       (nerd-icons-completion-mode))
 #+END_SRC
 
-* COMMENT Dashboard
+* Vertico 
 #+BEGIN_SRC elisp
-  (use-package dashboard
-  :ensure t
-  :config
-  (dashboard-modify-heading-icons '((recents . "file-text")
-  (bookmarks . "book")))t
-  :init
-  :custom
-  (dashboard-banner-logo-title "E M A C S")
-  (dashboard-startup-banner (expand-file-name "images/emacs-logo.png" user-emacs-directory))
-  (dashboard-center-content t)
-  (dashboard-set-file-icons t)
-  (dashboard-set-navigator t)
-  (dashboard-set-heading-icons t)
-  (dashboard-set-init-info t)
-  (dashboard-center-content t)
-  (dashboard-vertically-center-content t)
-  (dashboard-navigation-cycle t)
-  (dashboard-display-icons-p t)
-  (dashboard-icon-type 'all-the-icons)
-  (dashboard-set-heading-icons t)
-  (dashboard-set-file-icons t)
-  (dashboard-footer-icon "")
-  (dashboard-footer-message '("\"Have a Wonderful Day!\""))
-  (dashboard-items nil)
-  (dashboard-item-shortcuts '((recents   . "r")
-  (bookmarks . "m")
-  (projects  . "p")
-  (agenda    . "a")
-  (registers . "e")))
-  (dashboard-items '((bookmarks . 5)
-  (projects . 5)
-  (recents . 5)))
-
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-  :config
-  (dashboard-setup-startup-hook))
-  (setq dashboard-navigator-buttons
-  `(;; line1
-  ;; Keybindings
-  ((,(all-the-icons-octicon "search" :height 0.9 :v-adjust -0.1)
-  " Find file" nil
-  (lambda (&rest _) (ido-find-file)) nil "" "            C-x C-f"))
-  ((,(all-the-icons-octicon "file-directory" :height 1.0 :v-adjust -0.1)
-  " Open project" nil
-  (lambda (&rest _) (project-find-dir)) nil "" "         C-x p d"))
-  ((,(all-the-icons-octicon "three-bars" :height 1.1 :v-adjust -0.1)
-  " File explorer" nil
-  (lambda (&rest _) (project-dired)) nil "" "        C-x p D"))))
-#+END_SRC
-
-* Ido
-#+BEGIN_SRC elisp
-  (use-package ido
-    :ensure nil
-    :hook (after-init)
-    :config
-    (setq ido-enable-flex-matching t)
-    (ido-mode 1)
-    (setq ido-ubiquitous-mode 1
-	  ido-everywhere 1))
-
-  (use-package ido-vertical-mode
-    :ensure t
-    :hook (after-init . ido-vertical-mode))
-  (autoload 'ido-find-file "ido" nil t)
-#+END_SRC
-
-* Irony
-#+BEGIN_SRC elisp
-  (use-package irony
-    :ensure t
+  (use-package vertico
+    :straight t
     :defer t
     :hook
-    ((c++-mode c-mode) . irony-mode)
-    ('irony-mode-hook) . 'irony-cdb-autosetup-compile-options)
-#+END_SRC
-
-* Neotree
-#+BEGIN_SRC elisp
-  (use-package neotree
-    :ensure t
-    :commands (neotree)
+    (after-init . vertico-mode)           ;; Enable vertico after Emacs has initialized.
+    :custom
+    (vertico-count 10)                    ;; Number of candidates to display in the completion list.
+    (vertico-resize nil)                  ;; Disable resizing of the vertico minibuffer.
+    (vertico-cycle nil)                   ;; Do not cycle through candidates when reaching the end of the list
     :config
-    (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-    (add-hook 'neo-after-create-hook (lambda (&rest _) (display-line-numbers-mode -1))))
-  (setq neo-smart-open t)
+    ;; Customize the display of the current candidate in the completion list.
+    ;; This will prefix the current candidate with “» ” to make it stand out.
+    ;; Reference: https://github.com/minad/vertico/wiki#prefix-current-candidate-with-arrow
+    (advice-add #'vertico--format-candidate :around
+                (lambda (orig cand prefix suffix index _start)
+                  (setq cand (funcall orig cand prefix suffix index _start))
+                  (concat
+                   (if (= vertico--index index)
+                       (propertize "» " 'face '(:foreground "#80adf0" :weight bold))
+                     "  ")
+                   cand))))
 #+END_SRC
 
-* Nerd Icons
+* Orderless
 #+BEGIN_SRC elisp
-  (use-package nerd-icons
-    :ensure t
-    :defer t)
-#+END_SRC
-
-* Org
-#+BEGIN_SRC elisp
-  (use-package org
-    :hook (after-init . org-mode)
-    :diminish (org-mode)
-    :commands (org-capture org-agenda))
-#+END_SRC
-
-** Org modern
-#+begin_SRC elisp
-  (use-package org-modern
-    :ensure t
-    :hook (org-mode . org-modern-mode))
-
-(setq org-capture-templates
-  '(("t" "Programming" entry
-     "* TODO %?\n %U")
-     (file+headline "" "Inbox")))
-
-;;; (set-face-attribute 'default nil :family "Iosevka")
-;; (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
-;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
-
-
-(setq
-;; Edit settings
-org-auto-align-tags nil
-org-tags-column 0
-org-catch-invisible-edits 'show-and-error
-org-special-ctrl-a/e t
-org-insert-heading-respect-content t
-
-;; Org styling, hide markup etc.
-org-hide-emphasis-markers t
-org-pretty-entities t
-
-;; Agenda styling
-org-agenda-tags-column 0
-org-agenda-block-separator ?─
-org-agenda-time-grid
-'((daily today require-timed)
-(800 1000 1200 1400 1600 1800 2000)
-" ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-org-agenda-current-time-string
-"◀── now ─────────────────────────────────────────────────")
-
-;; Ellipsis styling
-;(setq org-ellipsis "…")
-;(set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
-
-(global-org-modern-mode)
-#+end_SRC
-
-** Common settings
-#+BEGIN_SRC elisp
-      (with-eval-after-load "org"
-	'(require 'ox-md nil t)
-	(setq org-ellipsis " "
-	 org-src-fontify-natively t
-	 org-src-tab-acts-natively t
-	 org-confirm-babel-evaluate nil
-	 org-export-with-smart-quotes t
-	 org-fontify-quote-and-verse-blocks nil
-         org-hide-emphasis-markers t
- 
-;;         org-fontify-whole-heading-line nil
-;;         org-hide-leading-stars nil
-;;         org-startup-indented nil
-;;         org-src-window-setup 'current-window
-         )
-
-	(custom-set-faces
-	 '(org-block ((t (:background "black")))))
-    ;      '(org-block-begin-line ((t (:background "white"))))
-    ;     '(org-block-end-line ((t (:background "grey"))))
-    ;     '(org-block-background ((t (:background "black"))))
-
-         (add-hook 'org-mode-hook (lambda ()
-            "Beautify Org Checkbox Symbol"
-            (push '("[ ]" .  "☐") prettify-symbols-alist)
-            (push '("[X]" . "☑" ) prettify-symbols-alist)
-            (push '("[-]" . "❍" ) prettify-symbols-alist)
-            (prettify-symbols-mode))))
-
-         (defface org-checkbox-done-text
-  '((t (:foreground "#71696A" :strike-through t)))
-  "Face for the text part of a checked org-mode checkbox.")
-
-(font-lock-add-keywords
- 'org-mode
- `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
-    1 'org-checkbox-done-text prepend))
- 'append)
-
-(with-eval-after-load 'org-faces
-  (custom-set-faces
-   '(org-document-title ((t (:font "Iosevka Aile" :weight bold :height 1.3))))
-   '(org-level-1 ((t (:font "Iosevka Aile" :weight medium :height 1.2))))
-   '(org-level-2 ((t (:font "Iosevka Aile" :weight medium :height 1.1))))
-   '(org-level-3 ((t (:font "Iosevka Aile" :weight medium :height 1.05))))
-   '(org-level-4 ((t (:font "Iosevka Aile" :weight medium :height 1.0))))
-   '(org-level-5 ((t (:font "Iosevka Aile" :weight medium :height 1.1))))
-   '(org-level-6 ((t (:font "Iosevka Aile" :weight medium :height 1.1))))
-   '(org-level-7 ((t (:font "Iosevka Aile" :weight medium :height 1.1))))
-   '(org-level-8 ((t (:font "Iosevka Aile" :weight medium :height 1.1))))))
-#+END_SRC
-
-** Org babel execute
-#+BEGIN_SRC elisp
-  ;; Org babel execute.
-  (with-eval-after-load 'org
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((C . t)
-       (python . t)
-       (lua . t)
-       (awk . t)
-       (shell . t)
-       (org . t)
-       (emacs-lisp . t))))
-  (setq org-confirm-babel-evaluate nil)
-#+END_SRC
-
-** Org bullets
-#+BEGIN_SRC elisp
-  (use-package org-bullets
-    :after (org)
-    :defer t
-    :ensure t
+  (use-package orderless
+    :straight t
+    :defer t                                    ;; Load Orderless on demand.
+    :after vertico                              ;; Ensure Vertico is loaded before Orderless.
     :config
-    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+    (setq completion-styles '(orderless basic)  ;; Set the completion styles.
+          completion-category-defaults nil      ;; Clear default category settings.
+          completion-category-overrides '((file (styles partial-completion))))) ;; Customize file completion styles.
 #+END_SRC
 
-** Org auto tangle
+* Marginalia
 #+BEGIN_SRC elisp
-  (use-package org-auto-tangle
-    :ensure t
-    :defer t
-    :hook (org-mode . org-auto-tangle-mode)
-    :diminish (org-auto-tangle-mode)
-    :config
-    (setq org-auto-tangle-default t
-	  org-auto-tangle-babel-safelist '(
-					   "~/.config/emacs/config.org")))
+;; Marginalia enhances the completion experience in Emacs by adding
+;; additional context to the completion candidates. This includes
+;; helpful annotations such as documentation and other relevant
+;; information, making it easier to choose the right option.
+(use-package marginalia
+  :straight t
+  :hook
+  (after-init . marginalia-mode))
 #+END_SRC
 
-* COMMENT Projectile
+* Consult
 #+BEGIN_SRC elisp
-  (use-package projectile
-  :ensure t
-  :defer 1
-  :init
-  (projectile-mode 1)
+;; Consult provides powerful completion and narrowing commands for Emacs.
+;; It integrates well with other completion frameworks like Vertico, enabling
+;; features like previews and enhanced register management. It's useful for
+;; navigating buffers, files, and xrefs with ease.
+(use-package consult
+  :straight t
+  :defer t
   :config
-  (setq projectile-completion-system 'ido))
+  ;; Enhance register preview with thin lines and no mode line.
+  (advice-add #'register-preview :override #'consult-register-window)
+
+  ;; Use Consult for xref locations with a preview feature.
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref))
 #+END_SRC
 
-* Swiper
+* Embark
 #+BEGIN_SRC elisp
-  (use-package swiper
-    :ensure t
-    :defer 2
-    :commands (swiper))
+;; Embark provides a powerful contextual action menu for Emacs, allowing
+;; you to perform various operations on completion candidates and other items.
+;; It extends the capabilities of completion frameworks by offering direct
+;; actions on the candidates.
+;; Just `<leader> .' over any text, explore it :)
+(use-package embark
+  :straight t
+  :defer t)
+#+END_SRC
+
+* Embark consult
+#+BEGIN_SRC elisp
+;; Embark-Consult provides a bridge between Embark and Consult, ensuring
+;; that Consult commands, like previews, are available when using Embark.
+(use-package embark-consult
+  :straight t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode)) ;; Enable preview in Embark collect mode.
 #+END_SRC
 
 * Vterm & vterm-toggle
 #+BEGIN_SRC elisp
   (use-package vterm
-    :ensure t
+    :straight t
+    :defer t
     :commands (vterm))
 
   (use-package vterm-toggle
-    :ensure t
+    :straight t
+    :defer t
     :commands (vterm-toggle))
 #+END_SRC
 
 * Which key
 #+BEGIN_SRC elisp
   (use-package which-key
-    :ensure t
-    :defer 1
+    :straight t
+    :defer t
+    :hook (after-init . which-key-mode)
     :custom
     (which-key-lighter "")
-					  ;  (which-key-sort-order #'which-key-order-alpha)
+;  (which-key-sort-order #'which-key-order-alpha)
     (which-key-sort-uppercase-first nil)
     (which-key-add-column-padding 1)
     (which-key-max-display-columns nil)
@@ -1036,7 +857,7 @@ org-agenda-current-time-string
     (which-key-setup-minibuffer))
 #+END_SRC
 
-* Nyan
+* COMMENT Nyan
 #+BEGIN_SRC elisp
   (use-package nyan-mode
     :defer 2
@@ -1052,89 +873,21 @@ org-agenda-current-time-string
     (nyan-cat-face-number 3))
 #+END_SRC
 
-* Dimmer
-#+BEGIN_SRC elisp
-  (use-package dimmer
-    :ensure t
-    :disabled t
-    :defer 5
-    :config (dimmer-mode)
-    :custom (dimmer-fraction 0.3))
-#+END_SRC
-
-* Diminish
-#+BEGIN_SRC elisp
-  (use-package diminish
-  :ensure t
-  :init
-  (diminish 'which-key-mode)
-  (diminish 'linum-relative-mode)
-  (diminish 'hungry-delete-mode)
-  (diminish 'visual-line-mode)
-  (diminish 'subword-mode)
-  (diminish 'beacon-mode)
-  (diminish 'irony-mode)
-  (diminish 'page-break-lines-mode)
-  (diminish 'auto-revert-mode)
-  (diminish 'rainbow-delimiters-mode)
-  (diminish 'rainbow-mode)
-  (diminish 'yas-minor-mode)
-  (diminish 'flycheck-mode)
-  (diminish 'helm-mode)
-  (diminish 'company-mode)
-  (diminish 'beacon-mode)
-  (diminish 'hungry-delete-mode)
-  (diminish 'org-auto-tangle-mode)
-  (diminish 'highlight-parentheses-mode)
-  (diminish 'evil-collection-impaired-mode)
-  (diminish 'org-mode))
-#+END_SRC
-
-* Vertico
-#+BEGIN_SRC elisp
-  (defun def/minibuffer-backward-kill (arg)
-    "When minibuffer is completing a file name, delete up to parent folder otherwise delete word"
-    (interactive "p")
-    (if minibuffer-completing-file-name
-	;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
-	(if (string-match-p "/." (minibuffer-contents))
-	    (zap-up-to-char (- arg) ?/)
-	  (delete-minibuffer-contents))
-      (backward-kill-word arg)))
-#+END_SRC
-
-* Vertico
-#+BEGIN_SRC elisp
-  (use-package vertico
-    :ensure t
-    :hook (after-init . vertico-mode)
-    :bind (:map vertico-map
-		("C-j" . vertico-next)
-		("C-k" . vertico-previous)
-		("C-f" . vertico-exit)
-		:map minibuffer-local-map
-		("M-h" . def/minibuffer-backward-kill))
-    :custom
-    (vertico-cycle t)
-    (vertico-scroll-margin 1)
-    (vertico-resize t))
-#+END_SRC
-
 * Persistent history.
 #+BEGIN_SRC elisp
   (use-package savehist
-    :ensure nil
+    :straight nil
     :defer 1
-    :init
+    :config
     (setq history-length 15)
-    (savehist-mode))
+    (savehist-mode 1))
 #+END_SRC
 
 * A few more useful configurations...
 #+BEGIN_SRC elisp
   (use-package emacs
-    :defer 1
-    :init
+    :defer t
+    :config
     ;; Add prompt indicator to `completing-read-multiple'.
     ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
     (defun crm-indicator (args)
@@ -1160,61 +913,12 @@ org-agenda-current-time-string
     (setq enable-recursive-minibuffers t))
 #+END_SRC
 
-* Optionally use the `orderless' completion style.
-#+BEGIN_SRC elisp
-  (use-package orderless
-    :ensure t
-    :after (vertico)
-    :init
-    ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
-    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless basic)
-	  completion-category-defaults nil
-	  completion-category-overrides '((file (styles partial-completion)))))
-#+END_SRC
-
-* COMMENT Vim like modeline
-#+BEGIN_SRC elisp
-  (use-package vim-like-modeline
-  :ensure nil
-  :init
-  (defun ntf/mode-line-format (left right)
-  "Return a string of `window-width' length.
-  Containing LEFT, and RIGHT aligned respectively."
-  (let ((available-width (- (window-width) (length left) 1)))
-  (format (format "%%s %%%ds " available-width) left right)))
-
-  (defface evil-mode-line-face '((t (:foreground  "white"
-  :background "black"))) "Face for evil mode-line colors.")
-
-  (setq-default
-  mode-line-format
-  '((:eval (ntf/mode-line-format
-  ;; left portion
-  (format-mode-line
-  (quote ("%e"
-  (:eval
-  (when (bound-and-true-p evil-local-mode)
-  (propertize
-  (concat
-  " "
-  (upcase
-  (substring (symbol-name evil-state) 0 1))
-  (substring (symbol-name evil-state) 1)
-  " ") 'face 'evil-mode-line-face)))
-  " " (:eval (when (buffer-modified-p) "[+]"))
-  " " mode-line-buffer-identification
-  " %l:%c")))
-  ;; right portion
-  (format-mode-line (quote ("%m " (vc-mode vc-mode)))))))))
-#+END_SRC
-
 * Company
 #+BEGIN_SRC elisp
   (use-package company
+    :straight t
+    :defer t
     :hook ((prog-mode text-mode) . company-mode)
-;    :init (add-hook 'after-init-hook 'global-company-mode)
     :diminish (company-mode)
     :config
     (setq company-idle-delay 0.1) ;; company-idle-delay set to low causes latency while typing use with caution.
@@ -1228,33 +932,85 @@ org-agenda-current-time-string
     (define-key company-active-map (kbd "SPC") #'company-abort))
 #+END_SRC
 
-* C and C++
+* Org 
 #+BEGIN_SRC elisp
-  (use-package company-c-headers
-    :ensure t
-    :hook
-    (cc-mode . company-c-headers)
-    (c++-mode . company-c-headers)
-    (objc-mode . company-c-headers))
-
-  (use-package company-irony
-    :ensure t
-    :after (company)
+  ;; Org mode, if you still want it for notes/tasks
+  (use-package org
+    :straight t
+    :defer t
     :config
-    (eval-after-load 'company
-      '(add-to-list 'company-backends 'company-c-headers
-		    'company-dabbrev-code
-		    'company-irony)))
+    (setq org-agenda-files '("~/Documents/org/")
+          org-log-done 'time
+          org-hide-emphasis-markers t)
+    (add-hook 'org-mode-hook #'org-indent-mode)
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)
+       (C . t))))
 #+END_SRC
 
 * Lsp
 #+BEGIN_SRC elisp
-  (use-package lsp-mode
-    :hook ((lua-mode bash-mode c-mode c++-mode python-mode js-mode) . lsp-deferred)
-    (lsp-mode . lsp-enable-which-key-intergration)
-    :commands lsp lsp-deferred)
+ (use-package lsp-mode
+      :straight t
+      :defer t
+      :hook ((lsp-mode . lsp-enable-which-key-intergration)
+              ((lua-mode 
+                bash-mode 
+                c-mode 
+                c++-mode 
+                go-ts-mode
+                js-ts-mode
+                python-base-mode
+                js-mode) . lsp-deferred)
+      (lsp-mode . lsp-enable-which-key-integration))
+      :commands lsp
+      :custom
+      (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
+      (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
+      (lsp-completion-provider :none)                       ;; Disable the default completion provider.
+      (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
+      (lsp-log-io nil)                                      ;; Disable IO logging for speed.
+      (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
+      (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
+      ;; Core settings
+      (lsp-enable-xref t)                                   ;; Enable cross-references.
+      (lsp-auto-configure t)                                ;; Automatically configure LSP.
+      (lsp-enable-links nil)                                ;; Disable links.
+      (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
+      (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
+      (lsp-enable-folding nil)                              ;; Disable folding.
+      (lsp-enable-imenu t)                                  ;; Enable Imenu support.
+      (lsp-enable-indentation nil)                          ;; Disable indentation.
+      (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
+      (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
+      (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
+      (lsp-enable-text-document-color t)                    ;; Enable text document color.
+      ;; Modeline settings
+      (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
+      (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
+      (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
+      (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
+      (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
+      ;; Completion settings
+      (lsp-completion-enable t)                             ;; Enable completion.
+      (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
+      (lsp-enable-snippet nil)                              ;; Disable snippets
+      (lsp-completion-show-kind t)                          ;; Show kind in completions.
+      ;; Lens settings
+      (lsp-lens-enable t)                                   ;; Enable lens support.
+      ;; Headerline settings
+      (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
+      (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
+      (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
+      (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
+      ;; Semantic settings
+      (lsp-semantic-tokens-enable nil))                     ;; Disable semantic 
 
   (use-package lsp-ui
+    :straight t
+    :defer t
     :commands lsp-ui-mode
     :config
     (setq lsp-ui-doc-enable nil)
@@ -1267,30 +1023,87 @@ org-agenda-current-time-string
 
 * Tree sitter
 #+BEGIN_SRC elisp
-  (use-package treesit
-    :ensure nil
-    :defer 1
-    :config
-    (require 'treesit))
+  (use-package tree-sitter
+      :straight t
+      :defer t
+      :config
+      (global-tree-sitter-mode))
+
+  ;; Remap major modes to use tree-sitter variants
+;;  (setq major-mode-remap-alist
+;;        '((python-mode . python-ts-mode)
+;;          (c-mode . c-ts-mode)
+;;          (c++-mode . c++-ts-mode)
+;;          (c-or-c++-mode . c-or-c++-ts-mode)))
+#+END_SRC
+
+* Treesitter-auto
+#+BEGIN_SRC elisp
+;;; TREESITTER-AUTO
+;; Treesit-auto simplifies the use of Tree-sitter grammars in Emacs,
+;; providing automatic installation and mode association for various
+;; programming languages. This enhances syntax highlighting and
+;; code parsing capabilities, making it easier to work with modern
+;; programming languages.
+(use-package treesit-auto
+  :straight t
+  :after emacs
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
 #+END_SRC
 
 * Evil mode
 #+BEGIN_SRC elisp
   (use-package evil
-    :ensure t
-    :hook (after-init . evil-mode)
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t) ; scrolling using p and n without holding ctrl.
-    (setq evil-vsplit-window-right t)
-    (setq evil-split-window-below t))
+        :straight t
+        :defer t
+        :hook (after-init . evil-mode)
+        :config
+        (setq evil-want-integration t
+      	evil-want-keybinding nil
+      	evil-want-C-u-scroll t ; scrolling using p and n without holding ctrl.
+      	evil-want-C-u-delete t 
+      	evil-vsplit-window-right t
+      	evil-split-window-below t)
+        (evil-set-initial-state 'dired-mode 'normal) ;evil-mode in dired.
+        ;; Set SPC as the leader key
+        (evil-set-leader 'normal (kbd "SPC"))
+        (evil-set-leader 'visual (kbd "SPC"))
+
+        ;; Files
+        (evil-define-key 'normal 'global (kbd "<leader> f") 'find-file)
+        (evil-define-key 'normal 'global (kbd "<leader> d") 'dired)
+        (evil-define-key 'normal 'global (kbd "<leader> pv") 'dired-jump)
+        (evil-define-key 'normal 'global (kbd "<leader> c") 'compile)
+        (evil-define-key 'normal 'global (kbd "<leader> w") 'save-buffer)
+        (evil-define-key 'normal 'global (kbd "<leader> q") 'evil-quit)
+        (evil-define-key 'normal 'global (kbd "<leader> r") 'restart-emacs)
+        (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer)
+        (evil-define-key 'normal 'global (kbd "<leader> b") 'switch-to-buffer)
+;        (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-current-buffer)
+        (evil-define-key 'normal 'global (kbd "<leader> u") 'undo)
+        (evil-define-key 'normal 'global (kbd "<leader> z") 'undo-redo)
+        (evil-define-key 'normal 'global (kbd "<leader> g U") 'evil-upcase)
+
+        ;; Orgmode
+        (evil-define-key 'normal 'global (kbd "<leader> SPC") 'org-babel-tangle)
+
+        (evil-define-key 'normal 'global (kbd "<leader> t") 'vterm-toggle-cd)
+
+        ;; Windows
+        (evil-define-key 'normal 'global (kbd "<leader> o") 'other-window)
+        (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-buffer)
+    )
 #+END_SRC
 
 ** Evil collection
 #+BEGIN_SRC elisp
   (use-package evil-collection
-    :ensure t
+    :straight t
+    :defer t
     :after (evil)
     :diminish (evil-collection-unimpaired-mode)
     :config
@@ -1301,445 +1114,61 @@ org-agenda-current-time-string
 ** Evil tutor
 #+BEGIN_SRC elisp
   (use-package evil-tutor
-    :ensure t
+    :straight t
+    :defer t
     :commands (evil-tutor))
 #+END_SRC
 
-* Man
+* Programming languages
 #+BEGIN_SRC elisp
-  (autoload 'man "man" nil t)
-#+END_SRC
-
-* Dmenu
-#+BEGIN_SRC elisp
-  (use-package dmenu
-    :ensure t
-    :commands (dmenu))
-#+END_SRC
-
-* Assembly
-#+BEGIN_SRC elisp
-  (use-package asm-mode
-    :ensure t
-    :defer 3
-    :config
-    (asm-mode))
-#+END_SRC 
-
-* Beacon
-#+BEGIN_SRC elisp
-  (use-package beacon
-    :ensure t
-    :defer 3
-    :diminish (beacon-mode)
-    :config
-    (beacon-mode))
-#+END_SRC
-
-* Doom theme
-#+BEGIN_SRC elisp
-  (use-package doom-themes
-    :ensure t
-    :config
-    ;; Global settings (defaults)
-    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	 doom-themes-enable-italic t)
-    (load-theme 'doom-ir-black t)
-    ;; Enable flashing mode-line on errors
-    (doom-themes-visual-bell-config)
-    ;; Enable custom neotree theme (all-the-icons must be installed!)
-    (doom-themes-neotree-config)
-    ;; or for treemacs users
-    (setq doom-themes-treemacs-theme "doom-ir-black") ; use "doom-colors" for less minimal icon theme
-    (doom-themes-treemacs-config)
-    ;; Corrects (and improves) org-mode's native fontification.
-    (doom-themes-org-config)
-    (doom-themes-visual-bell-config)
-    :init
-    (custom-set-faces
-     '(default ((t (:background "black"))))))
-
-#+END_SRC
-
-* COMMENT Doom Modeline
-#+BEGIN_SRC elisp
-  (use-package doom-modeline
-  :hook (after-init . doom-modeline-mode)
-  :custom
-  ;; Don't compact font caches during GC. Windows Laggy Issue
-  (inhibit-compacting-font-caches t)
-  (doom-modeline-icon t)
-  (doom-modeline-major-mode-icon t)
-  (doom-modeline-major-mode-color-icon t)
-  (doom-modeline-buffer-state-icon t)
-  (doom-modeline-buffer-modification-icon t)
-  (doom-modeline-lsp-icon t)
-  (doom-modeline-modeline-time-icon t)
-  (doom-modeline-time-live-icon t)
-  (doom-modeline-time-analogue-clock t)
-  (doom-modeline-time-clock-size 0.7)
-  (doom-modeline-unicode-fallback nil)
-  (doom-modeline-buffer-name t)
-  (doom-modeline-highlight-modified-buffer-name t)
-  (doom-modeline-column-zero-based t)
-  (doom-modeline-percent-position '(-3 "%p"))
-  (doom-modeline-position-line-format '("L%l")
-  (doom-modeline-minor-modes nil)
-  (doom-modeline-enable-word-count nil)
-  (doom-modeline-buffer-encoding t)
-  (doom-modeline-indent-info nil)
-  (doom-modeline-total-line-number nil)
-  (doom-modeline-vcs-icon t)
-  (doom-modeline-check-icon t)
-  (doom-modeline-check-simple-format nil)
-  (doom-modeline-number-limit 99)
-  (doom-modeline-vcs-max-length 12)
-  (doom-modeline-workspace-name t)
-  (doom-modeline-persp-name t)
-  (doom-modelin-display-default-persp-name nil)
-  (doom-modeline-persp-icon t)
-  (doom-modeline-lsp t)
-  (doom-modeline-modal t)
-  (doom-modeline-github nil)
-  (doom-modeline-icon (display-graphic-p))
-  (doom-modeline-checker-simple-format t)
-  (doom-line-numbers-style 'relative)
-  (doom-modeline-buffer-file-name-style 'relative-to-project)
-  (doom-modeline-buffer-modification-icon t)
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-buffer-state-icon t)
-  (doom-modeline-flycheck-icon t)
-  (doom-modeline-height 25)
-  (doom-modeline-bar-width 4)
-  (doom-modeline-window-width-limit 85)
-  (doom-modeline-project-detection 'auto)))
-#+END_SRC
-
-* COMMENT Highlight paren
-#+BEGIN_SRC elisp
-  (defun lispy-parens ()
-  "Setup parens display for lisp modes"
-  (setq show-paren-delay 0)
-  (setq show-paren-style 'parenthesis)
-  (make-variable-buffer-local 'show-paren-mode)
-  (show-paren-mode 1)
-  (set-face-background 'show-paren-match-face (face-background 'default))
-  (if (boundp 'font-lock-comment-face)
-  (set-face-foreground 'show-paren-match-face
-  (face-foreground 'font-lock-comment-face))
-  (set-face-foreground 'show-paren-match-face
-  (face-foreground 'default)))
-  (custom-set-faces
-   '(show-paren-match-face ((t (:weight extra-bold)))))
-#+END_SRC
-
-* Highlight Parentheses
-#+BEGIN_SRC elisp
-  (use-package highlight-parentheses
-    :ensure t
+  (use-package python            ;; Python-specific tweaks
+    :straight nil
     :defer t
-    :diminish (highlight-parentheses-mode)
-    :hook ((prog-mode text-mode) . global-highlight-parentheses-mode))
-#+END_SRC
+    :hook (python-mode . lsp)
+    :config (setq python-indent-offset 4))
 
-* COMMENT Paren
-#+BEGIN_SRC elisp
-  (use-package paren
-    :ensure nil
-    :hook ((prog-mode text-mode) . show-paren-mode)
-    :init
-    (setq show-paren-deplay 0))
-#+END_SRC
+  (use-package cc-mode           ;; C/C++ tweaks
+    :straight nil
+    :defer t
+    :hook (c-mode-common . lsp)
+    :config (setq c-basic-offset 4))
 
-* Rainbow Delimiters
-#+BEGIN_SRC elisp
-  (use-package rainbow-delimiters
-    :ensure t
-    :hook ((prog-mode text-mode) . rainbow-delimiters-mode))
-#+END_SRC
+  (use-package js                ;; JS tweaks
+    :straight nil
+    :defer t
+    :hook (js-mode . lsp)
+    :config (setq js-indent-level 2))
 
-* Rainbow mode
-#+BEGIN_SRC elisp
-  (use-package rainbow-mode
-    :ensure t
-    :defer 0.1
-    :init
-    (setq rainbow-ansi-colors nil)
-    (setq rainbow-x-colors nil)
-
-    (defun rainbow-mode-in-themes ()
-      (when-let ((file (buffer-file-name))
-		 ((derived-mode-p 'emacs-lisp-mode))
-		 ((string-match-p "-theme" file)))
-	(rainbow-mode 1)))
-    :hook (emacs-lisp-mode . rainbow-mode-in-themes))
-#+END_SRC
-
-* Hungry Delete
-#+BEGIN_SRC elisp
-  (use-package hungry-delete
-    :ensure t
-    :defer 3
-    :diminish (hungry-delete-mode)
+  (use-package sh-script         ;; Shell scripts
+    :straight nil
+    :defer t
     :config
-    (global-hungry-delete-mode))
-#+END_SRC
+    (add-hook 'sh-mode-hook (lambda ()
+      (setq sh-basic-offset 4 sh-indentation 4))))
 
-* Pop kill ring
-#+BEGIN_SRC elisp
-  (use-package popup-kill-ring
-    :ensure t
-    :defer 3)
-#+END_SRC
-
-* COMMENT Gcmh
-#+BEGIN_SRC elisp
-  ;; github.com/doomemacs/doomemacs/blob/develop/core/core.el#L296
-  (use-package gcmh
-  :ensure t
-  :config (gcmh-mode)
-  (setq
-  gcmh-idle-delay 'auto ; default is 15s
-  gcmh-auto-idle-delay-factor 10
-  gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
-  (make-directory (expand-file-name "gcmh" user-emacs-directory) t)
-#+END_SRC
-
-* So-long
-Disable extras when visiting a file with long lines
-#+BEGIN_SRC elisp
-  (use-package so-long
-    :ensure t
-    :hook (after-init . so-long-minor-mode))
-#+END_SRC
-
-* Pdf-tools
-#+BEGIN_SRC elisp
-  (use-package pdf-tools
-    :ensure t
-    :defer 0.1
-    :mode ("%PDF" . pdf-view-mode)
-    :config
-    (pdf-tools-install :no-query)
-    (pdf-loader-install))
-#+END_SRC
-
-* COMMENT Vim like tab bar
-#+BEGIN_SRC elisp
-;; Description: Making the Emacs Tab Bar Look Like Vim's Tab Bar
-;; License: MIT
-;; Author: James Cherti
-;; URL: https://www.jamescherti.com/emacs-tab-bar-vim-style-colors/
-
-  (defun my-tab-bar-vim-name-format-function (tab i)
-  "Add a space on the sides of every tab."
-  (let ((current-p (eq (car tab) 'current-tab)))
-  (propertize
-  (concat " "
-  (if tab-bar-tab-hints (format "%d " i) "")
-  (alist-get 'name tab)
-  (or (and tab-bar-close-button-show
-  (not (eq tab-bar-close-button-show
-  (if current-p 'non-selected 'selected)))
-  tab-bar-close-button)
-  "")
-  " ")
-  'face (funcall tab-bar-tab-face-function tab))))
-
-  (defun my-tab-bar-vim-like-colors ()
-  "Apply Vim-like color themes to Emacs tab bars."
-  (let* ((fallback-light "white")
-  (fallback-dark "#333333")
-  (bg-default (or (face-attribute 'default :background) fallback-light))
-  (fg-default (or (face-attribute 'default :foreground) fallback-dark))
-  (bg-modeline-inactive (or (face-attribute 'mode-line-inactive :background)
-  fallback-dark))
-  (fg-modeline-inactive (or (face-attribute 'mode-line-inactive :foreground)
-  fallback-light))
-  (bg-tab-inactive bg-modeline-inactive)
-  (fg-tab-inactive fg-modeline-inactive)
-  (fg-tab-active fg-default)
-  (bg-tab-active bg-default))
-  (setq tab-bar-tab-name-format-function #'my-tab-bar-vim-name-format-function)
-  (setq tab-bar-format '(tab-bar-format-tabs tab-bar-separator))
-  (setq tab-bar-separator "\u200B")  ;; Zero width space to fix color bleeding
-  (setq tab-bar-tab-hints nil)  ;; Tab numbers of the left of the label
-  (setq tab-bar-new-button-show nil)
-  (setq tab-bar-close-button-show nil)
-  (setq tab-bar-auto-width nil)
-  (custom-set-faces
-  ;; The tab bar's appearance
-  `(tab-bar
-  ((t (:background ,bg-tab-inactive
-  :foreground ,fg-tab-inactive
-  :box (:line-width 3 :color ,bg-tab-inactive :style nil)))))
-  ;; Inactive tabs
-  `(tab-bar-tab-inactive
-  ((t (:background ,bg-tab-inactive
-  :foreground ,fg-tab-inactive
-  :box (:line-width 3 :color ,bg-tab-inactive :style nil)))))
-  ;; Active tab
-  `(tab-bar-tab
-  ((t (:background ,bg-tab-active :foreground ,fg-tab-active
-  :box (:line-width 3 :color ,bg-tab-active :style nil))))))))
-
-  ;; Customize the appearance of the tab bar
-  ;; Make sure to load your theme using 'load-theme' before
-  ;; calling 'my-tab-bar-vim-like-colors'.
-  (my-tab-bar-vim-like-colors)
-#+END_SRC
-
-* Vundo
-#+BEGIN_SRC elisp
-  (use-package vundo
-    :ensure t
-    :commands (vundo)
-    :init
-    (setq vundo-glyph-alist vundo-unicode-symbols))
-#+END_SRC
-
-* Centaur tabs
-#+BEGIN_SRC elisp
-  (use-package centaur-tabs
-    :ensure t
-    :hook (after-init . centaur-tabs-mode)
-    :config
-;    (centaur-tabs-mode 1)
-    (setq centaur-tabs-style "wave")
-    (setq centaur-tabs-set-icons t)
-    (setq centaur-tabs-set-bar 'under)
-    (setq x-underline-at-descent-line t)
-    (setq centaur-tabs-active-bar-face "#ffffff")
-    (setq centaur-tabs-set-modified-marker t)
-    (setq centaur-tabs-gray-out-icons 'buffer)
-    (setq centaur-tabs-modified-marker "*")
-    (setq centaur-tabs-set-close-button nil)
-    (setq centaur-tabs-label-fixed-length 12)
-    :hook
-    (dired-mode . centaur-tabs-local-mode)
-    )
-
-  (with-eval-after-load 'centaur-tabs
-    (defun centaur-tabs-hide-tab (x)
-      "Do no to show buffer X in tabs."
-      (let ((name (format "%s" x)))
-	(or
-	 ;; Current window is not dedicated window.
-	 (window-dedicated-p (selected-window))
-
-	 ;; Buffer name not match below blacklist.
-	 (string-prefix-p "*epc" name)
-	 (string-prefix-p "*helm" name)
-	 (string-prefix-p "*Helm" name)
-	 (string-prefix-p "*Compile-Log*" name)
-	 (string-prefix-p "*lsp" name)
-	 (string-prefix-p "*company" name)
-	 (string-prefix-p "*Flycheck" name)
-	 (string-prefix-p "*tramp" name)
-	 (string-prefix-p " *Mini" name)
-	 (string-prefix-p "*help" name)
-	 (string-prefix-p "*straight" name)
-	 (string-prefix-p " *temp" name)
-	 (string-prefix-p "*Help" name)
-	 (string-prefix-p "*mybuf" name)
-	 (string-prefix-p "*scratch" name)
-	 (string-prefix-p "*Messages" name)
-	 (string-prefix-p "*Native-compile-log" name)
-	 (string-prefix-p "*doom" name)
-	 (string-prefix-p "*Async-native-compile-log" name)
-	 (string-prefix-p "*scratch" name)
-	 (string-prefix-p "*Welcome-screen" name)
-	 (string-prefix-p "*dashboard" name)
-	 (string-prefix-p "*Quick Help" name)
-	 (string-prefix-p "*Flymake log" name)
-	 (string-prefix-p "*org-Babel" name)
-	 (string-prefix-p "*zone" name)
-	 (string-prefix-p "*DocView-mode" name)
-	 (string-prefix-p "*pdf-view-region" name)
-	 (string-prefix-p "*lua-language-server" name)
-
-	 ;; Is not magit buffer.
-	 (and (string-prefix-p "magit" name)
-	      (not (file-name-extension name)))))))
-#+END_SRC
-
-* Winner mode
-#+BEGIN_SRC elisp
-  (use-package winner-mode
-    :ensure nil
-    :commands (winner-undo winner-redo)
-    :init
-    (winner-mode 1))
-#+END_SRC
-
-* Auto package update
-#+BEGIN_SRC elisp
-  (use-package auto-package-update
-    :ensure t
-    :defer 5
-    :custom
-    (auto-package-update-interval 7)
-    (auto-package-update-prompt-before-update t)
-    (auto-package-update-hide-results t)
-    :config
-    (auto-package-update-maybe)
-    (package-refresh-contents :async)
-    (auto-package-update-now-async))
-#+end_src
-
-
-* Lua mode
-#+BEGIN_SRC elisp
   (use-package lua-mode
-    :ensure t
-    :mode ("%LUA" . lua-mode)
+      :straight t
+      :defer t
+      :mode ("%LUA" . lua-mode)
+      :config
+      (setq lua-indent-string-contents t)
+      (setq lua-indent-close-paren-align t))
+   
+   (use-package asm-mode
+    :straight t
+    :defer t
+    :mode ("\\.\\(asm\\|s\\|S\\)$" . asm-mode)
+    :hook (asm-mode . (lambda ()
+                        ;; your asm-mode customizations here
+                        ))
     :config
-    (setq lua-indent-string-contents t)
-    (setq lua-indent-close-paren-align t))
+    ;; extra configuration for asm-mode (does NOT activate it everywhere)
+  )
 #+END_SRC
-
-* Fzf
-#+begin_src elisp
-  (use-package fzf
-   :ensure t
-   :commands (fzf)
-     ;; Don't forget to set keybinds!
-   :config
-   (setq fzf/args "-x --color bw --print-query --margin=1,0 --no-hscroll"
-	 fzf/executable "fzf"
-	 fzf/git-grep-args "-i --line-number %s"
-	 ;; command used for `fzf-grep-*` functions
-	 ;; example usage for ripgrep:
-	 ;; fzf/grep-command "rg --no-heading -nH"
-	 fzf/grep-command "grep -nrH"
-	 ;; If nil, the fzf buffer will appear at the top of the window
-	 fzf/position-bottom t
-	 fzf/window-height 15))
-#+end_src
-
-* Popper
-** TODO [[https://www.youtube.com/watch?v=E-xUNlZi3rI][popper.el - Popup buffers for Emacs]]
-#+begin_src elisp
-  (use-package popper
-  :ensure t
-  :defer 3
-  :hook (prog-mode . popper-mode)
-  :bind (("C-`"   . popper-toggle)
-	 ("M-`"   . popper-cycle)
-	 ("C-M-`" . popper-toggle-type))
-  :init
-  (setq popper-reference-buffers
-	'("\\*Messages\\*"
-	  "Output\\*$"
-	  "\\*Async Shell Command\\*"
-	  "\\*Quick Help"
-	  help-mode
-	  compilation-mode))
-  (popper-echo-mode +1))                ; For echo area hints
-#+end_src
 
 * Bionic Reading
 #+BEGIN_SRC elisp :tangle "lisp/bionic-reading.el"
+;; -*- lexical-binding: t; -*-
   (defvar infu-bionic-reading-face nil "a face for `infu-bionic-reading-region'.")
 
   (setq infu-bionic-reading-face 'bold)
@@ -1778,6 +1207,7 @@ Disable extras when visiting a file with long lines
 
 * GDB
 #+BEGIN_SRC elisp :tangle "lisp/gdb.el"
+;; -*- lexical-binding: t; -*-
   (setq gdb-many-windows nil)
 
   (defun set-gdb-layout(&optional c-buffer)
@@ -1833,6 +1263,7 @@ Disable extras when visiting a file with long lines
 
 ** Don't let the specified get killed.
 #+BEGIN_SRC elisp :tangle "lisp/feature.el"
+;; -*- lexical-binding: t; -*-
   (defun my/protect-vital-buffers ()
     "Prevent killing vital buffers."
     (not (member (buffer-name) '("*Welcome-screen*"))))
@@ -1935,17 +1366,176 @@ Disable extras when visiting a file with long lines
   (provide 'feature)
 #+end_src
 
-* Toggle term
-#+begin_src elisp
- (use-package toggle-term
-  :ensure t
-  :bind (("M-o f" . toggle-term-find)
-         ("M-o t" . toggle-term-term)
-         ("M-o s" . toggle-term-shell)
-         ("M-o e" . toggle-term-eshell)
-         ("M-o i" . toggle-term-ielm)
-         ("M-o o" . toggle-term-toggle))
-  :config
-    (setq toggle-term-size 25)
-    (setq toggle-term-switch-upon-toggle t)) 
-#+end_src
+* Code compilation
+#+BEGIN_SRC elisp
+(defun compile-and-run-current-file ()
+  "Compile or run the current file depending on its extension."
+  (interactive)
+  (let* ((file (buffer-file-name))
+         (ext (file-name-extension file))
+         (cmd
+          (cond
+           ((member ext '("c"))
+            (format "gcc %s -o /tmp/a.out && /tmp/a.out" file))
+           ((member ext '("asm" "s"))
+
+    (format "nasm -f elf64 %s -o /tmp/a.o && ld /tmp/a.o -o /tmp/a.out && /tmp/a.out" file))
+           ((member ext '("py"))
+            (format "python3 %s" file))
+           ((member ext '("lua"))
+            (format "lua %s" file))
+           (t (format "chmod +x %s && %s" file file)))))
+    (compilation-start cmd)))
+
+(add-to-list 'display-buffer-alist
+             '("\\*compilation\\*"
+               (display-buffer-reuse-window display-buffer-at-bottom)
+               (window-height . 0.25)))
+
+(global-set-key (kbd "C-c r") 'compile-and-run-current-file)
+#+END_SRC
+
+* Hardtime
+#+BEGIN_SRC elisp
+  (use-package hardtime
+    :straight t
+    :defer t
+    :disabled t
+    :config
+    (defun evil-hardtime-check-command ()
+      "Return non-nil if the currently executed command should be checked."
+      (memq this-command '( next-line previous-line evil-previous-visual-line
+                            right-char left-char left-word right-word
+                            evil-forward-char evil-backward-char
+                            evil-next-line evil-previous-line)))
+    :custom
+    (hardtime-predicate #'evil-hardtime-check-command)
+    :hook
+    (text-mode . hardtime-mode)
+    (prog-mode . hardtime-mode))
+#+END_SRC
+
+* God mode
+#+BEGIN_SRC elisp
+      (use-package god-mode
+        :straight t
+        :defer t
+       :disabled t 
+        :config
+        (god-mode))
+    
+;  (global-set-key (kbd "<escape>") #'god-local-mode)
+  (setq god-mode-enable-function-key-translation nil)
+#+END_SRC
+
+* COMMENT Meow
+#+BEGIN_SRC elisp
+    (use-package meow 
+        :straight t
+        :defer t)
+
+    (defun meow-setup ()
+      (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+      (meow-motion-define-key
+       '("j" . meow-next)
+       '("k" . meow-prev)
+       '("<escape>" . ignore))
+      (meow-leader-define-key
+       ;; Use SPC (0-9) for digit arguments.
+       '("1" . meow-digit-argument)
+       '("2" . meow-digit-argument)
+       '("3" . meow-digit-argument)
+       '("4" . meow-digit-argument)
+       '("5" . meow-digit-argument)
+       '("6" . meow-digit-argument)
+       '("7" . meow-digit-argument)
+       '("8" . meow-digit-argument)
+       '("9" . meow-digit-argument)
+       '("0" . meow-digit-argument)
+       '("/" . meow-keypad-describe-key)
+       '("?" . meow-cheatsheet))
+      (meow-normal-define-key
+       '("0" . meow-expand-0)
+       '("9" . meow-expand-9)
+       '("8" . meow-expand-8)
+       '("7" . meow-expand-7)
+       '("6" . meow-expand-6)
+       '("5" . meow-expand-5)
+       '("4" . meow-expand-4)
+       '("3" . meow-expand-3)
+       '("2" . meow-expand-2)
+       '("1" . meow-expand-1)
+       '("-" . negative-argument)
+       '(";" . meow-reverse)
+       '("," . meow-inner-of-thing)
+       '("." . meow-bounds-of-thing)
+       '("[" . meow-beginning-of-thing)
+       '("]" . meow-end-of-thing)
+       '("a" . meow-append)
+       '("A" . meow-open-below)
+       '("b" . meow-back-word)
+       '("B" . meow-back-symbol)
+       '("c" . meow-change)
+       '("d" . meow-delete)
+       '("D" . meow-backward-delete)
+       '("e" . meow-next-word)
+       '("E" . meow-next-symbol)
+       '("f" . meow-find)
+       '("g" . meow-cancel-selection)
+       '("G" . meow-grab)
+       '("h" . meow-left)
+       '("H" . meow-left-expand)
+       '("i" . meow-insert)
+       '("I" . meow-open-above)
+       '("j" . meow-next)
+       '("J" . meow-next-expand)
+       '("k" . meow-prev)
+       '("K" . meow-prev-expand)
+       '("l" . meow-right)
+       '("L" . meow-right-expand)
+       '("m" . meow-join)
+       '("n" . meow-search)
+       '("o" . meow-block)
+       '("O" . meow-to-block)
+       '("p" . meow-yank)
+       '("q" . meow-quit)
+       '("Q" . meow-goto-line)
+       '("r" . meow-replace)
+       '("R" . meow-swap-grab)
+       '("s" . meow-kill)
+       '("t" . meow-till)
+       '("u" . meow-undo)
+       '("U" . meow-undo-in-selection)
+       '("v" . meow-visit)
+       '("w" . meow-mark-word)
+       '("W" . meow-mark-symbol)
+       '("x" . meow-line)
+       '("X" . meow-goto-line)
+       '("y" . meow-save)
+       '("Y" . meow-sync-grab)
+       '("z" . meow-pop-selection)
+       '("'" . repeat)
+       '("<escape>" . ignore)))
+
+  (require 'meow)
+    (meow-setup)
+        (meow-global-mode 1)
+#+END_SRC
+
+#+BEGIN_SRC elisp
+(defun ek/first-install ()
+  "Install tree-sitter grammars and compile packages on first run..."
+  (interactive)                                      ;; Allow this function to be called interactively.
+  (switch-to-buffer "*Messages*")                    ;; Switch to the *Messages* buffer to display installation messages.
+  (message ">>> All required packages installed.")
+  (message ">>> Configuring Emacs...")
+  (message ">>> Configuring Tree Sitter parsers...")
+  (require 'treesit-auto)
+  (treesit-auto-install-all)                         ;; Install all available Tree Sitter grammars.
+  (message ">>> Configuring Nerd Fonts...")
+;  (require 'nerd-icons)
+  (nerd-icons-install-fonts)                         ;; Install all available nerd-fonts
+  (message ">>> Emacs installed! Press any key to close the installer and open Emacs normally. First boot will compile some extra stuff :)")
+  (read-key)                                         ;; Wait for the user to press any key.
+  (kill-emacs))                                      ;; Close Emacs after installation is complete.
+#+END_SRC
