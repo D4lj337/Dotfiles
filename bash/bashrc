@@ -2,12 +2,11 @@
 
 # Source global definitions
 if [ -f /etc/bashrc ]; then
-	. /etc/bashrc
+    . /etc/bashrc
 fi
 
-# User specific environment 
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
-then
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
 export PATH
@@ -25,15 +24,18 @@ alias dvwa="podman run -it --name=dvwa -p 8080:80 sagikazarmark/dvwa"
 alias leftoff="xrandr --output eDP --off"
 alias lefton="xrandr --output eDP --auto --right-of HDMI-A-0"
 
-# Applications # 
+# Applications #
+alias v=nvim
 alias vim=nvim
 alias vi=nvim
 #alias sudo='doas'
+alias sudoedit='doas rnano'
 alias rr=ranger
 alias pacsyu='sudo pacman -Syyu'
 alias ..='cd ..'
 alias cs='clear'
 alias aria2='aria2c --max-connection-per-server=16'
+alias nv='nvim'
 
 # xclip
 alias xclip="xclip -sel clip"
@@ -51,11 +53,12 @@ alias cp='cp -i'
 # mkdir create parents
 alias mkdir='mkdir -pv'
 
-# Doas
+# Bash tab completion for doas
 complete -cf doas # bash completion
+complete -F _command doas
 
 # vi mode in bash
-set -o vi
+set -o emacs
 bind '"\e[A": history-search-backward'
 bind '"\e[B": history-search-forward'
 
@@ -64,6 +67,9 @@ export EDITOR=nvim
 export VISUAL="$VISUAL"
 export VISUAL=nvim
 
+# fzf
+eval "$(fzf --bash)"
+PATH="$HOME/.emacs.d/bin:$PATH"
 export PS1="\[\e[32m\][\[\e[m\]\[\e[32m\]\h\[\e[m\] \[\e[32m\]\W\[\e[m\]\[\e[32m\]]\[\e[m\]\[\e[32m\]\\$\[\e[m\] "
 # BEGIN_KITTY_SHELL_INTEGRATION
 if test -n "$KITTY_INSTALLATION_DIR" -a -e "$KITTY_INSTALLATION_DIR/shell-integration/bash/kitty.bash"; then source "$KITTY_INSTALLATION_DIR/shell-integration/bash/kitty.bash"; fi
