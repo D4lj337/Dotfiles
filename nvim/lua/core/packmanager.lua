@@ -1,0 +1,23 @@
+-- Package Manager
+vim.pack.add({
+    { src = "https://github.com/vague2k/vague.nvim" },
+    { src = "https://github.com/stevearc/oil.nvim" },
+    { src = "https://github.com/echasnovski/mini.pick" },
+    { src = "https://github.com/neovim/nvim-lspconfig" },
+    { src = "https://github.com/mason-org/mason.nvim" },
+    { src = "https://github.com/mason-org/mason-lspconfig.nvim" },
+    { src = "https://github.com/nvim-telescope/telescope.nvim" },
+    { src = "https://github.com/windwp/nvim-autopairs" },
+    { src = "https://github.com/folke/which-key.nvim" },
+    { src = "https://github.com/mdedonno1337/disassemble.nvim" },
+    { src = "https://github.com/nvim-lualine/lualine.nvim" },
+    { src = "https://github.com/echasnovski/mini.icons" },
+    { src = "https://github.com/nvim-tree/nvim-web-devicons" },
+    { src = "https://github.com/nvimdev/dashboard-nvim" },
+    { src = "https://github.com/lukas-reineke/indent-blankline.nvim" },
+    { src = "https://github.com/nvim-telescope/telescope.nvim" },
+    { src = "https://github.com/nvim-lua/plenary.nvim" },
+    { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
+    { src = "https://github.com/catppuccin/nvim" },
+    { src = "https://github.com/nvim-orgmode/orgmode" },
+})
