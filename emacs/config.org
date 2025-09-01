@@ -457,7 +457,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 				      (show-welcome-screen-buffer)))))
 #+END_SRC
 
-* COMMENT Welcome screen
+* Welcome screen
 #+BEGIN_SRC elisp
   ;; Add a hook to run code after Emacs has fully initialized.
 (add-hook 'after-init-hook
@@ -860,6 +860,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 * COMMENT Nyan
 #+BEGIN_SRC elisp
   (use-package nyan-mode
+    :straight t
     :defer 2
     :config
     (nyan-mode)
@@ -1428,10 +1429,11 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (setq god-mode-enable-function-key-translation nil)
 #+END_SRC
 
-* COMMENT Meow
+* Meow
 #+BEGIN_SRC elisp
     (use-package meow 
         :straight t
+        :disabled t
         :defer t)
 
     (defun meow-setup ()
