@@ -48,6 +48,14 @@ unset ***file-name-handler-alist*** during startup
 #+BEGIN_SRC elisp :tangle "early-init.el"
   ;; early-init.el -*- lexical-binding: t; -*-
 
+  ;; Increase 'gc-cons-threshold' to 100MB for lsp heavy buffers.
+                                          ;(setq gc-cons-threshold (* 8 1024 1024))
+  (setq gc-cons-threshold 100000000)
+  (setq read-process-output-max (* 1024 1024)) ;; 1 MB
+
+;; Use plists for deserialization 
+  (setenv "LSP_USE_PLISTS" "true")
+
   ;; Disable "file-name-handler-alist" than enable it later for speed.
   (defvar startup/file-name-handler-alist file-name-handler-alist)
   (setq file-name-handler-alist nil)
@@ -61,6 +69,7 @@ unset ***file-name-handler-alist*** during startup
 
   ;; Loads packages only when needed
   (setq use-package-always-defer t)
+
 #+END_SRC
 
 ** Disable menu and scrollbar
@@ -126,7 +135,6 @@ unset ***file-name-handler-alist*** during startup
   (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
-  (setq gc-cons-threshold (* 8 1024 1024))
 #+END_SRC
 
 * Major settings
@@ -180,10 +188,10 @@ unset ***file-name-handler-alist*** during startup
    redisplay-dont-pause t ; improve display engine
 
    ;; Suppress the startup
-   inhibit-splash-screen t
-   inhibit-startup-screen t		; do not show the startup message
-   inhibit-startup-message t      ; reduce noise at startup
-   inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
+   ;inhibit-splash-screen t
+   ;inhibit-startup-screen t		; do not show the startup message
+   ;inhibit-startup-message t      ; reduce noise at startup
+   ;inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
 
    fast-but-imprecise-scrolling t ; more performant rapid scrolling over unfontified regions
    frame-inhibit-implied-resize t ; do not resize the frame at this early stage
@@ -245,7 +253,7 @@ unset ***file-name-handler-alist*** during startup
 
    browse-url-browser-function 'browse-url-xdg-open
 
-   custom-safe-themes t
+;   custom-safe-themes t
 
    ;; Prevent unwanted runtime builds; packages are compiled ahead-of-time when
    ;; they are installed and site files are compiled when gccemacs is installed.
@@ -300,8 +308,8 @@ unset ***file-name-handler-alist*** during startup
    '(line-number-current-line ((t (:foreground "yellow" :background nil :inherit line-number))))
 
    ;; Mode-line font and weight
-   '(mode-line ((t (:font "Jetbrains Mono:size=15" :weight bold :background "black" :foreground "green"))))
-   '(mode-line-active ((t (:font "JetBrains Mono:size=15" :weight bold :foreground "grey"))))
+                                          ;   '(mode-line ((t (:font "Jetbrains Mono:size=15" :weight bold :background "black" :foreground "green"))))
+   '(mode-line-active ((t (:font "JetBrains Mono:size=15" :weight bold :foreground "black" :background "white"))))
 
    ;; Comments italic, inherits font
    '(font-lock-comment-face ((t (:slant italic))))
@@ -314,6 +322,8 @@ unset ***file-name-handler-alist*** during startup
    '(font-lock-constant-face ((t (:slant italic))))
    '(font-lock-type-face ((t (:slant italic))))
    '(font-lock-builtin-face ((t (:slant italic))))
+
+   ;; Lsp 
    '(lsp-face-error ((t (:underline (:style wave :color "Red")))))
    '(lsp-face-warning ((t (:underline (:style wave :color "Orange")))))
    '(lsp-face-info ((t (:underline (:style wave :color "LightBlue")))))
@@ -345,7 +355,8 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   ;; init.el -*- lexical-binding: t; -*-
   (setq native-comp-speed 3)
 
-  (native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively) (setq native-comp-compiler-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+  (native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively) 
+  (setq native-comp-compiler-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
   (setq native-comp-driver-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 #+END_SRC
@@ -401,9 +412,9 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
   			             ("org" . "https://orgmode.org/elpa/")
   			             ("elpa" . "https://elpa.gnu.org/packages/")))
-#+END_SRC
+                                     #+END_SRC
 
-* Welcome Screen
+* COMMENT Welcome Screen
 #+BEGIN_SRC elisp
   (defun show-welcome-screen-buffer ()
     "Show *Welcome-screen* buffer."
@@ -800,7 +811,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous)
     (define-key company-active-map (kbd "SPC") #'company-abort))
-    #+END_SRC
+#+END_SRC
 
 * Flycheck
 #+BEGIN_SRC elisp
@@ -809,26 +820,42 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     :init (global-flycheck-mode))
 #+END_SRC
 
-
 * Org 
 #+BEGIN_SRC elisp
-  ;; Org mode, if you still want it for notes/tasks
-  (use-package org
-    :straight t
-    :defer t
-    :config
-    (setq org-agenda-files '("~/Documents/org/")
-          org-log-done 'time
-          org-hide-emphasis-markers t)
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (python . t)
-       (C . t))))
+;; Org mode, if you still want it for notes/tasks
+(use-package org
+  :straight t
+  :defer t
+  :config
+  (setq org-agenda-files '("~/Documents/org/")
+        org-log-done 'time
+        org-hide-emphasis-markers t
+	    org-ellipsis "  ."
+        org-src-fontify-natively t
+	    org-src-tab-acts-natively t
+        org-pretty-entities t
+        org-edit-src-content-indentation 0)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)
+     (C . t))))
+
+(with-eval-after-load 'org
+  ;; Org document title color and size
+  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
+  ;; Org headings levels 1-7 beautiful colors
+  (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.5 :weight 'bold)
+  (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.4 :weight 'bold)
+  (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.3 :weight 'bold)
+  (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 1.2 :weight 'bold)
+  (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
+  (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
+  (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
 #+END_SRC
 
 * Lsp
-#+BEGIN_SRC elisp
+  #+BEGIN_SRC elisp
   (use-package lsp-mode
     :ensure t
     :straight t
@@ -895,6 +922,16 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     ;; Semantic settings
     (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
 
+  (setq lsp-log-io nil)
+  (setq lsp-diagnostics-provider :auto)
+
+  ;; Ignore irrelevant directories.
+  (setq lsp-file-watch-ignored
+        '("[/\\\\]\\.git$"
+          "[/\\\\]node_modules$"
+          "[/\\\\]build$"
+          "[/\\\\]\\.next$"))
+
   ;; LSP UI for inline and doc popups
   (use-package lsp-ui
     :ensure t
@@ -906,11 +943,13 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
           lsp-ui-doc-include-signature t
           lsp-ui-doc-border (face-foreground 'default)
           lsp-ui-sideline-show-code-actions t
-          lsp-ui-sideline-delay 0.05))
-#+END_SRC
+          lsp-ui-sideline-delay 0.05)
+    :commands
+    lsp-ui-mode)
+  #+END_SRC
 
 * Tree sitter
-#+BEGIN_SRC elisp
+  #+BEGIN_SRC elisp
   (use-package tree-sitter
     :ensure t
     :straight t
@@ -1103,60 +1142,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   			               'font-lock-face infu-bionic-reading-face)))))
 
   (provide 'bionic-reading)
-#+END_SRC
-
-* GDB
-#+BEGIN_SRC elisp :tangle "lisp/gdb.el"
-  ;; -*- lexical-binding: t; -*-
-  (setq gdb-many-windows nil)
-
-  (defun set-gdb-layout(&optional c-buffer)
-    (if (not c-buffer)
-  	  (setq c-buffer (window-buffer (selected-window)))) ;; save current buffer
-
-    ;; from http://stackoverflow.com/q/39762833/846686
-    (set-window-dedicated-p (selected-window) nil) ;; unset dedicate state if needed
-    (switch-to-buffer gud-comint-buffer)
-    (delete-other-windows) ;; clean all
-
-    (let* (
-  	     (w-source (selected-window)) ;; left top
-  	     (w-gdb (split-window w-source nil 'right)) ;; right bottom
-  	     (w-locals (split-window w-gdb nil 'above)) ;; right middle bottom
-  	     (w-stack (split-window w-locals nil 'above)) ;; right middle top
-  	     (w-breakpoints (split-window w-stack nil 'above)) ;; right top
-  	     (w-io (split-window w-source (floor(* 0.9 (window-body-height)))
-  			                 'below)) ;; left bottom
-  	     )
-      (set-window-buffer w-io (gdb-get-buffer-create 'gdb-inferior-io))
-      (set-window-dedicated-p w-io t)
-      (set-window-buffer w-breakpoints (gdb-get-buffer-create 'gdb-breakpoints-buffer))
-      (set-window-dedicated-p w-breakpoints t)
-      (set-window-buffer w-locals (gdb-get-buffer-create 'gdb-locals-buffer))
-      (set-window-dedicated-p w-locals t)
-      (set-window-buffer w-stack (gdb-get-buffer-create 'gdb-stack-buffer))
-      (set-window-dedicated-p w-stack t)
-
-      (set-window-buffer w-gdb gud-comint-buffer)
-
-      (select-window w-source)
-      (set-window-buffer w-source c-buffer)
-      ))
-  (defadvice gdb (around args activate)
-    "Change the way to gdb works."
-    (setq global-config-editing (current-window-configuration)) ;; to restore: (set-window-configuration c-editing)
-    (let (
-  	    (c-buffer (window-buffer (selected-window))) ;; save current buffer
-  	    )
-      ad-do-it
-      (set-gdb-layout c-buffer))
-    )
-  (defadvice gdb-reset (around args activate)
-    "Change the way to gdb exit."
-    ad-do-it
-    (set-window-configuration global-config-editing))
-
-  (provide 'gdb)
 #+END_SRC
 
 * Features
@@ -1426,3 +1411,74 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
       (catppuccin-reload))
 #+END_SRC
 
+* GDB
+#+BEGIN_SRC elisp
+  (use-package gdb-mi
+    :ensure t
+    :straight (:host github :repo "weirdNox/emacs-gdb" :files ("*.el" "*.c" "*.h" "Makefile"))
+    :init
+    (fmakunbound 'gdb)
+    (fmakunbound 'gdb-enable-debug))
+#+END_SRC
+
+* COMMENT Testing
+#+BEGIN_SRC elisp
+;;; gdb-layout.el --- Custom GDB window layout  -*- lexical-binding: t; -*-
+
+(setq gdb-many-windows nil)
+
+(defvar my-gdb-window-config nil
+  "Saved window configuration before starting GDB.")
+
+(defun set-gdb-layout (&optional c-buffer)
+  "Custom window layout for GDB.
+Preserves the source buffer in the left window and arranges GDB
+buffers to the right/below."
+  (unless c-buffer
+    (setq c-buffer (window-buffer (selected-window)))) ;; save current buffer
+
+  ;; start fresh
+  (delete-other-windows)
+
+  (let* ((w-source (selected-window)) ;; left
+         ;; left bottom: IO
+         (w-io (split-window w-source (floor (* 0.7 (window-body-height))) 'below))
+         ;; right column
+         (w-right (split-window w-source nil 'right))
+         (w-gdb (split-window w-right nil 'below))
+         (w-stack (split-window w-right nil 'below))
+         (w-locals (split-window w-right nil 'below))
+         (w-breakpoints w-right))
+
+    ;; assign buffers
+    (set-window-buffer w-source c-buffer)
+    (set-window-buffer w-io (gdb-get-buffer-create 'gdb-inferior-io))
+    (set-window-buffer w-gdb gud-comint-buffer)
+    (set-window-buffer w-stack (gdb-get-buffer-create 'gdb-stack-buffer))
+    (set-window-buffer w-locals (gdb-get-buffer-create 'gdb-locals-buffer))
+    (set-window-buffer w-breakpoints (gdb-get-buffer-create 'gdb-breakpoints-buffer))
+
+    ;; make them sticky
+    (mapc (lambda (w) (set-window-dedicated-p w t))
+          (list w-io w-gdb w-stack w-locals w-breakpoints))
+
+    (select-window w-source)))
+
+;; Override default layout mechanism
+(defun gdb-setup-windows ()
+  "Use my custom GDB window layout."
+  (set-gdb-layout))
+
+;; Save/restore window config around GDB
+(advice-add 'gdb :around
+            (lambda (orig-fun &rest args)
+              (setq my-gdb-window-config (current-window-configuration))
+              (apply orig-fun args)
+              (set-gdb-layout)))
+
+(advice-add 'gdb-reset :around
+            (lambda (orig-fun &rest args)
+              (apply orig-fun args)
+              (when my-gdb-window-config
+                (set-window-configuration my-gdb-window-config))))
+#+END_SRC
