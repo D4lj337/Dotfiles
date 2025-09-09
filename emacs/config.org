@@ -137,7 +137,7 @@ unset ***file-name-handler-alist*** during startup
   (set-keyboard-coding-system 'utf-8)
 #+END_SRC
 
-* Major settings
+** Major settings
 #+BEGIN_SRC elisp :tangle "early-init.el"
   (setq
    package-enable-at-startup nil ; don't auto-initialize!
@@ -299,7 +299,7 @@ unset ***file-name-handler-alist*** during startup
 #+BEGIN_SRC elisp :tangle "early-init.el"
   (custom-set-faces
    ;; Default font for all text
-   '(default ((t (:font "JetBrains Mono:size=15"))))
+   '(default ((t (:font "Jetbrains Mono:size=15"))))
 
    ;; Fringe background
    '(fringe ((t (:background "white"))))
@@ -309,7 +309,7 @@ unset ***file-name-handler-alist*** during startup
 
    ;; Mode-line font and weight
                                           ;   '(mode-line ((t (:font "Jetbrains Mono:size=15" :weight bold :background "black" :foreground "green"))))
-   '(mode-line-active ((t (:font "JetBrains Mono:size=15" :weight bold :foreground "black" :background "white"))))
+   '(mode-line-active ((t (:font "CaskaydiaCove Nerd Font Mono:size=15" :weight bold :foreground "black" :background "white"))))
 
    ;; Comments italic, inherits font
    '(font-lock-comment-face ((t (:slant italic))))
@@ -328,6 +328,7 @@ unset ***file-name-handler-alist*** during startup
    '(lsp-face-warning ((t (:underline (:style wave :color "Orange")))))
    '(lsp-face-info ((t (:underline (:style wave :color "LightBlue")))))
    '(lsp-face-hint ((t (:underline (:style wave :color "Green"))))))
+;;; early-init.el 
 #+END_SRC
 
 * Init
@@ -385,7 +386,8 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
                my/copy-whole-line))
 #+end_src
 
-* Straight
+* Package Management
+** Straight
 #+BEGIN_SRC elisp
   (defvar bootstrap-version)
   (let ((bootstrap-file
@@ -407,7 +409,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (setq straight-use-package-by-default t)
 #+END_SRC
 
-* Use-package
+** Use-package
 #+BEGIN_SRC elisp
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
   			             ("org" . "https://orgmode.org/elpa/")
@@ -497,62 +499,63 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 
 * Keybindings
 #+BEGIN_SRC elisp
-  ;; Escape
-  (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-                                          ;(global-set-key (kbd "<escape> <escape>") 'keyboard-escape-quit)
+;; Escape
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+                                        ;(global-set-key (kbd "<escape> <escape>") 'keyboard-escape-quit)
 
-  ;; Visiting files
-  (global-set-key (kbd "C-c e") 'my/visit-init) ; vist the config
-  (global-set-key (kbd "C-c q") 'my/visit-qtile) ; vist the qtile config
+;; Visiting files
+(global-set-key (kbd "C-c e") 'my/visit-init) ; vist the config
+(global-set-key (kbd "C-c q") 'my/visit-qtile) ; vist the qtile config
 
-  ;; Restart the Emacs
-  (global-set-key (kbd "C-x r") 'restart-emacs) ; restart the Emacs.
+;; Restart the Emacs
+(global-set-key (kbd "C-x r") 'restart-emacs) ; restart the Emacs.
 
-  ;; Avoid accidentally minimizing emacs.
-  (global-unset-key (kbd "C-z"))
+;; Avoid accidentally minimizing emacs.
+(global-unset-key (kbd "C-z"))
 
-  ;; Close all the buffers.
-  (global-set-key (kbd "C-c k") 'my/kill-all-buffers)
+;; Close all the buffers.
+(global-set-key (kbd "C-c k") 'my/kill-all-buffers)
 
-  ;; Emacs
-  (global-set-key (kbd "<f12>") 'my/toggle-mode-line) 
+;; Emacs
+(global-set-key (kbd "<f12>") 'my/toggle-mode-line) 
 
-  ;; Buffers
-                                          ;(global-set-key (kbd "C-x b") 'buffer-menu)    ; ibuffer
-  (global-set-key (kbd "C-x C-k") 'kill-buffer)    ; kill buffer
-                                          ;(global-set-key (kbd "C-x j") 'previous-buffer)    ; move to previous buffer
-                                          ;(global-set-key (kbd "C-x k") 'next-buffer)    ; move to next buffer
-  (global-set-key (kbd "C-c r") 'recentf)    ; open recent buffers
-  (global-set-key (kbd "C-x 2") 'my/split-and-follow-horizontally) ;; move focus to new window.
-  (global-set-key (kbd "C-x 3") 'my/split-and-follow-vertically) ;; move focust to new window.
+;; Buffers
+                                        ;(global-set-key (kbd "C-x b") 'buffer-menu)    ; ibuffer
+(global-set-key (kbd "C-x C-k") 'kill-buffer)    ; kill buffer
+                                        ;(global-set-key (kbd "C-x j") 'previous-buffer)    ; move to previous buffer
+                                        ;(global-set-key (kbd "C-x k") 'next-buffer)    ; move to next buffer
+(global-set-key (kbd "C-c r") 'recentf)    ; open recent buffers
+(global-set-key (kbd "C-x 2") 'my/split-and-follow-horizontally) ;; move focus to new window.
+(global-set-key (kbd "C-x 3") 'my/split-and-follow-vertically) ;; move focust to new window.
 
-  ;; File
-                                          ;(global-set-key (kbd "C-c f") 'find-name-dired)
-                                          ;(global-set-key (kbd "C-c s") 'find-lisp--)
-  (global-set-key (kbd "C-c w w") 'my/kill-whole-word)
-  (global-set-key (kbd "C-c w l") 'my/copy-whole-line)
-  (global-set-key (kbd "C-c w h") 'my/highlight-word)
-  (global-set-key (kbd "C-c v") 'view-mode)
+;; File
+                                        ;(global-set-key (kbd "C-c f") 'find-name-dired)
+                                        ;(global-set-key (kbd "C-c s") 'find-lisp--)
+(global-set-key (kbd "C-c w w") 'my/kill-whole-word)
+(global-set-key (kbd "C-c w l") 'my/copy-whole-line)
+(global-set-key (kbd "C-c w h") 'my/highlight-word)
+(global-set-key (kbd "C-c v") 'view-mode)
 
-  ;; Applications
-  (global-set-key (kbd "C-c p") 'dmenu) ; dmenu
-  (global-set-key (kbd "C-c T") 'vterm)      ; vterm
-  (global-set-key (kbd "C-c t") 'vterm-toggle-cd) ; vterm-toggle to cd
+;; Applications
+(global-set-key (kbd "C-c p") 'dmenu) ; dmenu
+(global-set-key (kbd "C-c T") 'vterm)      ; vterm
+(global-set-key (kbd "C-c t") 'vterm-toggle-cd) ; vterm-toggle to cd
+(global-set-key (kbd "C-c y") #'yas-expand)
 
-  (global-set-key (kbd "C-x B") 'infu-bionic-reading-buffer) ; bionic reading
-  (global-set-key (kbd "C-+") 'text-scale-increase) ; zoom in
-  (global-set-key (kbd "C--") 'text-scale-decrease) ; zoom out
-  (global-set-key (kbd "<C-wheel-down>") 'text-scale-increase) ; zoom in with mouse
-  (global-set-key (kbd "<C-wheel-up>") 'text-scale-decrease) ; zoom out with mouse
-  (global-set-key (kbd "C-c n") 'neotree-toggle)
-  (global-set-key (kbd "C-.") 'avy-goto-char)
-  (global-set-key (kbd "C-c c") 'compile)
-  (global-set-key (kbd "C-c b") 'nyan-mode)
-  (global-set-key (kbd "C-c C-u") 'package-upgrade-all)
-  (global-set-key (kbd "C-c g") #'gdb)
-  (global-set-key (kbd "M-y") #'popup-kill-ring)
-                                          ; (global-set-key (kbd "C-x C-f") #'fzf-find-file)
-                                          ; (global-set-key (kbd "C-x C-b") #'fzf-find-in-buffer)
+(global-set-key (kbd "C-x B") 'infu-bionic-reading-buffer) ; bionic reading
+(global-set-key (kbd "C-+") 'text-scale-increase) ; zoom in
+(global-set-key (kbd "C--") 'text-scale-decrease) ; zoom out
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-increase) ; zoom in with mouse
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-decrease) ; zoom out with mouse
+(global-set-key (kbd "C-c n") 'neotree-toggle)
+(global-set-key (kbd "C-.") 'avy-goto-char)
+(global-set-key (kbd "C-c c") 'compile)
+(global-set-key (kbd "C-c b") 'nyan-mode)
+(global-set-key (kbd "C-c C-u") 'package-upgrade-all)
+(global-set-key (kbd "C-c g") #'gdb)
+(global-set-key (kbd "M-y") #'popup-kill-ring)
+                                        ; (global-set-key (kbd "C-x C-f") #'fzf-find-file)
+                                        ; (global-set-key (kbd "C-x C-b") #'fzf-find-in-buffer)
 #+END_SRC
 
 * Zone
@@ -598,101 +601,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     :after (marginalia)
     :config
     (nerd-icons-completion-mode))
-#+END_SRC
-
-* Vertico 
-#+BEGIN_SRC elisp
-  (use-package vertico
-    :ensure t
-    :straight t
-    :defer t
-    :hook
-    (after-init . vertico-mode)           ;; Enable vertico after Emacs has initialized.
-    :custom
-    (vertico-count 10)                    ;; Number of candidates to display in the completion list.
-    (vertico-resize nil)                  ;; Disable resizing of the vertico minibuffer.
-    (vertico-cycle nil)                   ;; Do not cycle through candidates when reaching the end of the list
-    :config
-    ;; Customize the display of the current candidate in the completion list.
-    ;; This will prefix the current candidate with “» ” to make it stand out.
-    ;; Reference: https://github.com/minad/vertico/wiki#prefix-current-candidate-with-arrow
-    (advice-add #'vertico--format-candidate :around
-                (lambda (orig cand prefix suffix index _start)
-                  (setq cand (funcall orig cand prefix suffix index _start))
-                  (concat
-                   (if (= vertico--index index)
-                       (propertize "» " 'face '(:foreground "#80adf0" :weight bold))
-                     "  ")
-                   cand))))
-#+END_SRC
-
-* Orderless
-#+BEGIN_SRC elisp
-  (use-package orderless
-    :ensure t
-    :straight t
-    :defer t                                    ;; Load Orderless on demand.
-    :after vertico                              ;; Ensure Vertico is loaded before Orderless.
-    :config
-    (setq completion-styles '(orderless basic)  ;; Set the completion styles.
-          completion-category-defaults nil      ;; Clear default category settings.
-          completion-category-overrides '((file (styles partial-completion))))) ;; Customize file completion styles.
-#+END_SRC
-
-* Marginalia
-#+BEGIN_SRC elisp
-  ;; Marginalia enhances the completion experience in Emacs by adding
-  ;; additional context to the completion candidates. This includes
-  ;; helpful annotations such as documentation and other relevant
-  ;; information, making it easier to choose the right option.
-  (use-package marginalia
-    :ensure t
-    :straight t
-    :hook
-    (after-init . marginalia-mode))
-#+END_SRC
-
-* Consult
-#+BEGIN_SRC elisp
-  ;; Consult provides powerful completion and narrowing commands for Emacs.
-  ;; It integrates well with other completion frameworks like Vertico, enabling
-  ;; features like previews and enhanced register management. It's useful for
-  ;; navigating buffers, files, and xrefs with ease.
-  (use-package consult
-    :ensure t
-    :straight t
-    :defer t
-    :config
-    ;; Enhance register preview with thin lines and no mode line.
-    (advice-add #'register-preview :override #'consult-register-window)
-
-    ;; Use Consult for xref locations with a preview feature.
-    (setq xref-show-xrefs-function #'consult-xref
-          xref-show-definitions-function #'consult-xref))
-#+END_SRC
-
-* Embark
-#+BEGIN_SRC elisp
-  ;; Embark provides a powerful contextual action menu for Emacs, allowing
-  ;; you to perform various operations on completion candidates and other items.
-  ;; It extends the capabilities of completion frameworks by offering direct
-  ;; actions on the candidates.
-  ;; Just `<leader> .' over any text, explore it :)
-  (use-package embark
-    :ensure t
-    :straight t
-    :defer t)
-#+END_SRC
-
-* Embark consult
-#+BEGIN_SRC elisp
-  ;; Embark-Consult provides a bridge between Embark and Consult, ensuring
-  ;; that Consult commands, like previews, are available when using Embark.
-  (use-package embark-consult
-    :ensure t
-    :straight t
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode)) ;; Enable preview in Embark collect mode.
 #+END_SRC
 
 * Vterm & vterm-toggle
@@ -754,7 +662,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     (nyan-cat-face-number 3))
 #+END_SRC
 
-* Persistent history.
+** Persistent history.
 #+BEGIN_SRC elisp
   (use-package savehist
     :straight nil
@@ -794,32 +702,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     (setq enable-recursive-minibuffers t))
 #+END_SRC
 
-* Company
-#+BEGIN_SRC elisp
-  (use-package company
-    :ensure t
-    :straight t
-    :defer t
-    :hook ((prog-mode text-mode) . company-mode)
-    :config
-    (setq company-idle-delay 0.1) ;; company-idle-delay set to low causes latency while typing use with caution.
-    (setq company-minimum-prefix-length 3))
-
-  (with-eval-after-load 'company
-    (define-key company-active-map (kbd "M-n") nil)
-    (define-key company-active-map (kbd "M-p") nil)
-    (define-key company-active-map (kbd "C-n") #'company-select-next)
-    (define-key company-active-map (kbd "C-p") #'company-select-previous)
-    (define-key company-active-map (kbd "SPC") #'company-abort))
-#+END_SRC
-
-* Flycheck
-#+BEGIN_SRC elisp
-  (use-package flycheck
-    :ensure t
-    :init (global-flycheck-mode))
-#+END_SRC
-
 * Org 
 #+BEGIN_SRC elisp
 ;; Org mode, if you still want it for notes/tasks
@@ -835,10 +717,14 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 	    org-src-tab-acts-natively t
         org-pretty-entities t
         org-edit-src-content-indentation 0)
+        (require 'org-tempo)
+
+  ;; Org babel
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
      (python . t)
+     (shell . t)
      (C . t))))
 
 (with-eval-after-load 'org
@@ -854,191 +740,50 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
 #+END_SRC
 
-* Lsp
-  #+BEGIN_SRC elisp
-  (use-package lsp-mode
-    :ensure t
-    :straight t
-    :defer t
-    :hook (;; Replace XXX-mode with concrete major mode (e.g. python-mode)
-           (lsp-mode . lsp-enable-which-key-integration)  ;; Integrate with Which Key
-           ((js-mode                                      ;; Enable LSP for JavaScript
-             tsx-ts-mode                                  ;; Enable LSP for TSX
-             typescript-ts-base-mode                      ;; Enable LSP for TypeScript
-             css-mode                                     ;; Enable LSP for CSS
-             go-ts-mode                                   ;; Enable LSP for Go
-             js-ts-mode                                   ;; Enable LSP for JavaScript (TS mode)
-             prisma-mode                                  ;; Enable LSP for Prisma
-             python-base-mode                             ;; Enable LSP for Python
-             c-mode
-             ruby-base-mode                               ;; Enable LSP for Ruby
-             rust-ts-mode                                 ;; Enable LSP for Rust
-  		   c-mode
-             c++-mode
-             js-mode
-             bash-mode
-             lua-mode
-             web-mode) . lsp-deferred))                   ;; Enable LSP for Web (HTML)
-    :commands lsp
-    :custom
-    (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
-    (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
-    (lsp-completion-provider :none)                       ;; Disable the default completion provider.
-    (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
-    (lsp-log-io nil)                                      ;; Disable IO logging for speed.
-    (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
-    (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
-    ;; Core settings
-    (lsp-enable-xref t)                                   ;; Enable cross-references.
-    (lsp-auto-configure t)                                ;; Automatically configure LSP.
-    (lsp-enable-links nil)                                ;; Disable links.
-    (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
-    (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
-    (lsp-enable-folding nil)                              ;; Disable folding.
-    (lsp-enable-imenu t)                                  ;; Enable Imenu support.
-    (lsp-enable-indentation nil)                          ;; Disable indentation.
-    (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
-    (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
-    (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
-    (lsp-enable-text-document-color t)                    ;; Enable text document color.
-    ;; Modeline settings
-    (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
-    (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
-    (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
-    (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
-    (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
-    ;; Completion settings
-    (lsp-completion-enable t)                             ;; Enable completion.
-    (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
-    (lsp-enable-snippet nil)                              ;; Disable snippets
-    (lsp-completion-show-kind t)                          ;; Show kind in completions.
-    ;; Lens settings
-    (lsp-lens-enable t)                                   ;; Enable lens support.
-    ;; Headerline settings
-    (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
-    (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
-    (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
-    (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
-    ;; Semantic settings
-    (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
-
-  (setq lsp-log-io nil)
-  (setq lsp-diagnostics-provider :auto)
-
-  ;; Ignore irrelevant directories.
-  (setq lsp-file-watch-ignored
-        '("[/\\\\]\\.git$"
-          "[/\\\\]node_modules$"
-          "[/\\\\]build$"
-          "[/\\\\]\\.next$"))
-
-  ;; LSP UI for inline and doc popups
-  (use-package lsp-ui
-    :ensure t
-    :after lsp-mode
-    :config
-    (setq lsp-ui-sideline-enable t
-          lsp-ui-doc-enable t
-          lsp-ui-doc-header t
-          lsp-ui-doc-include-signature t
-          lsp-ui-doc-border (face-foreground 'default)
-          lsp-ui-sideline-show-code-actions t
-          lsp-ui-sideline-delay 0.05)
-    :commands
-    lsp-ui-mode)
-  #+END_SRC
-
-* Tree sitter
-  #+BEGIN_SRC elisp
-  (use-package tree-sitter
-    :ensure t
-    :straight t
-    :hook ((python-mode c-mode c++-mode lua-mode sh-mode asm-mode
-                        go-mode rust-mode js-mode typescript-mode
-                        json-mode yaml-mode bash-mode html-mode)
-           . tree-sitter-hl-mode))
-
-  (use-package tree-sitter-langs
-    :ensure t
-    :straight t)
-
-  (add-hook 'python-ts-mode-hook #'tree-sitter-hl-mode)
-  (add-hook 'c-ts-mode-hook #'tree-sitter-hl-mode)
-  (add-hook 'c++-ts-mode-hook #'tree-sitter-hl-mode)
-  (add-hook 'lua-ts-mode-hook #'tree-sitter-hl-mode)
-  (add-hook 'bash-ts-mode-hook #'tree-sitter-hl-mode)
-  (add-hook 'asm-ts-mode-hook #'tree-sitter-hl-mode)
-#+END_SRC
-
-* Tree sitter font settings
+* Vim Layer
+** Evil mode
 #+BEGIN_SRC elisp
-  (setq treesit-font-lock-level 4)
+(use-package evil
+  :ensure t
+  :straight t
+  :defer t
+  :hook (after-init . evil-mode)
+  :config
+  (setq evil-want-integration t
+      	evil-want-keybinding nil
+      	evil-want-C-u-scroll t ; scrolling using p and n without holding ctrl.
+      	evil-want-C-u-delete t 
+      	evil-vspli-window-right t
+      	evil-split-window-below t)
+  (evil-set-initial-state 'dired-mode 'normal) ;evil-mode in dired.
+  ;; Set SPC as the leader key
+  (evil-set-leader 'normal (kbd "SPC"))
+  (evil-set-leader 'visual (kbd "SPC"))
 
-  ;; Example for Python (similar rules can be applied for C, C++, Lua)
-  (add-hook 'python-ts-mode-hook
-            (lambda ()
-              (setq-local treesit-font-lock-settings
-                          (append treesit-font-lock-settings my/python-treesit-settings))))
-  (defun my/custom-c-ts-highlight ()
-    (add-to-list 'treesit-font-lock-settings
-                 (car (treesit-font-lock-rules
-                       :language 'c
-                       :feature 'custom
-                       :override t
-                       '(( "assert" @font-lock-keyword-face )
-                         (call_expression function: (identifier) @font-lock-function-name-face))))))
-  (add-hook 'c-ts-mode-hook #'my/custom-c-ts-highlight)
+  ;; Files-
+  (evil-define-key 'normal 'global (kbd "<leader> f") 'find-file)
+  (evil-define-key 'normal 'global (kbd "<leader> d") 'dired)
+  (evil-define-key 'normal 'global (kbd "<leader> pv") 'dired-jump)
+  (evil-define-key 'normal 'global (kbd "<leader> c") 'compile)
+  (evil-define-key 'normal 'global (kbd "<leader> w") 'save-buffer)
+  (evil-define-key 'normal 'global (kbd "<leader> q") 'evil-quit)
+  (evil-define-key 'normal 'global (kbd "<leader> r") 'restart-emacs)
+  (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer)
+  (evil-define-key 'normal 'global (kbd "<leader> b") 'consult-buffer)
+                                        ;        (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-current-buffer)
+  (evil-define-key 'normal 'global (kbd "<leader> u") 'undo)
+  (evil-define-key 'normal 'global (kbd "<leader> z") 'undo-redo)
+  (evil-define-key 'normal 'global (kbd "<leader> g U") 'evil-upcase)
 
-  (setq-local treesit-font-lock-feature-list
-              '((comment)
-                (constant variable)
-                (keyword function)
-                (type operator delimiter)))
-#+END_SRC
+  ;; Orgmode
+  (evil-define-key 'normal 'global (kbd "<leader> SPC") 'org-babel-tangle)
 
-* Evil mode
-#+BEGIN_SRC elisp
-  (use-package evil
-    :ensure t
-    :straight t
-    :defer t
-    :hook (after-init . evil-mode)
-    :config
-    (setq evil-want-integration t
-        	evil-want-keybinding nil
-        	evil-want-C-u-scroll t ; scrolling using p and n without holding ctrl.
-        	evil-want-C-u-delete t 
-        	evil-vspli-window-right t
-        	evil-split-window-below t)
-    (evil-set-initial-state 'dired-mode 'normal) ;evil-mode in dired.
-    ;; Set SPC as the leader key
-    (evil-set-leader 'normal (kbd "SPC"))
-    (evil-set-leader 'visual (kbd "SPC"))
+  (evil-define-key 'normal 'global (kbd "<leader> t") 'vterm-toggle-cd)
 
-    ;; Files
-    (evil-define-key 'normal 'global (kbd "<leader> f") 'find-file)
-    (evil-define-key 'normal 'global (kbd "<leader> d") 'dired)
-    (evil-define-key 'normal 'global (kbd "<leader> pv") 'dired-jump)
-    (evil-define-key 'normal 'global (kbd "<leader> c") 'compile)
-    (evil-define-key 'normal 'global (kbd "<leader> w") 'save-buffer)
-    (evil-define-key 'normal 'global (kbd "<leader> q") 'evil-quit)
-    (evil-define-key 'normal 'global (kbd "<leader> r") 'restart-emacs)
-    (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer)
-    (evil-define-key 'normal 'global (kbd "<leader> b") 'switch-to-buffer)
-                                          ;        (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-current-buffer)
-    (evil-define-key 'normal 'global (kbd "<leader> u") 'undo)
-    (evil-define-key 'normal 'global (kbd "<leader> z") 'undo-redo)
-    (evil-define-key 'normal 'global (kbd "<leader> g U") 'evil-upcase)
-
-    ;; Orgmode
-    (evil-define-key 'normal 'global (kbd "<leader> SPC") 'org-babel-tangle)
-
-    (evil-define-key 'normal 'global (kbd "<leader> t") 'vterm-toggle-cd)
-
-    ;; Windows
-    (evil-define-key 'normal 'global (kbd "<leader> o") 'other-window)
-    (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-buffer)
-    )
+  ;; Windows
+  (evil-define-key 'normal 'global (kbd "<leader> o") 'other-window)
+  (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-buffer)
+  )
 #+END_SRC
 
 ** Evil collection
@@ -1061,48 +806,99 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     :commands (evil-tutor))
 #+END_SRC
 
-* Programming languages
+** COMMENT Meow
 #+BEGIN_SRC elisp
-  (use-package python            ;; Python-specific tweaks
-    :straight nil
-    :defer t
-    :hook (python-mode . lsp))
-
-  (use-package cc-mode           ;; C/C++ tweaks
-    :straight nil
-    :defer t
-    :hook (c-mode-common . lsp))
-
-  (use-package js                ;; JS tweaks
-    :straight nil
-    :defer t
-    :hook (js-mode . lsp))
-
-  (use-package sh-script         ;; Shell scripts
-    :straight nil
-    :defer t
-    :config
-    (add-hook 'sh-mode-hook (lambda ()
-                              (setq sh-basic-offset 4 sh-indentation 4))))
-
-  (use-package lua-mode
+  (use-package meow 
+    :ensure t
     :straight t
-    :defer t
-    :mode ("\\.lua\\'" . lua-mode)
-    :config
-    (setq lua-indent-string-contents t)
-    (setq lua-indent-close-paren-align t))
+    :defer t)
 
-  (use-package asm-mode
-    :straight t
-    :defer t
-    :mode ("\\.\\(asm\\|s\\|S\\)$" . asm-mode)
-    :hook (asm-mode . (lambda ()
-                        ;; your asm-mode customizations here
-                        ))
-    :config
-    ;; extra configuration for asm-mode (does NOT activate it everywhere)
-    )
+  (defun meow-setup ()
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet))
+    (meow-normal-define-key
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . meow-undo)
+     '("U" . meow-undo-in-selection)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
+
+  (require 'meow)
+  (meow-setup)
+  (meow-global-mode 1)
 #+END_SRC
 
 * Bionic Reading
@@ -1251,7 +1047,46 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (provide 'feature)
 #+end_src
 
-* Code compilation
+* Hardtime
+#+BEGIN_SRC elisp
+  (use-package hardtime
+    :ensure t
+    :straight t
+    :disabled t
+    :defer t
+    :config
+    (defun evil-hardtime-check-command ()
+      "Return non-nil if the currently executed command should be checked."
+      (memq this-command '( next-line previous-line evil-previous-visual-line
+                            right-char left-char left-word right-word
+                            evil-forward-char evil-backward-char
+                            evil-next-line evil-previous-line)))
+    :custom
+    (hardtime-predicate #'evil-hardtime-check-command)
+    :hook
+    (text-mode . hardtime-mode)
+    (prog-mode . hardtime-mode))
+#+END_SRC
+
+* Theme
+** Catppuccin
+#+BEGIN_SRC elisp
+    (use-package catppuccin-theme
+      :ensure t
+      :straight t
+      :init
+      (load-theme 'catppuccin :no-confirm)
+      :config
+      (setq catppuccin-flavor 'mocha)
+      (catppuccin-set-color 'base "#000000")
+      (catppuccin-set-color 'mantle "#000000" 'mocha)
+      (catppuccin-set-color 'crust "#000000" 'mocha)
+      (catppuccin-reload))
+#+END_SRC
+
+* Programming
+
+** M-x compile
 #+BEGIN_SRC elisp
   (defun compile-and-run-current-file ()
     "Compile or run the current file depending on its extension."
@@ -1280,138 +1115,8 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (global-set-key (kbd "C-c r") 'compile-and-run-current-file)
 #+END_SRC
 
-* Hardtime
-#+BEGIN_SRC elisp
-  (use-package hardtime
-    :ensure t
-    :straight t
-    :disabled t
-    :defer t
-    :config
-    (defun evil-hardtime-check-command ()
-      "Return non-nil if the currently executed command should be checked."
-      (memq this-command '( next-line previous-line evil-previous-visual-line
-                            right-char left-char left-word right-word
-                            evil-forward-char evil-backward-char
-                            evil-next-line evil-previous-line)))
-    :custom
-    (hardtime-predicate #'evil-hardtime-check-command)
-    :hook
-    (text-mode . hardtime-mode)
-    (prog-mode . hardtime-mode))
-#+END_SRC
 
-* COMMENT Meow
-#+BEGIN_SRC elisp
-  (use-package meow 
-    :ensure t
-    :straight t
-    :defer t)
-
-  (defun meow-setup ()
-    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-    (meow-motion-define-key
-     '("j" . meow-next)
-     '("k" . meow-prev)
-     '("<escape>" . ignore))
-    (meow-leader-define-key
-     ;; Use SPC (0-9) for digit arguments.
-     '("1" . meow-digit-argument)
-     '("2" . meow-digit-argument)
-     '("3" . meow-digit-argument)
-     '("4" . meow-digit-argument)
-     '("5" . meow-digit-argument)
-     '("6" . meow-digit-argument)
-     '("7" . meow-digit-argument)
-     '("8" . meow-digit-argument)
-     '("9" . meow-digit-argument)
-     '("0" . meow-digit-argument)
-     '("/" . meow-keypad-describe-key)
-     '("?" . meow-cheatsheet))
-    (meow-normal-define-key
-     '("0" . meow-expand-0)
-     '("9" . meow-expand-9)
-     '("8" . meow-expand-8)
-     '("7" . meow-expand-7)
-     '("6" . meow-expand-6)
-     '("5" . meow-expand-5)
-     '("4" . meow-expand-4)
-     '("3" . meow-expand-3)
-     '("2" . meow-expand-2)
-     '("1" . meow-expand-1)
-     '("-" . negative-argument)
-     '(";" . meow-reverse)
-     '("," . meow-inner-of-thing)
-     '("." . meow-bounds-of-thing)
-     '("[" . meow-beginning-of-thing)
-     '("]" . meow-end-of-thing)
-     '("a" . meow-append)
-     '("A" . meow-open-below)
-     '("b" . meow-back-word)
-     '("B" . meow-back-symbol)
-     '("c" . meow-change)
-     '("d" . meow-delete)
-     '("D" . meow-backward-delete)
-     '("e" . meow-next-word)
-     '("E" . meow-next-symbol)
-     '("f" . meow-find)
-     '("g" . meow-cancel-selection)
-     '("G" . meow-grab)
-     '("h" . meow-left)
-     '("H" . meow-left-expand)
-     '("i" . meow-insert)
-     '("I" . meow-open-above)
-     '("j" . meow-next)
-     '("J" . meow-next-expand)
-     '("k" . meow-prev)
-     '("K" . meow-prev-expand)
-     '("l" . meow-right)
-     '("L" . meow-right-expand)
-     '("m" . meow-join)
-     '("n" . meow-search)
-     '("o" . meow-block)
-     '("O" . meow-to-block)
-     '("p" . meow-yank)
-     '("q" . meow-quit)
-     '("Q" . meow-goto-line)
-     '("r" . meow-replace)
-     '("R" . meow-swap-grab)
-     '("s" . meow-kill)
-     '("t" . meow-till)
-     '("u" . meow-undo)
-     '("U" . meow-undo-in-selection)
-     '("v" . meow-visit)
-     '("w" . meow-mark-word)
-     '("W" . meow-mark-symbol)
-     '("x" . meow-line)
-     '("X" . meow-goto-line)
-     '("y" . meow-save)
-     '("Y" . meow-sync-grab)
-     '("z" . meow-pop-selection)
-     '("'" . repeat)
-     '("<escape>" . ignore)))
-
-  (require 'meow)
-  (meow-setup)
-  (meow-global-mode 1)
-#+END_SRC
-
-* Catppuccin
-#+BEGIN_SRC elisp
-    (use-package catppuccin-theme
-      :ensure t
-      :straight t
-      :init
-      (load-theme 'catppuccin :no-confirm)
-      :config
-      (setq catppuccin-flavor 'mocha)
-      (catppuccin-set-color 'base "#000000")
-      (catppuccin-set-color 'mantle "#000000" 'mocha)
-      (catppuccin-set-color 'crust "#000000" 'mocha)
-      (catppuccin-reload))
-#+END_SRC
-
-* GDB
+** GDB
 #+BEGIN_SRC elisp
   (use-package gdb-mi
     :ensure t
@@ -1421,7 +1126,99 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     (fmakunbound 'gdb-enable-debug))
 #+END_SRC
 
-* COMMENT Testing
+** Tree sitter
+  #+BEGIN_SRC elisp
+  (use-package tree-sitter
+    :ensure t
+    :straight t
+    :hook ((python-mode c-mode c++-mode lua-mode sh-mode asm-mode
+                        go-mode rust-mode js-mode typescript-mode
+                        json-mode yaml-mode bash-mode html-mode)
+           . tree-sitter-hl-mode))
+
+  (use-package tree-sitter-langs
+    :ensure t
+    :straight t)
+
+ ;; (add-hook 'python-ts-mode-hook #'tree-sitter-hl-mode)
+ ;; (add-hook 'c-ts-mode-hook #'tree-sitter-hl-mode)
+ ;; (add-hook 'c++-ts-mode-hook #'tree-sitter-hl-mode)
+ ;; (add-hook 'lua-ts-mode-hook #'tree-sitter-hl-mode)
+ ;; (add-hook 'bash-ts-mode-hook #'tree-sitter-hl-mode)
+ ;; (add-hook 'asm-ts-mode-hook #'tree-sitter-hl-mode)
+#+END_SRC
+
+** COMMENT Tree sitter font settings
+#+BEGIN_SRC elisp
+  (setq treesit-font-lock-level 4)
+
+  ;; Example for Python (similar rules can be applied for C, C++, Lua)
+  (add-hook 'python-ts-mode-hook
+            (lambda ()
+              (setq-local treesit-font-lock-settings
+                          (append treesit-font-lock-settings my/python-treesit-settings))))
+  (defun my/custom-c-ts-highlight ()
+    (add-to-list 'treesit-font-lock-settings
+                 (car (treesit-font-lock-rules
+                       :language 'c
+                       :feature 'custom
+                       :override t
+                       '(( "assert" @font-lock-keyword-face )
+                         (call_expression function: (identifier) @font-lock-function-name-face))))))
+  (add-hook 'c-ts-mode-hook #'my/custom-c-ts-highlight)
+
+  (setq-local treesit-font-lock-feature-list
+              '((comment)
+                (constant variable)
+                (keyword function)
+                (type operator delimiter)))
+#+END_SRC
+
+** COMMENT Programming languages
+#+BEGIN_SRC elisp
+  (use-package python            ;; Python-specific tweaks
+    :straight nil
+    :defer t
+    :hook (python-mode . egot-mode))
+
+  (use-package cc-mode           ;; C/C++ tweaks
+    :straight nil
+    :defer t
+    :hook (c-mode-common . lsp))
+
+  (use-package js                ;; JS tweaks
+    :straight nil
+    :defer t
+    :hook (js-mode . lsp))
+
+  (use-package sh-script         ;; Shell scripts
+    :straight nil
+    :defer t
+    :config
+    (add-hook 'sh-mode-hook (lambda ()
+                              (setq sh-basic-offset 4 sh-indentation 4))))
+
+  (use-package lua-mode
+    :straight t
+    :defer t
+    :mode ("\\.lua\\'" . lua-mode)
+    :config
+    (setq lua-indent-string-contents t)
+    (setq lua-indent-close-paren-align t))
+
+  (use-package asm-mode
+    :straight t
+    :defer t
+    :mode ("\\.\\(asm\\|s\\|S\\)$" . asm-mode)
+    :hook (asm-mode . (lambda ()
+                        ;; your asm-mode customizations here
+                        ))
+    :config
+    ;; extra configuration for asm-mode (does NOT activate it everywhere)
+    )
+#+END_SRC
+
+** COMMENT Testing
 #+BEGIN_SRC elisp
 ;;; gdb-layout.el --- Custom GDB window layout  -*- lexical-binding: t; -*-
 
@@ -1482,3 +1279,290 @@ buffers to the right/below."
               (when my-gdb-window-config
                 (set-window-configuration my-gdb-window-config))))
 #+END_SRC
+
+** COMMENT Lsp
+  #+BEGIN_SRC elisp
+  (use-package lsp-mode
+    :ensure t
+    :straight t
+    :defer t
+    :hook (;; Replace XXX-mode with concrete major mode (e.g. python-mode)
+           (lsp-mode . lsp-enable-which-key-integration)  ;; Integrate with Which Key
+           ((js-mode                                      ;; Enable LSP for JavaScript
+             tsx-ts-mode                                  ;; Enable LSP for TSX
+             typescript-ts-base-mode                      ;; Enable LSP for TypeScript
+             css-mode                                     ;; Enable LSP for CSS
+             go-ts-mode                                   ;; Enable LSP for Go
+             js-ts-mode                                   ;; Enable LSP for JavaScript (TS mode)
+             prisma-mode                                  ;; Enable LSP for Prisma
+             python-base-mode                             ;; Enable LSP for Python
+             c-mode
+             ruby-base-mode                               ;; Enable LSP for Ruby
+             rust-ts-mode                                 ;; Enable LSP for Rust
+  		   c-mode
+             c++-mode
+             js-mode
+             bash-mode
+             lua-mode
+             web-mode) . lsp-deferred))                   ;; Enable LSP for Web (HTML)
+    :commands lsp
+    :custom
+    (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
+    (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
+    (lsp-completion-provider :none)                       ;; Disable the default completion provider.
+    (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
+    (lsp-log-io nil)                                      ;; Disable IO logging for speed.
+    (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
+    (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
+    ;; Core settings
+    (lsp-enable-xref t)                                   ;; Enable cross-references.
+    (lsp-auto-configure t)                                ;; Automatically configure LSP.
+    (lsp-enable-links nil)                                ;; Disable links.
+    (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
+    (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
+    (lsp-enable-folding nil)                              ;; Disable folding.
+    (lsp-enable-imenu t)                                  ;; Enable Imenu support.
+    (lsp-enable-indentation nil)                          ;; Disable indentation.
+    (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
+    (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
+    (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
+    (lsp-enable-text-document-color t)                    ;; Enable text document color.
+    ;; Modeline settings
+    (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
+    (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
+    (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
+    (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
+    (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
+    ;; Completion settings
+    (lsp-completion-enable t)                             ;; Enable completion.
+    (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
+    (lsp-enable-snippet nil)                              ;; Disable snippets
+    (lsp-completion-show-kind t)                          ;; Show kind in completions.
+    ;; Lens settings
+    (lsp-lens-enable t)                                   ;; Enable lens support.
+    ;; Headerline settings
+    (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
+    (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
+    (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
+    (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
+    ;; Semantic settings
+    (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
+
+  (setq lsp-log-io nil)
+  (setq lsp-diagnostics-provider :auto)
+
+  ;; Ignore irrelevant directories.
+  (setq lsp-file-watch-ignored
+        '("[/\\\\]\\.git$"
+          "[/\\\\]node_modules$"
+          "[/\\\\]build$"
+          "[/\\\\]\\.next$"))
+
+  ;; LSP UI for inline and doc popups
+  (use-package lsp-ui
+    :ensure t
+    :after lsp-mode
+    :config
+    (setq lsp-ui-sideline-enable t
+          lsp-ui-doc-enable t
+          lsp-ui-doc-header t
+          lsp-ui-doc-include-signature t
+          lsp-ui-doc-border (face-foreground 'default)
+          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-delay 0.05)
+    :commands
+    lsp-ui-mode)
+#+END_SRC
+
+** COMMENT Tree sitter (Testing)
+#+BEGIN_SRC elisp
+(use-package treesit-auto
+  :ensure t
+  :straight t
+  :custom
+  (treesit-auto-install t) ; or 'prompt for confirmation before install
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+(setq treesit-auto-langs '(python rust go))
+
+(setq major-mode-remap-alist
+      '((c-mode . c-ts-mode)
+        (c++-mode . c++-ts-mode)
+        (python-mode . python-ts-mode)
+        (lua-mode . lua-ts-mode)
+        (sh-mode . bash-ts-mode)))
+
+;; Ensure eglot starts with Tree-sitter modes
+(dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
+  (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
+;; ...and so on
+
+(setq treesit-language-source-alist
+      '((c    "https://github.com/tree-sitter/tree-sitter-c")
+        (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")
+        (bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (lua  "https://github.com/tree-sitter/tree-sitter-lua")
+        (python "https://github.com/tree-sitter/tree-sitter-python")))
+
+(add-to-list 'treesit-extra-load-path (expand-file-name "~/.emacs.d/tree-sitter/"))
+#+END_SRC
+
+** Eglot
+=Eglot= is lightweight inbuild emacs package server for Lsp.
+#+BEGIN_SRC elisp
+(use-package eglot
+  :ensure nil
+  :straight nil
+  :defer t
+  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure))
+
+(setq eglot-sync-connect nil)
+(setq eglot-workspace-configuration
+      '((:pyright . (:exclude ["**/.venv" "**/__pycache__" "**/node_modules"]))))
+
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(c-ts-mode . ("clangd" "--offset-encoding=utf-16")))
+  (add-to-list 'eglot-server-programs
+               '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16")))
+  (add-to-list 'eglot-server-programs
+               '(python-ts-mode . ("pylsp")))
+  (add-to-list 'eglot-server-programs
+               '(lua-ts-mode . ("lua-language-server")))
+  (add-to-list 'eglot-server-programs
+               '(bash-ts-mode . ("bash-language-server" "start"))))
+
+
+(setq major-mode-remap-alist
+      '((c-mode . c-ts-mode)
+        (c++-mode . c++-ts-mode)
+        (python-mode . python-ts-mode)
+        (lua-mode . lua-ts-mode)
+        (sh-mode . bash-ts-mode)))
+
+;; Ensure eglot starts with Tree-sitter modes
+(dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
+  (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
+;; ...and so on
+
+(setq treesit-language-source-alist
+      '((c    "https://github.com/tree-sitter/tree-sitter-c")
+        (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")
+        (bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (lua  "https://github.com/tree-sitter/tree-sitter-lua")
+        (python "https://github.com/tree-sitter/tree-sitter-python")))
+
+#+END_SRC
+
+** Flycheck
+#+BEGIN_SRC elisp
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
+#+END_SRC
+
+* Completion
+** Ivy
+#+begin_src elisp
+(use-package ivy
+  :ensure t
+  :demand
+  :bind (("C-s" . swiper)                ;; Incremental search with swiper
+         ("M-x" . counsel-M-x)           ;; Enhanced M-x with counsel
+         ("C-x C-f" . counsel-find-file) ;; Improved find file
+         ("C-x C-r" . counsel-recentf)   ;; Open recent files
+         ("C-c g" . counsel-git)         ;; Search in git repo files
+         ("C-c j" . counsel-git-grep)    ;; Search grep in git repo
+         ("C-c /" . counsel-ag)           ;; Search using ag (silver searcher)
+         ("C-x l" . counsel-locate))      ;; Locate files
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)       ;; Use virtual buffers for recent files etc.
+  (setq ivy-count-format "(%d/%d) "))
+  
+(use-package counsel
+  :ensure t
+  :after ivy
+  :config (counsel-mode 1))                ;; Enable counsel-mode to remap commands
+#+end_src
+
+** Company
+#+BEGIN_SRC elisp
+  (use-package company
+    :ensure t
+    :straight t
+    :defer t
+    :hook ((prog-mode text-mode) . company-mode)
+    :config
+    (setq company-idle-delay 0.1) ;; company-idle-delay set to low causes latency while typing use with caution.
+    (setq company-minimum-prefix-length 3))
+
+  (with-eval-after-load 'company
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key company-active-map (kbd "C-n") #'company-select-next)
+    (define-key company-active-map (kbd "C-p") #'company-select-previous)
+    (define-key company-active-map (kbd "SPC") #'company-abort))
+#+END_SRC
+
+* Snippets
+
+** Yasnippet
+#+begin_src elisp
+(use-package yasnippet
+  :ensure t
+  :straight t
+  :defer t
+  :hook (after-init . yas-global-mode)
+;  :hook (org-mode . yas-minor-mode)  ;; Enable yasnippet in org-mode buffers :config
+  (yas-reload-all))                   ;; Load all snippet definitions (from ~/.emacs.d/snippets/ by default)
+#+end_src
+
+*** Source Code block
+#+begin_src elisp :tangle snippets/org-mode/src
+# -*- mode: snippet -*-
+# name: source block
+# key: src
+# --
+#+BEGIN_SRC ${1:Language}
+$0
+##+END_SRC
+#+end_src
+
+*** Template
+#+begin_src elisp :tangle snippets/org-mode/temp
+# -*- mode: snippet -*-
+# name: template
+# key: temp
+# --
+#+TITLE: ${1:title}
+#+AUTHOR: ${2:author}
+#+DATE: `(format-time-string "%Y-%m-%d")`
+#+end_src
+
+*** Insert TODO heading with Priority and Tags
+#+begin_src elisp :tangle snippets/org-mode/todo
+# -*- mode: snippet -*-
+# name: TODO entry
+# key: todo
+# --
+\* TODO [#${1:A}] ${2:Task description}       :${3:tags}:
+  DEADLINE: <${4:yyyy-mm-dd}>
+  $0
+#+end_src
+
+*** Insert Org table with caption
+#+begin_src elisp :tangle snippets/org-mode/table
+# -*- mode: snippet -*-
+# name: table with caption
+# key: table
+# --
+| ${1:Column1} | ${2:Column2} | ${3:Column3} |
+|--------------+--------------+--------------|
+| ${4:Value1}  | ${5:Value2}  | ${6:Value3}  |
+#+CAPTION: ${7:Table caption here}
+$0
+#+end_src
+
