@@ -12,7 +12,6 @@
 Link:https://www.reddit.com/r/emacs/comments/lkfuk5/comment/gnk42ta/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
 
 Defer most packages using ***use-package*** (most important)
-
 increase ***gc-cons-threshold*** during startup
 
 use ***early-init.el*** to set graphical parameters and fonts
@@ -91,7 +90,7 @@ Xft.antialias: 1 Xft.rgba: rgb
 
 ** Fringe
 #+begin_src elisp :tangle "early-init.el"
-                                        ;(set-fringe-mode 1)
+                                        ;(set-fringe-mode 1) ;; FLycheck will not work with fringemode.
 #+end_src
 
 ** Remeber last place you were in file.
@@ -104,11 +103,7 @@ Xft.antialias: 1 Xft.rgba: rgb
 (global-auto-revert-mode t)
 #+END_SRC
 
-** Auto revert dired buffer
-#+BEGIN_SRC elisp :tangle "early-init.el"
-(setq global-auto-revert-non-file-buffers t)
-#+END_SRC
-
+** Auto revert dired buffer #+BEGIN_SRC elisp :tangle "early-init.el" (setq global-auto-revert-non-file-buffers t) #+END_SRC
 ** Open Emacs in full screen always.
 #+BEGIN_SRC elisp :tangle "early-init.el"
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -188,10 +183,10 @@ Xft.antialias: 1 Xft.rgba: rgb
  redisplay-dont-pause t ; improve display engine
 
  ;; Suppress the startup
-                                        ;inhibit-splash-screen t
-                                        ;inhibit-startup-screen t		; do not show the startup message
-                                        ;inhibit-startup-message t      ; reduce noise at startup
-                                        ;inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
+ inhibit-splash-screen t
+ inhibit-startup-screen t		; do not show the startup message
+ inhibit-startup-message t      ; reduce noise at startup
+ inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
 
  fast-but-imprecise-scrolling t ; more performant rapid scrolling over unfontified regions
  frame-inhibit-implied-resize t ; do not resize the frame at this early stage
@@ -469,21 +464,21 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 			             ("elpa" . "https://elpa.gnu.org/packages/")))
 #+END_SRC
 
-* COMMENT Welcome Screen
+* Welcome Screen
 #+BEGIN_SRC elisp
 (defun show-welcome-screen-buffer ()
   "Show *Welcome-screen* buffer."
   (with-current-buffer (get-buffer-create "*Welcome-screen*")
     (setq truncate-lines t)
     (let* ((buffer-read-only)
-           (image-path (expand-file-name "images/emacs-logo.png" user-emacs-directory))
+           (image-path (expand-file-name "images/diablo.png" user-emacs-directory))
            (image (create-image image-path))
            (size (image-size image))
            (height (cdr size))
            (width (car size))
            (top-margin (floor (/ (- (window-height) height) 2)))
            (left-margin (floor (/ (- (window-width) width) 2)))
-           (prompt-title "E M A C S"))
+           (prompt-title "Embrace the power of Code"))
       (erase-buffer)
       (setq mode-line-format nil) ;; Disable the modeline
       (setq elscreen-toggle-display-tab nil) ; hide elscreen
@@ -506,6 +501,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (add-hook 'emacs-startup-hook (lambda ()
   			                      (when (display-graphic-p)
   			                        (show-welcome-screen-buffer)))))
+
 #+END_SRC
 
 * Functions
@@ -547,7 +543,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   	            pdf-view-mode-hook
   	            vterm-mode-hook
   	            eshell-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0))))
+  (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0) (enlight-open))))
 #+END_SRC
 
 * Zone
@@ -1192,243 +1188,6 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :ensure t
   :straight t
   :defer t)
-
-(use-package treesit-auto
-  :ensure t
-  :straight t
-  :defer t
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-
-#+END_SRC
-
-** COMMENT Tree sitter font settings
-#+BEGIN_SRC elisp
-(setq treesit-font-lock-level 4)
-
-;; Example for Python (similar rules can be applied for C, C++, Lua)
-(add-hook 'python-ts-mode-hook
-          (lambda ()
-            (setq-local treesit-font-lock-settings
-                        (append treesit-font-lock-settings my/python-treesit-settings))))
-(defun my/custom-c-ts-highlight ()
-  (add-to-list 'treesit-font-lock-settings
-               (car (treesit-font-lock-rules
-                     :language 'c
-                     :feature 'custom
-                     :override t
-                     '(( "assert" @font-lock-keyword-face )
-                       (call_expression function: (identifier) @font-lock-function-name-face))))))
-(add-hook 'c-ts-mode-hook #'my/custom-c-ts-highlight)
-
-(setq-local treesit-font-lock-feature-list
-            '((comment)
-              (constant variable)
-              (keyword function)
-              (type operator delimiter)))
-#+END_SRC
-
-** COMMENT Programming languages
-#+BEGIN_SRC elisp
-(use-package python            ;; Python-specific tweaks
-  :straight nil
-  :defer t
-  :hook (python-mode . egot-mode))
-
-(use-package cc-mode           ;; C/C++ tweaks
-  :straight nil
-  :defer t
-  :hook (c-mode-common . lsp))
-
-(use-package js                ;; JS tweaks
-  :straight nil
-  :defer t
-  :hook (js-mode . lsp))
-
-(use-package sh-script         ;; Shell scripts
-  :straight nil
-  :defer t
-  :config
-  (add-hook 'sh-mode-hook (lambda ()
-                            (setq sh-basic-offset 4 sh-indentation 4))))
-
-(use-package lua-mode
-  :straight t
-  :defer t
-  :mode ("\\.lua\\'" . lua-mode)
-  :config
-  (setq lua-indent-string-contents t)
-  (setq lua-indent-close-paren-align t))
-
-(use-package asm-mode
-  :straight t
-  :defer t
-  :mode ("\\.\\(asm\\|s\\|S\\)$" . asm-mode)
-  :hook (asm-mode . (lambda ()
-                      ;; your asm-mode customizations here
-                      ))
-  :config
-  ;; extra configuration for asm-mode (does NOT activate it everywhere)
-  )
-#+END_SRC
-
-** COMMENT Testing
-#+BEGIN_SRC elisp
-;;; gdb-layout.el --- Custom GDB window layout  -*- lexical-binding: t; -*-
-
-(setq gdb-many-windows nil)
-
-(defvar my-gdb-window-config nil
-  "Saved window configuration before starting GDB.")
-
-(defun set-gdb-layout (&optional c-buffer)
-  "Custom window layout for GDB.
-Preserves the source buffer in the left window and arranges GDB
-buffers to the right/below."
-  (unless c-buffer
-    (setq c-buffer (window-buffer (selected-window)))) ;; save current buffer
-
-  ;; start fresh
-  (delete-other-windows)
-
-  (let* ((w-source (selected-window)) ;; left
-         ;; left bottom: IO
-         (w-io (split-window w-source (floor (* 0.7 (window-body-height))) 'below))
-         ;; right column
-         (w-right (split-window w-source nil 'right))
-         (w-gdb (split-window w-right nil 'below))
-         (w-stack (split-window w-right nil 'below))
-         (w-locals (split-window w-right nil 'below))
-         (w-breakpoints w-right))
-
-    ;; assign buffers
-    (set-window-buffer w-source c-buffer)
-    (set-window-buffer w-io (gdb-get-buffer-create 'gdb-inferior-io))
-    (set-window-buffer w-gdb gud-comint-buffer)
-    (set-window-buffer w-stack (gdb-get-buffer-create 'gdb-stack-buffer))
-    (set-window-buffer w-locals (gdb-get-buffer-create 'gdb-locals-buffer))
-    (set-window-buffer w-breakpoints (gdb-get-buffer-create 'gdb-breakpoints-buffer))
-
-    ;; make them sticky
-    (mapc (lambda (w) (set-window-dedicated-p w t))
-          (list w-io w-gdb w-stack w-locals w-breakpoints))
-
-    (select-window w-source)))
-
-;; Override default layout mechanism
-(defun gdb-setup-windows ()
-  "Use my custom GDB window layout."
-  (set-gdb-layout))
-
-;; Save/restore window config around GDB
-(advice-add 'gdb :around
-            (lambda (orig-fun &rest args)
-              (setq my-gdb-window-config (current-window-configuration))
-              (apply orig-fun args)
-              (set-gdb-layout)))
-
-(advice-add 'gdb-reset :around
-            (lambda (orig-fun &rest args)
-              (apply orig-fun args)
-              (when my-gdb-window-config
-                (set-window-configuration my-gdb-window-config))))
-#+END_SRC
-
-** COMMENT Lsp
-#+BEGIN_SRC elisp
-(use-package lsp-mode
-  :ensure t
-  :straight t
-  :defer t
-  :hook (;; Replace XXX-mode with concrete major mode (e.g. python-mode)
-         (lsp-mode . lsp-enable-which-key-integration)  ;; Integrate with Which Key
-         ((js-mode                                      ;; Enable LSP for JavaScript
-           tsx-ts-mode                                  ;; Enable LSP for TSX
-           typescript-ts-base-mode                      ;; Enable LSP for TypeScript
-           css-mode                                     ;; Enable LSP for CSS
-           go-ts-mode                                   ;; Enable LSP for Go
-           js-ts-mode                                   ;; Enable LSP for JavaScript (TS mode)
-           prisma-mode                                  ;; Enable LSP for Prisma
-           python-base-mode                             ;; Enable LSP for Python
-           c-mode
-           ruby-base-mode                               ;; Enable LSP for Ruby
-           rust-ts-mode                                 ;; Enable LSP for Rust
-		   c-mode
-           c++-mode
-           js-mode
-           bash-mode
-           lua-mode
-           web-mode) . lsp-deferred))                   ;; Enable LSP for Web (HTML)
-  :commands lsp
-  :custom
-  (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
-  (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
-  (lsp-completion-provider :none)                       ;; Disable the default completion provider.
-  (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
-  (lsp-log-io nil)                                      ;; Disable IO logging for speed.
-  (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
-  (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
-  ;; Core settings
-  (lsp-enable-xref t)                                   ;; Enable cross-references.
-  (lsp-auto-configure t)                                ;; Automatically configure LSP.
-  (lsp-enable-links nil)                                ;; Disable links.
-  (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
-  (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
-  (lsp-enable-folding nil)                              ;; Disable folding.
-  (lsp-enable-imenu t)                                  ;; Enable Imenu support.
-  (lsp-enable-indentation nil)                          ;; Disable indentation.
-  (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
-  (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
-  (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
-  (lsp-enable-text-document-color t)                    ;; Enable text document color.
-  ;; Modeline settings
-  (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
-  (lsp-modeline-diagnostics-enable nil)                 ;; Use `flymake' instead.
-  (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
-  (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
-  (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
-  ;; Completion settings
-  (lsp-completion-enable t)                             ;; Enable completion.
-  (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
-  (lsp-enable-snippet nil)                              ;; Disable snippets
-  (lsp-completion-show-kind t)                          ;; Show kind in completions.
-  ;; Lens settings
-  (lsp-lens-enable t)                                   ;; Enable lens support.
-  ;; Headerline settings
-  (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
-  (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
-  (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
-  (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
-  ;; Semantic settings
-  (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
-
-(setq lsp-log-io nil)
-(setq lsp-diagnostics-provider :auto)
-
-;; Ignore irrelevant directories.
-(setq lsp-file-watch-ignored
-      '("[/\\\\]\\.git$"
-        "[/\\\\]node_modules$"
-        "[/\\\\]build$"
-        "[/\\\\]\\.next$"))
-
-;; LSP UI for inline and doc popups
-(use-package lsp-ui
-  :ensure t
-  :after lsp-mode
-  :config
-  (setq lsp-ui-sideline-enable t
-        lsp-ui-doc-enable t
-        lsp-ui-doc-header t
-        lsp-ui-doc-include-signature t
-        lsp-ui-doc-border (face-foreground 'default)
-        lsp-ui-sideline-show-code-actions t
-        lsp-ui-sideline-delay 0.05)
-  :commands
-  lsp-ui-mode)
 #+END_SRC
 
 ** Eglot
@@ -1437,7 +1196,6 @@ buffers to the right/below."
 (use-package eglot
   :ensure nil
   :straight nil
-  :disabled t
   :defer t
   :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure))
 
@@ -1445,42 +1203,46 @@ buffers to the right/below."
 (setq eglot-workspace-configuration
       '((:pyright . (:exclude ["**/.venv" "**/__pycache__" "**/node_modules"]))))
 
-;; Remap legacy major modes to tree-sitter equivalents for automatic syntax highlighting.
-(setq major-mode-remap-alist
-      '((c-mode      . c-ts-mode)
-        (c++-mode    . c++-ts-mode)
-        (python-mode . python-ts-mode)
-        (lua-mode    . lua-ts-mode)
-        (sh-mode     . bash-ts-mode)))
-
-;; Define LSP server commands for Tree-sitter major modes.
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
-               '(c-ts-mode      . ("clangd" "--offset-encoding=utf-16")))
+               '(c-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
   (add-to-list 'eglot-server-programs
-               '(c++-ts-mode    . ("clangd" "--offset-encoding=utf-16")))
+               '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
   (add-to-list 'eglot-server-programs
-               '(python-ts-mode . ("pyright-langserver" "--stdio")))
+               '(python-ts-mode . ("pyright-langserver" "--stdio" "python-flake8")))
   (add-to-list 'eglot-server-programs
-               '(lua-ts-mode    . ("lua-language-server")))
+               '(lua-ts-mode . ("lua-language-server")))
   (add-to-list 'eglot-server-programs
-               '(bash-ts-mode   . ("bash-language-server" "start")))
-  (add-to-list 'eglot-server-programs
-               '(asm-mode       . ("asm-lsp" "asmfmt"))))
+               '(bash-ts-mode . ("bash-language-server" "start"))))
 
-;; Enable Eglot for all Tree-sitter major modes automatically.
+
+                                        ;(setq major-mode-remap-alist
+                                        ;      '((c-mode . c-ts-mode)
+                                        ;        (c++-mode . c++-ts-mode)
+                                        ;        (python-mode . python-ts-mode)
+                                        ;        (lua-mode . lua-ts-mode)
+                                        ;        (sh-mode . bash-ts-mode)))
+(setq major-mode-remap-alist
+      '((c-mode . c-ts-mode)
+        (c++-mode . c++-ts-mode)
+        (python-mode . python-ts-mode)
+        (lua-mode . lua-ts-mode)
+        (sh-mode . bash-ts-mode)))
+
+;; Ensure eglot starts with Tree-sitter modes
 (dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
   (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
+;; ...and so on
 
-;; Register Tree-sitter grammar sources when needed.
 (setq treesit-language-source-alist
-      '((c      "https://github.com/tree-sitter/tree-sitter-c")
-        (cpp    "https://github.com/tree-sitter/tree-sitter-cpp")
-        (bash   "https://github.com/tree-sitter/tree-sitter-bash")
-        (lua    "https://github.com/tree-sitter/tree-sitter-lua")
+      '((c    "https://github.com/tree-sitter/tree-sitter-c")
+        (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")
+        (bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (lua  "https://github.com/tree-sitter/tree-sitter-lua")
         (python "https://github.com/tree-sitter/tree-sitter-python")))
 
 (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-ts-mode))
+
 #+END_SRC
 
 ** Flycheck
@@ -1536,52 +1298,63 @@ buffers to the right/below."
 
 ** Flymake
 #+begin_src elisp
-;;(use-package flymake 
-;;  :ensure nil
-;;  :hook (prog-mode . flymake-mode)
-;;  :config ; (Optional) For fix bad icon display (Only for left margin)
-;;  (advice-add #'flymake--indicator-overlay-spec
-;;              :filter-return
-;;              (lambda (indicator)
-;;                (concat indicator
-;;                        (propertize " "
-;;                                    'face 'default
-;;                                    'display `((margin left-margin)
-;;                                               (space :width 5))))))
-;;  :custom
-;;  (flymake-indicator-type 'margins)
-;; (flymake-indicator-type 'margins)
-;;  (flymake-margin-indicators-string
-;;   `((error ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-error)
-;;     (warning ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-warning)
-;;     (note ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-info))))
-
 (use-package flymake
   :ensure nil
+  :straight nil
   :hook (prog-mode . flymake-mode)
   :custom
   (flymake-indicator-type 'margins)
   (flymake-margin-indicators-string
    `((error ,(propertize "┃"
                          'face '(:inherit compilation-error
-                                 :weight bold :height 1.5
-                                 :background "#5c0000" :foreground "red")
+                                          :weight bold :height 1.5
+                                          :background "#5c0000" :foreground "red")
                          'display '((margin left-margin)))
             compilation-error)
 
      (warning ,(propertize "┃"
                            'face '(:inherit compilation-warning
-                                   :weight bold :height 1.5
-                                   :background "#5c3d00" :foreground "yellow")
+                                            :weight bold :height 1.5
+                                            :background "#5c3d00" :foreground "yellow")
                            'display '((margin left-margin)))
               compilation-warning)
 
      (note ,(propertize "┃"
                         'face '(:inherit compilation-info
-                                :weight bold :height 1.5
-                                :background "#003d1f" :foreground "green")
+                                         :weight bold :height 1.5
+                                         :background "#003d1f" :foreground "green")
                         'display '((margin left-margin)))
            compilation-info))))
+#+end_src
+
+** Flycheck-eglot
+#+begin_src elisp
+(use-package flycheck-eglot
+  :ensure t
+  :straight t
+                                        ;  :after (flycheck eglot)
+  :defer t
+  :hook (prog-mode . flycheck-eglot-mode)
+  :config
+  (global-flycheck-eglot-mode 1)
+  (setq flycheck-eglot-exclusive nil)
+  (global-flycheck-eglot-mode 1)
+  (defun my/eglot-diagnostics-to-flycheck (report &rest _)
+    "Convert Eglot diagnostics REPORT to Flycheck errors and report to Flycheck."
+    (when (bound-and-true-p flycheck-mode)
+      (let ((errors
+             (mapcar
+              (lambda (diag)
+                (flycheck-error-new
+                 :buffer (current-buffer)
+                 :checker 'eglot
+                 :filename (flycheck-error-buffer diag)
+                 :line (flycheck-error-line diag)
+                 :column (flycheck-error-column diag)
+                 :message (flycheck-error-message diag)
+                 :level (flycheck-error-level diag)))
+              report)))
+        (flycheck-report-error-new-errors errors)))))
 #+end_src
 
 ** Eldoc
@@ -1726,4 +1499,3 @@ $0
 ,#+CAPTION: ${7:Table caption here}
 $0
 #+end_src
-
