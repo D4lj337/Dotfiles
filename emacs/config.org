@@ -1,7 +1,7 @@
-#+TITLE: Emacs configuration.
+#+TITLE: Emacs configuration
 #+DESCRIPTION: Emacs configuration is written in orgmode. Code is directly written to the files using org-babel-tangle without the need to start orgmode at startup.
-#+PROPERTY: header-args:elisp :lexical t :tangle "init.el" :mkdirp "lisp"
-#+STARTUP: showeverything
+#+PROPERTY: header-args :lexical t :tangle "init.el" :mkdirp "lisp"
+#+STARTUP: showeverything  hidestars
 
 * Must Reads
 1. [[https://discourse.doomemacs.org/t/common-config-anti-patterns/119][Common config anti-patters]]
@@ -91,7 +91,7 @@ Xft.antialias: 1 Xft.rgba: rgb
 
 ** Fringe
 #+begin_src elisp :tangle "early-init.el"
-(set-fringe-mode 1)
+                                        ;(set-fringe-mode 1)
 #+end_src
 
 ** Remeber last place you were in file.
@@ -333,13 +333,25 @@ Xft.antialias: 1 Xft.rgba: rgb
 
 * Init
 
+** Maximum native eln speed.
+Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
+#+BEGIN_SRC elisp
+;; init.el -*- lexical-binding: t; -*-
+(setq native-comp-speed 3)
+
+(native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively) 
+(setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+
+(setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+#+END_SRC
+
 ** Emacs
 #+BEGIN_SRC elisp
 ;; init.el -*- lexical-binding: t; -*-
 ;; Global tab width and use spaces
 (use-package emacs 
-  :defer t
   :ensure nil
+  :defer t
   :bind
   (("C-c e" . 'my/visit-init)              ;; visit init.el
    ("C-c q" . 'my/visit-qtile)             ;; visit qtile config
@@ -379,19 +391,27 @@ Xft.antialias: 1 Xft.rgba: rgb
   (treesit-font-lock-level 4)
   (enable-recursive-minibuffers t)
   (read-extended-command-predicate #'command-completion-default-include-p)
-  (treesit-auto-install-grammar t)) ; EMACS-31
-#+END_SRC
+  (treesit-auto-install-grammar t) ; EMACS-31
+  (enable-recursive-minibuffers t) ; Enable recursive minibuffers
+  :config
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+  	              (replace-regexp-in-string
+  	               "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+  	               crm-separator)
+  	              (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-** Maximum native eln speed.
-Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
-#+BEGIN_SRC elisp
-;; init.el -*- lexical-binding: t; -*-
-(setq native-comp-speed 3)
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
-(native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively) 
-(setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
-
-(setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+  ;; Spell checking on programming modes
+  (add-hook 'prog-mode-hook 'flyspell-prog-mode))
 #+END_SRC
 
 ** Autoload
@@ -530,67 +550,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0))))
 #+END_SRC
 
-* COMMENT Keybindings
-#+BEGIN_SRC elisp
-;; Escape
-(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-                                        ;(global-set-key (kbd "<escape> <escape>") 'keyboard-escape-quit)
-
-;; Visiting files
-(global-set-key (kbd "C-c e") 'my/visit-init) ; vist the config
-(global-set-key (kbd "C-c q") 'my/visit-qtile) ; vist the qtile config
-
-;; Restart the Emacs
-(global-set-key (kbd "C-x r") 'restart-emacs) ; restart the Emacs.
-
-;; Avoid accidentally minimizing emacs.
-(global-unset-key (kbd "C-z"))
-
-;; Close all the buffers.
-(global-set-key (kbd "C-c k") 'my/kill-all-buffers)
-
-;; Emacs
-(global-set-key (kbd "<f12>") 'my/toggle-mode-line) 
-
-;; Buffers
-                                        ;(global-set-key (kbd "C-x b") 'buffer-menu)    ; ibuffer
-(global-set-key (kbd "C-x C-k") 'kill-buffer)    ; kill buffer
-                                        ;(global-set-key (kbd "C-x j") 'previous-buffer)    ; move to previous buffer
-                                        ;(global-set-key (kbd "C-x k") 'next-buffer)    ; move to next buffer
-(global-set-key (kbd "C-c r") 'recentf)    ; open recent buffers
-(global-set-key (kbd "C-x 2") 'my/split-and-follow-horizontally) ;; move focus to new window.
-(global-set-key (kbd "C-x 3") 'my/split-and-follow-vertically) ;; move focust to new window.
-
-;; File
-                                        ;(global-set-key (kbd "C-c f") 'find-name-dired)
-                                        ;(global-set-key (kbd "C-c s") 'find-lisp--)
-(global-set-key (kbd "C-c w w") 'my/kill-whole-word)
-(global-set-key (kbd "C-c w l") 'my/copy-whole-line)
-(global-set-key (kbd "C-c w h") 'my/highlight-word)
-(global-set-key (kbd "C-c v") 'view-mode)
-
-;; Applications
-(global-set-key (kbd "C-c p") 'dmenu) ; dmenu
-(global-set-key (kbd "C-c T") 'vterm)      ; vterm
-(global-set-key (kbd "C-c t") 'vterm-toggle-cd) ; vterm-toggle to cd
-(global-set-key (kbd "C-c y") #'yas-expand)
-
-(global-set-key (kbd "C-x B") 'infu-bionic-reading-buffer) ; bionic reading
-(global-set-key (kbd "C-+") 'text-scale-increase) ; zoom in
-(global-set-key (kbd "C--") 'text-scale-decrease) ; zoom out
-(global-set-key (kbd "<C-wheel-down>") 'text-scale-increase) ; zoom in with mouse
-(global-set-key (kbd "<C-wheel-up>") 'text-scale-decrease) ; zoom out with mouse
-(global-set-key (kbd "C-c n") 'neotree-toggle)
-(global-set-key (kbd "C-.") 'avy-goto-char)
-(global-set-key (kbd "C-c c") 'compile)
-(global-set-key (kbd "C-c b") 'nyan-mode)
-(global-set-key (kbd "C-c C-u") 'package-upgrade-all)
-(global-set-key (kbd "C-c g") #'gdb)
-(global-set-key (kbd "M-y") #'popup-kill-ring)
-                                        ; (global-set-key (kbd "C-x C-f") #'fzf-find-file)
-                                        ; (global-set-key (kbd "C-x C-b") #'fzf-find-in-buffer)
-#+END_SRC
-
 * Zone
 #+BEGIN_SRC elisp
                                         ;  (autoload 'zone-when-idle "zone" nil t)
@@ -603,16 +562,15 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 (use-package dired-open
   :ensure t
   :straight t
-  :defer t
-  :commands dired-open-by-extensions)
-(setq dired-open-extensions '(("jpg" . "eog")
-  			                  ("png" . "eog")
-  			                  ("pdf" . "zathura")
-  			                  ("mkv" . "mpv")
-  			                  ("mp3" . "mpv")
-  			                  ("mpg" . "mpv")
-  			                  ("epub" . "zathura")
-  			                  ("mp4" . "mpv")))
+  :config
+  ;; Add extension-to-program mappings:
+  (add-to-list 'dired-open-extensions '("pdf" "zathura"))
+  (add-to-list 'dired-open-extensions '("mp4" "mpv"))
+  (add-to-list 'dired-open-extensions '("mkv" "mpv"))
+  (add-to-list 'dired-open-extensions '("jpg" "feh"))
+  (add-to-list 'dired-open-extensions '("png" "feh"))
+  ;; Enable dired-open, replacing default dired open behavior:
+  (dired-open-mode))
 #+END_SRC
 
 ** Dired Async
@@ -685,6 +643,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (which-key-show-prefix 'bottom)
   :config
   (which-key-mode)
+  (setq which-key-idle-delay 0.5) ;; company-idle-delay set to low causes latency while typing use with caution.
   (which-key-setup-side-window-bottom)
   (which-key-setup-minibuffer))
 #+END_SRC
@@ -770,8 +729,11 @@ Builtin package allows =Dired= operations like copying and renaming files to run
    'org-babel-load-languages
    '((emacs-lisp . t)
      (python . t)
+     (lisp . t)
      (shell . t)
+     (lua . t)
      (calc . t)
+     (sql . t)
      (C . t))))
 
 (with-eval-after-load 'org
@@ -785,6 +747,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
   (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
   (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
+
 #+END_SRC
 
 *** Org Modern
@@ -833,7 +796,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (evil-define-key 'normal 'global (kbd "<leader> q") 'evil-quit)
   (evil-define-key 'normal 'global (kbd "<leader> r") 'restart-emacs)
   (evil-define-key 'normal 'global (kbd "<leader> b b") 'ibuffer)
-  (evil-define-key 'normal 'global (kbd "<leader> b") 'consult-buffer)
+  (evil-define-key 'normal 'global (kbd "<leader> b") 'switch-to-buffer)
                                         ;        (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-current-buffer)
   (evil-define-key 'normal 'global (kbd "<leader> u") 'undo)
   (evil-define-key 'normal 'global (kbd "<leader> z") 'undo-redo)
@@ -847,6 +810,9 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   ;; Windows
   (evil-define-key 'normal 'global (kbd "<leader> o") 'other-window)
   (evil-define-key 'normal 'global (kbd "<leader> k") 'kill-buffer)
+
+  ;; Comment or uncommnet
+  (evil-define-key 'normal 'global (kbd "gcc") 'comment-line)
   )
 #+END_SRC
 
@@ -869,6 +835,17 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :defer t
   :commands (evil-tutor))
 #+END_SRC
+
+** COMMENT Evil nerd commenter
+#+begin_src elisp
+(use-package evil-nerd-commenter
+  :ensure t
+  :straight t
+  :defer t
+  :after (evil)
+  :config
+  ;; (evil-nerd-commenter))
+#+end_src
 
 ** COMMENT Meow
 #+BEGIN_SRC elisp
@@ -1116,7 +1093,6 @@ Builtin package allows =Dired= operations like copying and renaming files to run
       (indent-region (point-min) (point-max)))))
 #+end_src
 
-
 ** Keep this at the bottom of the feature file.
 #+begin_src elsip :tangle "lisp/feature.el"
 (provide 'feature)
@@ -1206,6 +1182,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 (use-package tree-sitter
   :ensure t
   :straight t
+  :defer t
   :hook ((python-mode c-mode c++-mode lua-mode sh-mode asm-mode
                       go-mode rust-mode js-mode typescript-mode
                       json-mode yaml-mode bash-mode html-mode)
@@ -1213,14 +1190,19 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 
 (use-package tree-sitter-langs
   :ensure t
-  :straight t)
+  :straight t
+  :defer t)
 
-;; (add-hook 'python-ts-mode-hook #'tree-sitter-hl-mode)
-;; (add-hook 'c-ts-mode-hook #'tree-sitter-hl-mode)
-;; (add-hook 'c++-ts-mode-hook #'tree-sitter-hl-mode)
-;; (add-hook 'lua-ts-mode-hook #'tree-sitter-hl-mode)
-;; (add-hook 'bash-ts-mode-hook #'tree-sitter-hl-mode)
-;; (add-hook 'asm-ts-mode-hook #'tree-sitter-hl-mode)
+(use-package treesit-auto
+  :ensure t
+  :straight t
+  :defer t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
 #+END_SRC
 
 ** COMMENT Tree sitter font settings
@@ -1449,47 +1431,13 @@ buffers to the right/below."
   lsp-ui-mode)
 #+END_SRC
 
-** COMMENT Tree sitter (Testing)
-#+BEGIN_SRC elisp
-(use-package treesit-auto
-  :ensure t
-  :straight t
-  :custom
-  (treesit-auto-install t) ; or 'prompt for confirmation before install
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-
-(setq treesit-auto-langs '(python rust go))
-
-(setq major-mode-remap-alist
-      '((c-mode . c-ts-mode)
-        (c++-mode . c++-ts-mode)
-        (python-mode . python-ts-mode)
-        (lua-mode . lua-ts-mode)
-        (sh-mode . bash-ts-mode)))
-
-;; Ensure eglot starts with Tree-sitter modes
-(dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
-  (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
-;; ...and so on
-
-(setq treesit-language-source-alist
-      '((c    "https://github.com/tree-sitter/tree-sitter-c")
-        (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")
-        (bash "https://github.com/tree-sitter/tree-sitter-bash")
-        (lua  "https://github.com/tree-sitter/tree-sitter-lua")
-        (python "https://github.com/tree-sitter/tree-sitter-python")))
-
-(add-to-list 'treesit-extra-load-path (expand-file-name "~/.emacs.d/tree-sitter/"))
-#+END_SRC
-
 ** Eglot
 =Eglot= is lightweight inbuild emacs package server for Lsp.
 #+BEGIN_SRC elisp
 (use-package eglot
   :ensure nil
   :straight nil
+  :disabled t
   :defer t
   :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure))
 
@@ -1497,45 +1445,154 @@ buffers to the right/below."
 (setq eglot-workspace-configuration
       '((:pyright . (:exclude ["**/.venv" "**/__pycache__" "**/node_modules"]))))
 
+;; Remap legacy major modes to tree-sitter equivalents for automatic syntax highlighting.
+(setq major-mode-remap-alist
+      '((c-mode      . c-ts-mode)
+        (c++-mode    . c++-ts-mode)
+        (python-mode . python-ts-mode)
+        (lua-mode    . lua-ts-mode)
+        (sh-mode     . bash-ts-mode)))
+
+;; Define LSP server commands for Tree-sitter major modes.
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
-               '(c-ts-mode . ("clangd" "--offset-encoding=utf-16")))
+               '(c-ts-mode      . ("clangd" "--offset-encoding=utf-16")))
   (add-to-list 'eglot-server-programs
-               '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16")))
+               '(c++-ts-mode    . ("clangd" "--offset-encoding=utf-16")))
   (add-to-list 'eglot-server-programs
-               '(python-ts-mode . ("pylsp")))
+               '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (add-to-list 'eglot-server-programs
-               '(lua-ts-mode . ("lua-language-server")))
+               '(lua-ts-mode    . ("lua-language-server")))
   (add-to-list 'eglot-server-programs
-               '(bash-ts-mode . ("bash-language-server" "start"))))
+               '(bash-ts-mode   . ("bash-language-server" "start")))
+  (add-to-list 'eglot-server-programs
+               '(asm-mode       . ("asm-lsp" "asmfmt"))))
 
-
-                                        ;(setq major-mode-remap-alist
-                                        ;      '((c-mode . c-ts-mode)
-                                        ;        (c++-mode . c++-ts-mode)
-                                        ;        (python-mode . python-ts-mode)
-                                        ;        (lua-mode . lua-ts-mode)
-                                        ;        (sh-mode . bash-ts-mode)))
-
-;; Ensure eglot starts with Tree-sitter modes
+;; Enable Eglot for all Tree-sitter major modes automatically.
 (dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
   (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
-;; ...and so on
 
+;; Register Tree-sitter grammar sources when needed.
 (setq treesit-language-source-alist
-      '((c    "https://github.com/tree-sitter/tree-sitter-c")
-        (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")
-        (bash "https://github.com/tree-sitter/tree-sitter-bash")
-        (lua  "https://github.com/tree-sitter/tree-sitter-lua")
+      '((c      "https://github.com/tree-sitter/tree-sitter-c")
+        (cpp    "https://github.com/tree-sitter/tree-sitter-cpp")
+        (bash   "https://github.com/tree-sitter/tree-sitter-bash")
+        (lua    "https://github.com/tree-sitter/tree-sitter-lua")
         (python "https://github.com/tree-sitter/tree-sitter-python")))
+
+(add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-ts-mode))
 #+END_SRC
 
 ** Flycheck
-#+BEGIN_SRC elisp
+#+begin_src elisp
 (use-package flycheck
   :ensure t
-  :init (global-flycheck-mode))
-#+END_SRC
+  :straight t
+  :defer t
+  :hook (prog-mode . flycheck-mode)
+  :init
+  (progn
+    (define-fringe-bitmap 'my-flycheck-fringe-indicator
+      (vector #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111)
+      17  ;; height inferred
+      8)   ;; width
+    (flycheck-define-error-level 'error
+      :severity 2
+      :overlay-category 'flycheck-error-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-error)
+    (flycheck-define-error-level 'warning
+      :severity 1
+      :overlay-category 'flycheck-warning-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-warning)
+    (flycheck-define-error-level 'info
+      :severity 0
+      :overlay-category 'flycheck-info-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-info))
+  :config
+  (custom-set-faces
+   '(flycheck-fringe-error ((t (:foreground "red"))))
+   '(flycheck-fringe-warning ((t (:foreground "yellow"))))
+   '(flycheck-fringe-info ((t (:foreground "blue"))))))
+#+end_src
+
+** Flymake
+#+begin_src elisp
+;;(use-package flymake 
+;;  :ensure nil
+;;  :hook (prog-mode . flymake-mode)
+;;  :config ; (Optional) For fix bad icon display (Only for left margin)
+;;  (advice-add #'flymake--indicator-overlay-spec
+;;              :filter-return
+;;              (lambda (indicator)
+;;                (concat indicator
+;;                        (propertize " "
+;;                                    'face 'default
+;;                                    'display `((margin left-margin)
+;;                                               (space :width 5))))))
+;;  :custom
+;;  (flymake-indicator-type 'margins)
+;; (flymake-indicator-type 'margins)
+;;  (flymake-margin-indicators-string
+;;   `((error ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-error)
+;;     (warning ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-warning)
+;;     (note ,(nerd-icons-faicon "nf-fa-arrow_right") compilation-info))))
+
+(use-package flymake
+  :ensure nil
+  :hook (prog-mode . flymake-mode)
+  :custom
+  (flymake-indicator-type 'margins)
+  (flymake-margin-indicators-string
+   `((error ,(propertize "┃"
+                         'face '(:inherit compilation-error
+                                 :weight bold :height 1.5
+                                 :background "#5c0000" :foreground "red")
+                         'display '((margin left-margin)))
+            compilation-error)
+
+     (warning ,(propertize "┃"
+                           'face '(:inherit compilation-warning
+                                   :weight bold :height 1.5
+                                   :background "#5c3d00" :foreground "yellow")
+                           'display '((margin left-margin)))
+              compilation-warning)
+
+     (note ,(propertize "┃"
+                        'face '(:inherit compilation-info
+                                :weight bold :height 1.5
+                                :background "#003d1f" :foreground "green")
+                        'display '((margin left-margin)))
+           compilation-info))))
+#+end_src
+
+** Eldoc
+#+begin_src elisp
+(use-package eldoc
+  :ensure nil
+  :straight nil
+  :defer t
+  :config
+  (global-eldoc-mode))
+#+end_src
 
 * Completion
 
@@ -1543,7 +1600,9 @@ buffers to the right/below."
 Below is a modern Emacs completion system configuration using use-package, leveraging only built-in packages (no Vertico, Ivy, or Helm). This setup uses fido-mode, fido-vertical-mode, and modern completion styles for a smooth, efficient experience:
 #+begin_src elisp 
 ;; Modern Minibuffer Completion Framework (built-in only)
-(use-package emacs
+(use-package minibuffer
+  :ensure nil
+  :straight nil
   :config
   ;; Enable Fido-mode for minibuffer completion
   (fido-mode 1)
@@ -1582,30 +1641,11 @@ Below is a modern Emacs completion system configuration using use-package, lever
   :custom
   (marginalia-max-relative-age 0)
   (marginalia-align 'right)
-  :config
-  (marginalia-mode))
-#+end_src
-
-*** Consult
-#+begin_src elisp
-;; Consult provides powerful completion and narrowing commands for Emacs.
-;; It integrates well with other completion frameworks like Vertico, enabling
-;; features like previews and enhanced register management. It's useful for
-;; navigating buffers, files, and xrefs with ease.
-(use-package consult
-  :ensure t
-  :straight t
-  :defer t
-  :config
-  ;; Enhance register preview with thin lines and no mode line.
-  (advice-add #'register-preview :override #'consult-register-window)
-
-  ;; Use Consult for xref locations with a preview feature.
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref))
+  :hook (after-init . marginalia-mode))
 #+end_src
 
 ** Code
+
 *** Company
 #+BEGIN_SRC elisp
 (use-package company
@@ -1678,66 +1718,12 @@ $0
 # name: table with caption
 # key: table
 # --
-| ${1:Column1} | ${2:Column2} | ${3:Column3} |
-|--------------+--------------+--------------|
-| ${4:Value1}  | ${5:Value2}  | ${6:Value3}  |
+|--------------+--------------|
+| ${1:Column1} | ${2:Column2} |
+|--------------+--------------|
+| ${4:Value1}  | ${5:Value2}  |
+|--------------+--------------|
 ,#+CAPTION: ${7:Table caption here}
-y0
-#+end_src
-
-** COMMENT Testing LSP AND TREESITTER
-#+begin_src elisp
-(use-package eglot
-  :ensure nil
-  :custom
-  (eglot-autoshutdown t)
-  (eglot-events-buffer-size 0)
-  (eglot-events-buffer-config '(:size 0 :format full))
-  (eglot-prefer-plaintext nil)
-  (jsonrpc-event-hook nil)
-  (eglot-code-action-indications nil) ;; EMACS-31 -- annoying as hell
-  :init
-  (fset #'jsonrpc--log-event #'ignore)
-
-  (setq-default eglot-workspace-configuration (quote
-                                               (:gopls (:hints (:parameterNames t)))))
-
-  (defun emacs-solo/eglot-setup ()
-    "Setup eglot mode with specific exclusions."
-    (unless (eq major-mode 'emacs-lisp-mode)
-      (eglot-ensure)))
-
-  (add-hook 'prog-mode-hook #'emacs-solo/eglot-setup)
-
-  (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs '((ruby-mode ruby-ts-mode) "ruby-lsp")))
-
-  :bind (:map
-         eglot-mode-map
-         ("C-c l a" . eglot-code-actions)
-         ("C-c l o" . eglot-code-action-organize-imports)
-         ("C-c l r" . eglot-rename)
-         ("C-c l i" . eglot-inlay-hints-mode)
-         ("C-c l f" . eglot-format)))
-
-;;; | C-TS-MODE
-(use-package c-ts-mode
-  :ensure c-ts-mode
-  :mode "\\.c\\'"
-  :defer t
-  :custom
-  (c-indent-level 2)
-  :config
-  (add-to-list 'treesit-language-source-alist '(c "https://github.com/tree-sitter/tree-sitter-c" "master" "src")))
-
-;;; │ RUST-TS-MODE
-(use-package rust-ts-mode
-  :ensure rust-ts-mode
-  :mode "\\.rs\\'"
-  :defer t
-  :custom
-  (rust-indent-level 2)
-  :config
-  (add-to-list 'treesit-language-source-alist '(rust "https://github.com/tree-sitter/tree-sitter-rust" "master" "src")))
+$0
 #+end_src
 
