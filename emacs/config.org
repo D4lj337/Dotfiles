@@ -6,7 +6,6 @@
 * Must Reads
 1. [[https://discourse.doomemacs.org/t/common-config-anti-patterns/119][Common config anti-patters]]
 2. [[https://discourse.doomemacs.org/t/common-errors-how-to-deal-with-them/58][Common errors & how to deal with them]]
-
 * "My" tricks for <1s startup time (GUI Emacs on ~5 year old laptop):
 
 Link:https://www.reddit.com/r/emacs/comments/lkfuk5/comment/gnk42ta/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
@@ -188,11 +187,17 @@ Xft.antialias: 1 Xft.rgba: rgb
  inhibit-startup-message t      ; reduce noise at startup
  inhibit-startup-buffer-menu t  ; stop `list-buffers' from showing when opening multiple files
 
- fast-but-imprecise-scrolling t ; more performant rapid scrolling over unfontified regions
  frame-inhibit-implied-resize t ; do not resize the frame at this early stage
  ffap-machine-p-known 'reject   ; don't ping things that look like domain names
+
+ ;; Improve performance
  inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
  read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
+ fast-but-imprecise-scrolling t ; more performant rapid scrolling over unfontified regions
+ scroll-conservatively 101
+ scroll-margin 0
+ scroll-preserve-screen-position t
+
  redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
  idle-update-delay 1.0 ; slow down UI updates down
  select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings
@@ -263,7 +268,7 @@ Xft.antialias: 1 Xft.rgba: rgb
  comp-deferred-compilation nil
 
  ;; Compile all sites-lisp on demand.
- native-comp-deferred-compilation t
+ native-comp-jit-compilation t
 
  ;; Keep the eln cache clean.
  native-compile-prune-cache t
@@ -304,7 +309,7 @@ Xft.antialias: 1 Xft.rgba: rgb
 
  ;; Mode-line font and weight
                                         ;   '(mode-line ((t (:font "Jetbrains Mono:size=15" :weight bold :background "black" :foreground "green"))))
- '(mode-line-active ((t (:font "CaskaydiaCove Nerd Font Mono:size=15" :weight bold :foreground "black" :background "white"))))
+; '(mode-line-active ((t (:font "CaskaydiaCove Nerd Font Mono:size=15" :weight bold :foreground "black" :background "white"))))
 
  ;; Comments italic, inherits font
  '(font-lock-comment-face ((t (:slant italic))))
@@ -323,6 +328,16 @@ Xft.antialias: 1 Xft.rgba: rgb
  '(lsp-face-warning ((t (:underline (:style wave :color "Orange")))))
  '(lsp-face-info ((t (:underline (:style wave :color "LightBlue")))))
  '(lsp-face-hint ((t (:underline (:style wave :color "Green"))))))
+
+;;; early-init.el --- Mission Critical Early Init -*- lexical-binding: t -*-
+
+;; Disable flymake globally - we use flycheck exclusively
+(setq-default flymake-mode nil)
+
+;; Ensure flycheck loads before eglot
+(setq package-install-upgrade-built-in t)
+
+(set-window-buffer (minibuffer-window) (get-buffer " *Minibuf-0*"))
 ;;; early-init.el 
 #+END_SRC
 
@@ -543,7 +558,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   	            pdf-view-mode-hook
   	            vterm-mode-hook
   	            eshell-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0) (enlight-open))))
+  (add-hook mode (lambda () (display-line-numbers-mode 0) (setq mode-line-format nil) (tab-bar-mode 0) (tab-line-mode 0))))
 #+END_SRC
 
 * Zone
@@ -1197,11 +1212,29 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :ensure nil
   :straight nil
   :defer t
-  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure))
-
-(setq eglot-sync-connect nil)
-(setq eglot-workspace-configuration
-      '((:pyright . (:exclude ["**/.venv" "**/__pycache__" "**/node_modules"]))))
+  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure)
+  :config
+  ;; CRITICAL: Disable flymake integration - we use flycheck exclusively
+  (add-to-list 'eglot-stay-out-of 'flymake)
+  (setq eglot-sync-connect nil)
+  
+  ;; Enhanced LSP communication settings
+  (setq eglot-events-buffer-size 0            ; Disable events buffer for performance
+        eglot-autoshutdown t                  ; Auto-shutdown unused servers
+        eglot-sync-connect nil                ; Async connection for responsiveness
+        eglot-extend-to-xref t                ; Enhanced cross-references
+        eglot-report-progress nil)            ; Disable progress reports for focus
+  
+  ;; Server performance optimizations
+  (setq eglot-events-buffer-config '(:size 0 :format short))
+  ;; Key bindings for LSP operations
+  :bind (:map eglot-mode-map
+              ("C-c l r" . eglot-rename)
+              ("C-c l a" . eglot-code-actions)
+              ("C-c l f" . eglot-format)
+              ("C-c l d" . eglot-find-declaration)
+              ("C-c l i" . eglot-find-implementation)
+              ("C-c l t" . eglot-find-typeDefinition)))
 
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
@@ -1209,19 +1242,12 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (add-to-list 'eglot-server-programs
                '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
   (add-to-list 'eglot-server-programs
-               '(python-ts-mode . ("pyright-langserver" "--stdio" "python-flake8")))
+               '(python-ts-mode . ("python-flake8")))
   (add-to-list 'eglot-server-programs
                '(lua-ts-mode . ("lua-language-server")))
   (add-to-list 'eglot-server-programs
-               '(bash-ts-mode . ("bash-language-server" "start"))))
+               '(bash-ts-mode . ("bash-language-server" "start" "spellcheck"))))
 
-
-                                        ;(setq major-mode-remap-alist
-                                        ;      '((c-mode . c-ts-mode)
-                                        ;        (c++-mode . c++-ts-mode)
-                                        ;        (python-mode . python-ts-mode)
-                                        ;        (lua-mode . lua-ts-mode)
-                                        ;        (sh-mode . bash-ts-mode)))
 (setq major-mode-remap-alist
       '((c-mode . c-ts-mode)
         (c++-mode . c++-ts-mode)
@@ -1255,25 +1281,41 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :init
   (progn
     (define-fringe-bitmap 'my-flycheck-fringe-indicator
-      (vector #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111
-              #b00011111)
-      17  ;; height inferred
-      8)   ;; width
+      ;;      (vector #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111
+      ;;              #b00011111)
+      (vector #b01111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000
+              #b11111000)
+      15  ;; height inferred
+      7)   ;; width
     (flycheck-define-error-level 'error
       :severity 2
       :overlay-category 'flycheck-error-overlay
@@ -1293,10 +1335,80 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (custom-set-faces
    '(flycheck-fringe-error ((t (:foreground "red"))))
    '(flycheck-fringe-warning ((t (:foreground "yellow"))))
-   '(flycheck-fringe-info ((t (:foreground "blue"))))))
+   '(flycheck-fringe-info ((t (:foreground "blue")))))
+  ;; Key bindings for rapid error navigation
+  :bind (("C-c n" . flycheck-next-error)
+         ("C-c p" . flycheck-previous-error)
+         ("C-c l" . flycheck-list-errors)
+         ("C-c v" . flycheck-verify-setup)
+         ("C-c ?" . flycheck-describe-checker)
+         ("C-c s" . flycheck-select-checker)))
+
+;; Mission-critical error checking settings
+(setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+;      flycheck-idle-change-delay 0.5          ; Quick feedback
+;      flycheck-display-errors-delay 0.2       ; Immediate error display
+      flycheck-highlighting-mode 'symbols     ; Highlight entire symbols
+      flycheck-indication-mode 'left-fringe   ; Clear visual indicators
+      flycheck-standard-error-navigation t    ; Standard navigation
+      flycheck-deferred-syntax-check nil)     ; No deferred checking
+
+;; Enhanced error display for critical systems
+(setq flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
+
+;; Ensure all checkers are visible
+(setq flycheck-mode-line-prefix "⚠")
+
+;; Critical: Enable checker chaining for comprehensive analysis
+(setq flycheck-checker-error-threshold nil)  ; No error limit
+
+;; Ensure immediate error feedback
+(setq-default flycheck-check-syntax-automatically '(save idle-change mode-enabled))
+
+;; Enhanced error persistence
+(setq flycheck-relevant-error-other-file-show t)
+
+;; Critical: Ensure errors are always visible
+(setq flycheck-highlighting-mode 'symbols)
+(setq flycheck-indication-mode 'left-fringe)
+
+;; Disable flymake globally - we use flycheck exclusively
+(setq-default flymake-mode nil)
+
+;; Ensure flycheck loads before eglot
+(setq package-install-upgrade-built-in t)
+
+;; C/C++ Configuration - For system-critical code
+(add-hook 'c-mode-hook
+          (lambda ()
+            (eglot-ensure)
+            ;; Enable additional static analysis
+            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
+            (flycheck-mode 1)))
+
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (eglot-ensure)
+            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
+            (flycheck-mode 1)))
+
+;; Python Configuration - Enhanced for data analysis and security
+(add-hook 'python-mode-hook
+          (lambda ()
+            (eglot-ensure)
+            ;; Multiple checker chain for comprehensive analysis
+            (setq-local flycheck-checkers '(python-pylsp python-flake8 python-pylint python-mypy))
+            (flycheck-mode 1)))
+
+;; Rust Configuration - Memory safety critical
+(add-hook 'rust-mode-hook
+          (lambda ()
+            (eglot-ensure)
+            (setq-local flycheck-checkers '(rust-cargo rust-clippy))
+            (flycheck-mode 1)))
 #+end_src
 
-** Flymake
+** COMMENT Flymake
 #+begin_src elisp
 (use-package flymake
   :ensure nil
@@ -1336,9 +1448,22 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :defer t
   :hook (prog-mode . flycheck-eglot-mode)
   :config
+  ;; CRITICAL: Enable global integration
   (global-flycheck-eglot-mode 1)
+  
+  ;; NON-EXCLUSIVE MODE: Combine LSP + traditional checkers for maximum coverage
   (setq flycheck-eglot-exclusive nil)
+  
   (global-flycheck-eglot-mode 1)
+  
+  ;; Enable diagnostic tags for enhanced error categorization
+  (setq flycheck-eglot-enable-diagnostic-tags t)
+  
+  ;; Custom tag labels for better error identification
+  (setq flycheck-eglot-tag-labels '("⚠" "⚠" "!"))
+  
+  ;; Enhanced error level configuration
+  (setq flycheck-eglot-level-tag-separator ": ")
   (defun my/eglot-diagnostics-to-flycheck (report &rest _)
     "Convert Eglot diagnostics REPORT to Flycheck errors and report to Flycheck."
     (when (bound-and-true-p flycheck-mode)
@@ -1498,4 +1623,72 @@ $0
 |--------------+--------------|
 ,#+CAPTION: ${7:Table caption here}
 $0
+#+end_src
+
+* TEsting
+#+begin_src elisp
+;;; init.el or config.el
+
+;; 1. Install and enable Doom Modeline
+(use-package doom-modeline
+:ensure t
+:straight t
+:hook (after-init . doom-modeline-mode)
+:init
+;; Let imenu see `doom-modeline-def-*' forms
+(setq doom-modeline-support-imenu t)
+
+;; Sizing (GUI only)
+(setq doom-modeline-height            25
+      doom-modeline-bar-width         4
+      doom-modeline-hud               nil
+      doom-modeline-window-width-limit 85)
+
+;; Buffer path style: relative from project
+(setq doom-modeline-buffer-file-name-style 'relative-from-project)
+
+;; Diagnostics: Flycheck integration
+;; Use Flycheck (disable Eglot’s Flymake integration)
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-stay-out-of '(flymake)))
+(setq doom-modeline-check-icon         t
+      doom-modeline-check-simple-format t
+      doom-modeline-number-limit       99)
+
+;; LSP status (works with Eglot)
+(setq doom-modeline-lsp t
+      doom-modeline-lsp-icon t)
+
+;; Evil state indicator
+(setq doom-modeline-modal            t
+      doom-modeline-modal-icon       t
+      doom-modeline-modal-modern-icon nil)
+
+;; Core display options
+(setq doom-modeline-buffer-name            t
+      doom-modeline-highlight-modified-buffer-name t
+      doom-modeline-column-zero-based      t
+      doom-modeline-percent-position       '(-3 "%p")
+      doom-modeline-position-line-format   '("L%l")
+      doom-modeline-position-column-format '("C%c")
+      doom-modeline-position-column-line-format '("%l:%c")
+      doom-modeline-minor-modes            t
+      doom-modeline-enable-word-count      nil
+      doom-modeline-buffer-encoding        t
+      doom-modeline-indent-info            t
+      doom-modeline-total-line-number      t
+      doom-modeline-vcs-icon               t
+      doom-modeline-vcs-max-length         15
+      doom-modeline-project-name           t
+      doom-modeline-persp-name             t
+      doom-modeline-workspace-name         t
+      doom-modeline-mu4e                   t
+      doom-modeline-gnus                   t
+      doom-modeline-irc                    t
+      doom-modeline-battery                t
+      doom-modeline-time                   t
+      doom-modeline-time-icon              t
+      doom-modeline-time-live-icon         t
+      doom-modeline-time-analogue-clock    t
+      doom-modeline-unicode-fallback       nil))
 #+end_src
