@@ -52,8 +52,9 @@ Xft.antialias: 1 Xft.rgba: rgb
 ;; Handle large chunks of process output, improving peroformence of external processes (like LSP servers)
 (setq read-process-output-max (* 1024 1024)) ;; 1 MB
 
-;; Use plists for deserialization 
+;; Use 'lsp-use-plists' for faster deserialization
 (setenv "LSP_USE_PLISTS" "true")
+(setq lsp-use-plists t)
 
 ;; Disable "file-name-handler-alist" than enable it later for speed.
 (defvar startup/file-name-handler-alist file-name-handler-alist)
@@ -86,11 +87,6 @@ Xft.antialias: 1 Xft.rgba: rgb
 (electric-indent-mode -1)
 (blink-cursor-mode -1)
 #+END_SRC
-
-** Fringe
-#+begin_src elisp :tangle "early-init.el"
-                                        ;(set-fringe-mode 1) ;; FLycheck will not work with fringemode.
-#+end_src
 
 ** Remeber last place you were in file.
 #+BEGIN_SRC elisp :tangle "early-init.el"
@@ -309,7 +305,7 @@ Xft.antialias: 1 Xft.rgba: rgb
 
  ;; Mode-line font and weight
                                         ;   '(mode-line ((t (:font "Jetbrains Mono:size=15" :weight bold :background "black" :foreground "green"))))
-; '(mode-line-active ((t (:font "CaskaydiaCove Nerd Font Mono:size=15" :weight bold :foreground "black" :background "white"))))
+                                        ; '(mode-line-active ((t (:font "CaskaydiaCove Nerd Font Mono:size=15" :weight bold :foreground "black" :background "white"))))
 
  ;; Comments italic, inherits font
  '(font-lock-comment-face ((t (:slant italic))))
@@ -321,24 +317,7 @@ Xft.antialias: 1 Xft.rgba: rgb
  '(font-lock-variable-name-face ((t (:slant italic))))
  '(font-lock-constant-face ((t (:slant italic))))
  '(font-lock-type-face ((t (:slant italic))))
- '(font-lock-builtin-face ((t (:slant italic))))
-
- ;; Lsp 
- '(lsp-face-error ((t (:underline (:style wave :color "Red")))))
- '(lsp-face-warning ((t (:underline (:style wave :color "Orange")))))
- '(lsp-face-info ((t (:underline (:style wave :color "LightBlue")))))
- '(lsp-face-hint ((t (:underline (:style wave :color "Green"))))))
-
-;;; early-init.el --- Mission Critical Early Init -*- lexical-binding: t -*-
-
-;; Disable flymake globally - we use flycheck exclusively
-(setq-default flymake-mode nil)
-
-;; Ensure flycheck loads before eglot
-(setq package-install-upgrade-built-in t)
-
-(set-window-buffer (minibuffer-window) (get-buffer " *Minibuf-0*"))
-;;; early-init.el 
+ '(font-lock-builtin-face ((t (:slant italic)))))
 #+END_SRC
 
 * Init
@@ -402,6 +381,12 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (enable-recursive-minibuffers t)
   (read-extended-command-predicate #'command-completion-default-include-p)
   (treesit-auto-install-grammar t) ; EMACS-31
+  (delete-by-moving-to-trash t) ;; Move deleted files to trash instead of permantenly deleting
+  (split-width-threshold 300)
+  (switch-to-buffer-obey-display-actions t)
+  (tab-always-indent 'complete)
+  (use-short-answers t)
+  (warning-minimum-level :emergency)
   (enable-recursive-minibuffers t) ; Enable recursive minibuffers
   :config
   ;; Add prompt indicator to `completing-read-multiple'.
@@ -684,36 +669,6 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :config
   (setq history-length 15)
   (savehist-mode 1))
-#+END_SRC
-
-* A few more useful configurations...
-#+BEGIN_SRC elisp
-(use-package emacs
-  :defer t
-  :config
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
-  (defun crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-  	              (replace-regexp-in-string
-  	               "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-  	               crm-separator)
-  	              (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-  ;; Vertico commands are hidden in normal buffers.
-  ;; (setq read-extended-command-predicate
-  ;;       #'command-completion-default-include-p)
-
-  ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
 #+END_SRC
 
 * Writing 
@@ -1205,7 +1160,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :defer t)
 #+END_SRC
 
-** Eglot
+** COMMENT Eglot
 =Eglot= is lightweight inbuild emacs package server for Lsp.
 #+BEGIN_SRC elisp
 (use-package eglot
@@ -1281,41 +1236,41 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   :init
   (progn
     (define-fringe-bitmap 'my-flycheck-fringe-indicator
-      ;;      (vector #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111
-      ;;              #b00011111)
-      (vector #b01111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000
-              #b11111000)
-      15  ;; height inferred
-      7)   ;; width
+      (vector #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111
+              #b00011111)
+      ;; (vector #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000
+      ;;         #b11111000)
+      20  ;; height inferred
+      12)   ;; width
     (flycheck-define-error-level 'error
       :severity 2
       :overlay-category 'flycheck-error-overlay
@@ -1346,8 +1301,8 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 
 ;; Mission-critical error checking settings
 (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-;      flycheck-idle-change-delay 0.5          ; Quick feedback
-;      flycheck-display-errors-delay 0.2       ; Immediate error display
+                                        ;      flycheck-idle-change-delay 0.5          ; Quick feedback
+                                        ;      flycheck-display-errors-delay 0.2       ; Immediate error display
       flycheck-highlighting-mode 'symbols     ; Highlight entire symbols
       flycheck-indication-mode 'left-fringe   ; Clear visual indicators
       flycheck-standard-error-navigation t    ; Standard navigation
@@ -1372,6 +1327,9 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 (setq flycheck-highlighting-mode 'symbols)
 (setq flycheck-indication-mode 'left-fringe)
 
+;; Ensure Flycheck shows errors automatically when point moves
+(setq flycheck-auto-display-errors-after-checking t)
+
 ;; Disable flymake globally - we use flycheck exclusively
 (setq-default flymake-mode nil)
 
@@ -1379,40 +1337,82 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 (setq package-install-upgrade-built-in t)
 
 ;; C/C++ Configuration - For system-critical code
-(add-hook 'c-mode-hook
-          (lambda ()
-            (eglot-ensure)
-            ;; Enable additional static analysis
-            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
-            (flycheck-mode 1)))
-
-(add-hook 'c++-mode-hook
-          (lambda ()
-            (eglot-ensure)
-            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
-            (flycheck-mode 1)))
-
-;; Python Configuration - Enhanced for data analysis and security
-(add-hook 'python-mode-hook
-          (lambda ()
-            (eglot-ensure)
-            ;; Multiple checker chain for comprehensive analysis
-            (setq-local flycheck-checkers '(python-pylsp python-flake8 python-pylint python-mypy))
-            (flycheck-mode 1)))
-
-;; Rust Configuration - Memory safety critical
-(add-hook 'rust-mode-hook
-          (lambda ()
-            (eglot-ensure)
-            (setq-local flycheck-checkers '(rust-cargo rust-clippy))
-            (flycheck-mode 1)))
+;;(add-hook 'c-mode-hook
+;;          (lambda ()
+;;            (eglot-ensure)
+;;            ;; Enable additional static analysis
+;;            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
+;;            (flycheck-mode 1)))
+;;
+;;(add-hook 'c++-mode-hook
+;;          (lambda ()
+;;            (eglot-ensure)
+;;            (setq-local flycheck-checkers '(c/c++-clang c/c++-gcc c/c++-cppcheck))
+;;            (flycheck-mode 1)))
+;;
+;;;; Python Configuration - Enhanced for data analysis and security
+;;(add-hook 'python-mode-hook
+;;          (lambda ()
+;;            (eglot-ensure)
+;;            ;; Multiple checker chain for comprehensive analysis
+;;            (setq-local flycheck-checkers '(python-pylsp python-flake8 python-pylint python-mypy))
+;;            (flycheck-mode 1)))
+;;
+;;;; Rust Configuration - Memory safety critical
+;;(add-hook 'rust-mode-hook
+;;          (lambda ()
+;;            (eglot-ensure)
+;;            (setq-local flycheck-checkers '(rust-cargo rust-clippy))
+;;            (flycheck-mode 1)))
 #+end_src
+
+** Lsp ui
+#+begin_src elisp
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode
+  :hook (prog-mode . lsp-ui-mode)
+  :config
+  (lsp-ui-mode)
+  :init
+  ;; Reduce sideline clutter by limiting virtual text
+  (setq lsp-ui-sideline-enable t
+        lsp-ui-sideline-show-code-actions t
+        lsp-ui-sideline-show-hover t
+        lsp-ui-sideline-ignore-duplicate t
+        lsp-ui-peek-enable t
+        lsp-ui-peek-peek-height 25
+        lsp-ui-peek-list-width 60
+        lsp-ui-peek-fontify 'always
+        ;; Configure flycheck integration
+        lsp-ui-flycheck-enable t
+        ;; Customize doc popup
+        lsp-ui-doc-enable t
+        lsp-ui-doc-header t
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-position 'at-point
+        lsp-ui-doc-use-childframe t
+        ;; Enable breadcrumb navigation in headerline
+        lsp-headerline-breadcrumb-enable t
+        lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)
+        lsp-headerline-breadcrumb-icons-enable t)
+  :config
+  ;; Enable lsp-ui-mode whenever lsp-mode is active
+  (add-hook 'lsp-mode-hook #'lsp-ui-mode)
+
+  ;; Optional: Customize keybindings for lsp-ui peek interface
+  (define-key lsp-mode-map (kbd "C-c u") 'lsp-ui-peek-find-definitions)
+  (define-key lsp-mode-map (kbd "C-c U") 'lsp-ui-peek-find-references))
+#+end_src
+
 
 ** COMMENT Flymake
 #+begin_src elisp
 (use-package flymake
   :ensure nil
   :straight nil
+  :disabled t
+  :defer t
   :hook (prog-mode . flymake-mode)
   :custom
   (flymake-indicator-type 'margins)
@@ -1439,7 +1439,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
            compilation-info))))
 #+end_src
 
-** Flycheck-eglot
+** COMMENT Flycheck-eglot
 #+begin_src elisp
 (use-package flycheck-eglot
   :ensure t
@@ -1544,13 +1544,13 @@ Below is a modern Emacs completion system configuration using use-package, lever
 
 ** Code
 
-*** Company
+*** COMMENT Company
 #+BEGIN_SRC elisp
 (use-package company
   :ensure t
   :straight t
   :defer t
-  :hook ((prog-mode text-mode) . company-mode)
+  :hook ((lsp-mode) . company-mode)
   :config
   (setq company-idle-delay 0.1) ;; company-idle-delay set to low causes latency while typing use with caution.
   (setq company-minimum-prefix-length 3))
@@ -1564,7 +1564,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+END_SRC
 
 * Snippets
-
 ** Yasnippet
 #+begin_src elisp
 (use-package yasnippet
@@ -1625,70 +1624,164 @@ $0
 $0
 #+end_src
 
-* TEsting
+** Doom modeline
 #+begin_src elisp
 ;;; init.el or config.el
 
 ;; 1. Install and enable Doom Modeline
 (use-package doom-modeline
-:ensure t
-:straight t
-:hook (after-init . doom-modeline-mode)
-:init
-;; Let imenu see `doom-modeline-def-*' forms
-(setq doom-modeline-support-imenu t)
+  :ensure t
+  :straight t
+  :defer t
+  :hook (after-init . doom-modeline-mode)
+  :init
+  ;; Let imenu see `doom-modeline-def-*' forms
+  (setq doom-modeline-support-imenu t)
 
-;; Sizing (GUI only)
-(setq doom-modeline-height            25
-      doom-modeline-bar-width         4
-      doom-modeline-hud               nil
-      doom-modeline-window-width-limit 85)
+  ;; Sizing (GUI only)
+  (setq doom-modeline-height            25
+        doom-modeline-bar-width         4
+        doom-modeline-hud               nil
+        doom-modeline-window-width-limit 85)
 
-;; Buffer path style: relative from project
-(setq doom-modeline-buffer-file-name-style 'relative-from-project)
+  ;; Buffer path style: relative from project
+  (setq doom-modeline-buffer-file-name-style 'relative-from-project)
 
-;; Diagnostics: Flycheck integration
-;; Use Flycheck (disable Eglot’s Flymake integration)
-(with-eval-after-load 'eglot
-  (add-to-list 'eglot-stay-out-of '(flymake)))
-(setq doom-modeline-check-icon         t
-      doom-modeline-check-simple-format t
-      doom-modeline-number-limit       99)
+  ;; Diagnostics: Flycheck integration
+  ;; Use Flycheck (disable Eglot’s Flymake integration)
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-stay-out-of '(flymake)))
+  (setq doom-modeline-check-icon         t
+        doom-modeline-check-simple-format t
+        doom-modeline-number-limit       99)
 
-;; LSP status (works with Eglot)
-(setq doom-modeline-lsp t
-      doom-modeline-lsp-icon t)
+  ;; LSP status (works with Eglot)
+  (setq doom-modeline-lsp t
+        doom-modeline-lsp-icon t)
 
-;; Evil state indicator
-(setq doom-modeline-modal            t
-      doom-modeline-modal-icon       t
-      doom-modeline-modal-modern-icon nil)
+  ;; Evil state indicator
+  (setq doom-modeline-modal            t
+        doom-modeline-modal-icon       t
+        doom-modeline-modal-modern-icon nil)
 
-;; Core display options
-(setq doom-modeline-buffer-name            t
-      doom-modeline-highlight-modified-buffer-name t
-      doom-modeline-column-zero-based      t
-      doom-modeline-percent-position       '(-3 "%p")
-      doom-modeline-position-line-format   '("L%l")
-      doom-modeline-position-column-format '("C%c")
-      doom-modeline-position-column-line-format '("%l:%c")
-      doom-modeline-minor-modes            t
-      doom-modeline-enable-word-count      nil
-      doom-modeline-buffer-encoding        t
-      doom-modeline-indent-info            t
-      doom-modeline-total-line-number      t
-      doom-modeline-vcs-icon               t
-      doom-modeline-vcs-max-length         15
-      doom-modeline-project-name           t
-      doom-modeline-persp-name             t
-      doom-modeline-workspace-name         t
-      doom-modeline-mu4e                   t
-      doom-modeline-gnus                   t
-      doom-modeline-irc                    t
-      doom-modeline-battery                t
-      doom-modeline-time                   t
-      doom-modeline-time-icon              t
-      doom-modeline-time-live-icon         t
-      doom-modeline-time-analogue-clock    t
-      doom-modeline-unicode-fallback       nil))
+  ;; Core display options
+  (setq doom-modeline-buffer-name            t
+        doom-modeline-highlight-modified-buffer-name t
+        doom-modeline-column-zero-based      t
+        doom-modeline-percent-position       '(-3 "%p")
+        doom-modeline-position-line-format   '("L%l")
+        doom-modeline-position-column-format '("C%c")
+        doom-modeline-position-column-line-format '("%l:%c")
+        doom-modeline-minor-modes            nil
+        doom-modeline-enable-word-count      nil
+        doom-modeline-buffer-encoding        t
+        doom-modeline-indent-info            t
+        doom-modeline-total-line-number      t
+        doom-modeline-vcs-icon               t
+        doom-modeline-vcs-max-length         15
+        doom-modeline-project-name           t
+        doom-modeline-persp-name             t
+        doom-modeline-workspace-name         t
+        doom-modeline-mu4e                   t
+        doom-modeline-gnus                   t
+        doom-modeline-irc                    t
+        doom-modeline-battery                t
+        doom-modeline-time                   t
+        doom-modeline-time-icon              t
+        doom-modeline-time-live-icon         t
+        doom-modeline-time-analogue-clock    t
+        doom-modeline-unicode-fallback       nil))
+#+end_src
+
+** LSP mode
+#+begin_src elisp
+(use-package lsp-mode
+  :ensure t
+  :straight t
+  :defer t
+  :hook (;; Replace XXX-mode with concrete major mode (e.g. python-mode)
+         (lsp-mode . lsp-enable-which-key-integration)  ;; Integrate with Which Key
+         ((js-mode                                      ;; Enable LSP for JavaScript
+           tsx-ts-mode                                  ;; Enable LSP for TSX
+           c-ts-mode
+           typescript-ts-base-mode                      ;; Enable LSP for TypeScript
+           css-mode                                     ;; Enable LSP for CSS
+           go-ts-mode                                   ;; Enable LSP for Go
+           js-ts-mode                                   ;; Enable LSP for JavaScript (TS mode)
+           prisma-mode                                  ;; Enable LSP for Prisma
+           python-ts-mode                             ;; Enable LSP for Python
+           ruby-base-mode                               ;; Enable LSP for Ruby
+           rust-ts-mode                                 ;; Enable LSP for Rust
+           web-mode) . lsp-deferred))                   ;; Enable LSP for Web (HTML)
+  :commands lsp
+  :custom
+  (lsp-keymap-prefix "C-c l")                           ;; Set the prefix for LSP commands.
+  (lsp-format-buffer-on-save t )
+  (lsp-log-io nil)                                      ;; Disable lsp loggging.
+  (lsp-file-watch-ignored t)
+  (lsp-inlay-hint-enable nil)                           ;; Usage of inlay hints.
+  (lsp-completion-provider :none)                       ;; Disable the default completion provider.
+  (lsp-session-file (locate-user-emacs-file ".lsp-session")) ;; Specify session file location.
+  (lsp-log-io nil)                                      ;; Disable IO logging for speed.
+;  (lsp-idle-delay 0.5)                                  ;; Set the delay for LSP to 0 (debouncing).
+  (lsp-keep-workspace-alive nil)                        ;; Disable keeping the workspace alive.
+  ;; Core settings
+  (lsp-enable-xref t)                                   ;; Enable cross-references.
+  (lsp-auto-configure t)                                ;; Automatically configure LSP.
+  (lsp-enable-links nil)                                ;; Disable links.
+  (lsp-eldoc-enable-hover t)                            ;; Enable ElDoc hover.
+  (lsp-enable-file-watchers nil)                        ;; Disable file watchers.
+  (lsp-enable-folding nil)                              ;; Disable folding.
+  (lsp-enable-imenu t)                                  ;; Enable Imenu support.
+  (lsp-enable-indentation t)                            ;; Disable indentation.
+  (lsp-enable-on-type-formatting nil)                   ;; Disable on-type formatting.
+  (lsp-enable-suggest-server-download t)                ;; Enable server download suggestion.
+  (lsp-enable-symbol-highlighting t)                    ;; Enable symbol highlighting.
+  (lsp-enable-text-document-color t)                    ;; Enable text document color.
+  ;; Modeline settings
+  (lsp-modeline-code-actions-enable nil)                ;; Keep modeline clean.
+  (lsp-modeline-diagnostics-enable t)                 ;; Use `flymake' instead.
+  (lsp-modeline-workspace-status-enable t)              ;; Display "LSP" in the modeline when enabled.
+  (lsp-signature-doc-lines 1)                           ;; Limit echo area to one line.
+  (lsp-eldoc-render-all t)                              ;; Render all ElDoc messages.
+  ;; Completion settings
+  (lsp-completion-enable t)                             ;; Enable completion.
+  (lsp-completion-enable-additional-text-edit t)        ;; Enable additional text edits for completions.
+  (lsp-enable-snippet nil)                              ;; Disable snippets
+  (lsp-completion-show-kind t)                          ;; Show kind in completions.
+  ;; Lens settings
+  (lsp-lens-enable t)                                   ;; Enable lens support.
+  ;; Headerline settings
+  (lsp-headerline-breadcrumb-enable-symbol-numbers t)   ;; Enable symbol numbers in the headerline.
+  (lsp-headerline-arrow "▶")                            ;; Set arrow for headerline.
+  (lsp-headerline-breadcrumb-enable-diagnostics nil)    ;; Disable diagnostics in headerline.
+  (lsp-headerline-breadcrumb-icons-enable nil)          ;; Disable icons in breadcrumb.
+  ;; Semantic settings
+  (lsp-semantic-tokens-enable nil))                     ;; Disable semantic tokens.
+
+;; Optional keybindings for lsp-bridge commands
+(global-set-key (kbd "C-c l d") #'lsp-bridge-find-def)
+(global-set-key (kbd "C-c l r") #'lsp-bridge-find-references)
+(global-set-key (kbd "C-c l R") #'lsp-bridge-rename)
+(global-set-key (kbd "C-c l f") #'lsp-bridge-format-buffer)
+
+(setq major-mode-remap-alist
+      '((c-mode . c-ts-mode)
+        (c++-mode . c++-ts-mode)
+        (python-mode . python-ts-mode)
+        (lua-mode . lua-ts-mode)
+        (sh-mode . bash-ts-mode)))
+#+end_src
+
+** Lsp-bridge
+#+begin_src elisp
+(use-package lsp-bridge
+  :ensure t
+  :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+            :build (:not compile))
+  :init
+  (global-lsp-bridge-mode))
+(setq lsp-bridge-c-lsp-server "clangd")
+(add-hook 'lsp-bridge-mode-hook #'acm-mode)
 #+end_src
