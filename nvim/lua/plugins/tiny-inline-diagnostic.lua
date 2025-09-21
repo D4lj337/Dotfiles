@@ -1,8 +1,7 @@
 return {
 	"rachartier/tiny-inline-diagnostic.nvim",
-	event = "VeryLazy",
-	priority = 1000,
-	event = "VeryLazy",
+	event = { "BufReadPre", "BufRead" },
+	--	priority = 1000,
 	config = function()
 		require("tiny-inline-diagnostic").setup()
 		vim.diagnostic.config({ virtual_text = false }) -- Disable default virtual text

@@ -1,7 +1,7 @@
 -- INFO:- - Neovide settings
 if vim.g.neovide then
 	vim.g.neovide_scale_factor = 1.0
-	vim.o.guifont = "JetBrains Mono:h9"
+	vim.o.guifont = "JetBrains Mono:h7"
 	vim.g.neovide_floating_blur_amount_x = 2.0
 	vim.g.neovide_floating_blur_amount_y = 2.0
 	-- vim.g.neovide_theme = 'auto'
@@ -11,9 +11,10 @@ end
 
 -- INFO: Main files
 require("config.remap")
-require("config.lazy")
 require("config.options")
 require("config.lsp")
+require("config.lazy")
+require("config.dap")
 
 -- INFO: Theme
 vim.cmd.colorscheme("catppuccin")

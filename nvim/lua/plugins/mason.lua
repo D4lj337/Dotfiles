@@ -1,8 +1,8 @@
 -- INFO: Mason
 return {
 	"mason/mason.nvim",
-	event = "LspAttach",
-	cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate" },
+	event = { "BufRead", "BufNewFile" },
+	--	cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate" },
 	opts = {
 		ui = {
 			border = "rounded",
@@ -16,8 +16,9 @@ return {
 		ensure_installed = {
 			"prettier",
 			"stylua",
-			"black", -- python
+			--			"black", -- python
 			"shfmt",
+			"ruff",
 			"ast-grep", -- C,C++,Rust
 		},
 		automatic_installed = true,

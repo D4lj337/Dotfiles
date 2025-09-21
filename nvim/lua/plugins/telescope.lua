@@ -1,33 +1,26 @@
 -- INFO:
-
--- Extend or override Telescope configuration for LazyVim
 return {
 	{
 		"nvim-telescope/telescope.nvim",
-		event = "VeryLazy",
+		event = "VimEnter",
 		branch = "master", -- avoiding deprecated warnings, use latest stable if preferred
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 			"nvim-tree/nvim-web-devicons",
+			event = "VimEnter",
 			"folke/which-key.nvim",
-			"andrew-george/telescope-themes", -- optional, for themes
+			event = "VeryLazy",
+			"andrew-george/telescope-themes",
+			event = "VimEnter",
+			"nvim-telescope/telescope-file-browser.nvim",
+			event = "VimEnter",
 		},
 		opts = {
 			defaults = {
 				prompt_prefix = "🔍 ",
 				selection_caret = "➜ ",
 				path_display = { "smart" },
-				mappings = {
-					i = {
-						["<C-j>"] = require("telescope.actions").move_selection_next,
-						["<C-k>"] = require("telescope.actions").move_selection_previous,
-						["<C-c>"] = require("telescope.actions").close,
-					},
-					n = {
-						q = require("telescope.actions").close,
-					},
-				},
 			},
 			pickers = {
 				find_files = {
@@ -36,7 +29,14 @@ return {
 				},
 			},
 			extensions = {
-				-- optional extensions setup
+				file_browser = {
+					theme = "ivy",
+					hijack_netrw = true,
+					mappings = {
+						["i"] = {},
+						["n"] = {},
+					},
+				},
 			},
 		},
 		-- Keybindings for Telescope commands
@@ -48,6 +48,7 @@ return {
 			keymap("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", opts)
 			keymap("n", "<leader>fb", "<cmd>Telescope buffers<cr>", opts)
 			keymap("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", opts)
+			keymap("n", "<leader>fc", "<cmd>Telescope file_browser<cr>", opts)
 
 			keymap("n", "<leader>sh", "<cmd>Telescope help_tags<cr>", opts)
 			keymap("n", "<leader>sk", "<cmd>Telescope keymaps<cr>", opts)

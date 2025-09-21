@@ -1,18 +1,15 @@
 return {
 	"mason-org/mason-lspconfig.nvim",
-	event = "LspAttach",
-	cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate" },
+	event = { "BufReadPre", "BufNewFile" },
+	--	cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate" },
 	opts = {
 		ensure_installed = {
 			"lua_ls", -- lua
 			"pylsp", -- python
-			"bashls", -- bash
-			"cssls", -- css
 			"clangd", -- c/c++
-			"html", -- html
 			"textlsp", -- org,text,latex
+			"sqls", -- sql
 			"ruff", -- python
-			"pyright", -- python
 		},
 		automatic_enable = {
 			"lua_ls",
@@ -22,5 +19,7 @@ return {
 	dependencies = {
 		{ "mason-org/mason.nvim", opts = {} },
 		"neovim/nvim-lspconfig",
+		"hrsh7th/nvim-cmp",
+		"hrsh7th/cmp-nvim-lsp",
 	},
 }
