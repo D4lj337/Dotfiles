@@ -39,8 +39,7 @@ man-db man-pages
 
 * All the kernel parameters
 GRUB_TIMEOUT=0
-GRUB_CMDLINE_LINUX_DEFAULT="amd_pstate=guided"
-GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,integrity,apparmor,bpf"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_pstate=passive elevator=kyber lsm=landlock,lockdown,yama,integrity,apparmor,bpf"
 
 * Hide kernel message when booting
 echo "kernel.printk = 3 3 3 3" > /etc/sysctl.d/20-quiet-printk.conf
@@ -81,12 +80,6 @@ zathura-pdf-mupdf
 zathura-ps
 #+TITLE: System Performance Tweaks
 
-* Grub
-Adding amd_pstate in =etc/default/grub=
-#+begin_src desktop
-GRUB_CMDLINE_LINUX_DEFAULT="amd_pstate=passive"
-#+end_src
-
 * Package needed 
 #+begin_src bash
 libva-mesa-driver # for amd 
@@ -118,9 +111,6 @@ vo=gpu
 
 * I/O schedular 
 Adding the below line in the =/etc/default/grub=. This schedular is optimized for modern storage technologies like SSDs and NVMe drivers, offerig better performance.
-#+begin_src desktop
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash elevator=kyber"
-#+end_src
 
 * Pacman
 Put them in the /etc/pacman.conf
