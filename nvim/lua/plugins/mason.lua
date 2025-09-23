@@ -2,6 +2,8 @@
 return {
 	"mason/mason.nvim",
 	event = { "BufRead", "BufNewFile" },
+	cmd = "Mason",
+	build = ":MasonUpdate",
 	--	cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUpdate" },
 	opts = {
 		ui = {

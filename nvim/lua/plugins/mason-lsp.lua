@@ -8,7 +8,7 @@ return {
 			"pylsp", -- python
 			"clangd", -- c/c++
 			"textlsp", -- org,text,latex
-			"sqls", -- sql
+			--			"sqls", -- sql
 			"ruff", -- python
 		},
 		automatic_enable = {

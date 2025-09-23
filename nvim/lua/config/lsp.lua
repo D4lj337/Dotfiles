@@ -45,6 +45,40 @@ vim.api.nvim_create_autocmd("LspNotify", {
 	end,
 })
 
+---- INFO: Enable diagnostics display (run as a function)
+vim.diagnostic.enable = true
+
+-- INFO: Lsp diagnostics indicator
+vim.diagnostic.config({
+	virtual_text = true,
+	underline = true,
+	update_in_insert = true,
+	severity_sort = true,
+	float = {
+		border = "rounded",
+		source = true,
+	},
+	signs = {
+		text = {
+			[vim.diagnostic.severity.ERROR] = "┃", --- Red
+			[vim.diagnostic.severity.WARN] = "┃", --- Organge
+			[vim.diagnostic.severity.HINT] = "┃", --- Blue
+			[vim.diagnostic.severity.INFO] = "┃", --- Green
+		},
+	},
+})
+
+vim.cmd([[
+  highlight DiagnosticSignError guifg=#FF0000 guibg=NONE gui=bold
+  highlight DiagnosticSignWarn guifg=#FFAA00 guibg=NONE gui=bold
+  highlight DiagnosticSignHint guifg=#0099FF guibg=NONE gui=bold
+  highlight DiagnosticSignInfo guifg=#00CC55 guibg=NONE gui=bold
+]])
+
+-----------------
+--- languges ----
+-----------------
+
 -- INFO: (Re-)define the "clangd" configuration (overrides the resolved chain): >lua
 vim.lsp.config("clangd", {
 	cmd = {
@@ -95,32 +129,8 @@ vim.lsp.config("lua_ls", {
 	},
 })
 
----- INFO: Enable diagnostics display (run as a function)
-vim.diagnostic.enable = true
-
--- INFO: Lsp diagnostics indicator
-vim.diagnostic.config({
-	virtual_text = true,
-	underline = true,
-	update_in_insert = true,
-	severity_sort = true,
-	float = {
-		border = "rounded",
-		source = true,
-	},
-	signs = {
-		text = {
-			[vim.diagnostic.severity.ERROR] = "┃", --- Red
-			[vim.diagnostic.severity.WARN] = "┃", --- Organge
-			[vim.diagnostic.severity.HINT] = "┃", --- Blue
-			[vim.diagnostic.severity.INFO] = "┃", --- Green
-		},
-	},
-})
-
-vim.cmd([[
-  highlight DiagnosticSignError guifg=#FF0000 guibg=NONE gui=bold
-  highlight DiagnosticSignWarn guifg=#FFAA00 guibg=NONE gui=bold
-  highlight DiagnosticSignHint guifg=#0099FF guibg=NONE gui=bold
-  highlight DiagnosticSignInfo guifg=#00CC55 guibg=NONE gui=bold
-]])
+-- Prevent LSP fold
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+-- or the newer version:
+vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"

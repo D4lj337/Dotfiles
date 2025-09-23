@@ -41,7 +41,7 @@ return {
 		},
 		-- Keybindings for Telescope commands
 		config = function()
-			local wk = require("which-key")
+			--			local wk = require("which-key")
 			local opts = { noremap = true, silent = true }
 			local keymap = vim.api.nvim_set_keymap
 			keymap("n", "<leader>ff", "<cmd>Telescope find_files<cr>", opts)

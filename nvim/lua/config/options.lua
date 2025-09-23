@@ -69,3 +69,10 @@ vim.opt.listchars = {
 vim.o.spell = true
 vim.o.spelllang = "en_us"
 vim.o.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20"
+
+-- Disable fold
+vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.fillchars = { fold = " " }
+vim.opt.foldmethod = "indent"
+vim.opt.foldenable = false
+vim.opt.foldlevel = 99
