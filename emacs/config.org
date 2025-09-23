@@ -413,14 +413,17 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 #+begin_src elisp
 (use-package bionic-reading
   :load-path "lisp/"
+  :defer t
   :commands (infu-bionic-reading-buffer))
 
 (use-package gdb
   :load-path "lisp/"
+  :defer t
   :commands (gdb))
 
 (use-package feature
   :load-path "lisp/"
+  :defer t
   :commands (my/protect-vital-buffers
              my/toggle-mode-line
              my/visit-init
@@ -501,7 +504,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (add-hook 'emacs-startup-hook (lambda ()
   			                      (when (display-graphic-p)
   			                        (show-welcome-screen-buffer)))))
-
 #+END_SRC
 
 * Functions
@@ -704,7 +706,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 
 (with-eval-after-load 'org
   ;; Org document title color and size
-  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
+  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 1.0 :weight 'bold)
   ;; Org headings levels 1-7 beautiful colors
   (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.5 :weight 'bold)
   (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.4 :weight 'bold)
@@ -973,6 +975,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 
 ** Visit the config.
 #+BEGIN_SRC elisp :tangle "lisp/feature.el"
+
 (defun my/visit-init ()
   "Open the Emacs init file."
   (interactive)
@@ -1544,7 +1547,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
 
 ** Code
 
-*** COMMENT Company
+*** Company
 #+BEGIN_SRC elisp
 (use-package company
   :ensure t
