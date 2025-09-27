@@ -992,7 +992,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 ;;               '(bash-mode . bash-ts-mode))
 #+end_src
 
-** Treesitter
+** COMMENT Treesitter
 #+begin_src elisp
   ;; Ensure you have the packages installed
   (straight-use-package 'tree-sitter)
@@ -1116,7 +1116,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
     (flymake-mode nil))
 #+end_src
 
-** Eldoc
+** COMMENT Eldoc
 #+begin_src elisp
   (use-package eldoc
     :ensure nil
@@ -1212,346 +1212,331 @@ Below is a modern Emacs completion system configuration using use-package, lever
   $0
 #+end_src
 
-* Testing completion
+** Programming
 #+begin_src elisp
-;; Performance optimizations (place at top)
-;(setq read-process-output-max (* 1024 1024)) ; 1MB for better LSP performance
-;(setq gc-cons-threshold (* 100 1024 1024))   ; 100MB GC threshold
+  (use-package treesit
+    :ensure nil ; built-in
+    :straight nil
+    :custom
+    (treesit-font-lock-level 4)  ; Maximum font-lock decoration
+    :config
+    ;; Configure treesit-language-source-alist for grammar installation
+    (setq treesit-language-source-alist
+          '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+            (c "https://github.com/tree-sitter/tree-sitter-c")
+            (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+            (css "https://github.com/tree-sitter/tree-sitter-css")
+            (cmake "https://github.com/uyha/tree-sitter-cmake")
+            (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+            (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+            (go "https://github.com/tree-sitter/tree-sitter-go")
+            (html "https://github.com/tree-sitter/tree-sitter-html")
+            (java "https://github.com/tree-sitter/tree-sitter-java")
+            (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+            (json "https://github.com/tree-sitter/tree-sitter-json")
+            (lua "https://github.com/Azganoth/tree-sitter-lua")
+            (make "https://github.com/alemuller/tree-sitter-make")
+            (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+            (python "https://github.com/tree-sitter/tree-sitter-python")
+            (rust "https://github.com/tree-sitter/tree-sitter-rust")
+            (sql "https://github.com/m-novikov/tree-sitter-sql")
+            (toml "https://github.com/tree-sitter/tree-sitter-toml")
+            (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+            (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+            (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
-(use-package treesit
-  :ensure nil ; built-in
-  :custom
-  (treesit-font-lock-level 4)  ; Maximum font-lock decoration
-  :config
-  ;; Configure treesit-language-source-alist for grammar installation
-  (setq treesit-language-source-alist
-        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-          (c "https://github.com/tree-sitter/tree-sitter-c")
-          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-          (css "https://github.com/tree-sitter/tree-sitter-css")
-          (cmake "https://github.com/uyha/tree-sitter-cmake")
-          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-          (go "https://github.com/tree-sitter/tree-sitter-go")
-          (html "https://github.com/tree-sitter/tree-sitter-html")
-          (java "https://github.com/tree-sitter/tree-sitter-java")
-          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          (json "https://github.com/tree-sitter/tree-sitter-json")
-          (lua "https://github.com/Azganoth/tree-sitter-lua")
-          (make "https://github.com/alemuller/tree-sitter-make")
-          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-          (python "https://github.com/tree-sitter/tree-sitter-python")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          (sql "https://github.com/m-novikov/tree-sitter-sql")
-          (toml "https://github.com/tree-sitter/tree-sitter-toml")
-          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+    ;; Auto-remap major modes to tree-sitter versions
+    (setq major-mode-remap-alist
+          '((bash-mode . bash-ts-mode)
+            (c-mode . c-ts-mode)
+            (c++-mode . c++-ts-mode)
+            (css-mode . css-ts-mode)
+            (go-mode . go-ts-mode)
+            (java-mode . java-ts-mode)
+            (js-mode . js-ts-mode)
+            (javascript-mode . js-ts-mode)
+            (json-mode . json-ts-mode)
+            (python-mode . python-ts-mode)
+            (rust-mode . rust-ts-mode)
+            (typescript-mode . typescript-ts-mode))))
 
-  ;; Auto-remap major modes to tree-sitter versions
-  (setq major-mode-remap-alist
-        '((bash-mode . bash-ts-mode)
-          (c-mode . c-ts-mode)
-          (c++-mode . c++-ts-mode)
-          (css-mode . css-ts-mode)
-          (go-mode . go-ts-mode)
-          (java-mode . java-ts-mode)
-          (js-mode . js-ts-mode)
-          (javascript-mode . js-ts-mode)
-          (json-mode . json-ts-mode)
-          (python-mode . python-ts-mode)
-          (rust-mode . rust-ts-mode)
-          (typescript-mode . typescript-ts-mode))))
+  ;; Treesit-auto for automatic grammar management
+  (use-package treesit-auto
+    :ensure t
+    :custom
+    (treesit-auto-install 'prompt)  ; Prompt before installing grammars
+    :config
+    (treesit-auto-add-to-auto-mode-alist 'all)
+    (global-treesit-auto-mode))
 
-;; Treesit-auto for automatic grammar management
-(use-package treesit-auto
-  :ensure t
-  :custom
-  (treesit-auto-install 'prompt)  ; Prompt before installing grammars
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
+  ;; ============================================================================
+  ;; LSP-mode Configuration
+  ;; ============================================================================
 
-(use-package lsp-mode
-  :ensure t
-  :hook ((prog-mode . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :custom
-  ;; Performance optimizations
-  (lsp-completion-provider :none)          ; Use Corfu instead of company
-  (lsp-idle-delay 0.5)                     ; Debounce timer for after-change-function
-  (lsp-log-io nil)                         ; Disable for performance
-  (lsp-keep-workspace-alive nil)           ; Close LSP server when buffers are closed
-  (lsp-enable-file-watchers nil)           ; Disable file watchers for performance
+  (use-package lsp-mode
+    :ensure t
+    :hook ((prog-mode . lsp-deferred)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :custom
+    ;; Performance optimizations
+    (lsp-completion-provider :none)          ; Use Corfu instead of company
+    (lsp-idle-delay 0.5)                     ; Debounce timer for after-change-function
+    (lsp-log-io nil)                         ; Disable for performance
+    (lsp-keep-workspace-alive nil)           ; Close LSP server when buffers are closed
+    (lsp-enable-file-watchers nil)           ; Disable file watchers for performance
 
-  ;; UI and features
-  (lsp-keymap-prefix "C-c l")              ; LSP command prefix
-  (lsp-diagnostics-provider :flycheck)     ; Use flycheck for diagnostics
-  (lsp-eldoc-enable-hover t)               ; Enable hover documentation
-  (lsp-signature-render-documentation nil) ; Disable to reduce noise
-  (lsp-signature-doc-lines 1)              ; Limit signature lines
+    ;; UI and features
+    (lsp-keymap-prefix "C-c l")              ; LSP command prefix
+    (lsp-diagnostics-provider :flycheck)     ; Use flycheck for diagnostics
+    (lsp-eldoc-enable-hover t)               ; Enable hover documentation
+    (lsp-signature-render-documentation nil) ; Disable to reduce noise
+    (lsp-signature-doc-lines 1)              ; Limit signature lines
 
-  ;; Completion settings
-  (lsp-completion-enable t)
-  (lsp-completion-enable-additional-text-edit t)
-  (lsp-enable-snippet t)
-  (lsp-completion-show-kind t)
+    ;; Completion settings
+    (lsp-completion-enable t)
+    (lsp-completion-enable-additional-text-edit t)
+    (lsp-enable-snippet t)
+    (lsp-completion-show-kind t)
 
-  ;; UI elements
-  (lsp-headerline-breadcrumb-enable t)
-  (lsp-headerline-breadcrumb-enable-diagnostics nil)
-  (lsp-modeline-code-actions-enable nil)
-  (lsp-modeline-diagnostics-enable nil)
-  (lsp-modeline-workspace-status-enable t)
+    ;; UI elements
+    (lsp-headerline-breadcrumb-enable t)
+    (lsp-headerline-breadcrumb-enable-diagnostics nil)
+    (lsp-modeline-code-actions-enable nil)
+    (lsp-modeline-diagnostics-enable nil)
+    (lsp-modeline-workspace-status-enable t)
 
-  ;; Semantic tokens (let tree-sitter handle syntax highlighting)
-  (lsp-semantic-tokens-enable nil)
-  (lsp-enable-symbol-highlighting t)
-  (lsp-lens-enable nil)
+    ;; Semantic tokens (let tree-sitter handle syntax highlighting)
+    (lsp-semantic-tokens-enable nil)
+    (lsp-enable-symbol-highlighting t)
+    (lsp-lens-enable nil)
 
-  :init
-  (setq lsp-use-plists t)  ; Performance improvement
+    :init
+    (setq lsp-use-plists t)  ; Performance improvement
 
-  :config
-  ;; Fix orderless completion with lsp-mode
-  (add-hook 'lsp-completion-mode-hook
+    :config
+    ;; Fix orderless completion with lsp-mode
+    (add-hook 'lsp-completion-mode-hook
+              (lambda ()
+                (setq-local completion-category-defaults
+                            (assoc-delete-all 'lsp-capf completion-category-defaults))))
+
+    ;; Enhanced keybindings
+    (define-key lsp-mode-map (kbd "C-c l r") 'lsp-rename)
+    (define-key lsp-mode-map (kbd "C-c l a") 'lsp-execute-code-action)
+    (define-key lsp-mode-map (kbd "C-c l f") 'lsp-format-buffer)
+    (define-key lsp-mode-map (kbd "C-c l o") 'lsp-organize-imports)
+    (define-key lsp-mode-map (kbd "C-c l d") 'lsp-find-declaration)
+    (define-key lsp-mode-map (kbd "C-c l i") 'lsp-find-implementation)
+    (define-key lsp-mode-map (kbd "C-c l t") 'lsp-find-type-definition)
+    (define-key lsp-mode-map (kbd "C-c l s") 'lsp-signature-activate)
+    (define-key lsp-mode-map (kbd "C-c l h") 'lsp-describe-thing-at-point))
+
+  ;; LSP UI for additional features
+  (use-package lsp-ui
+    :ensure t
+    :after lsp-mode
+    :custom
+    ;; Documentation
+    (lsp-ui-doc-enable t)
+    (lsp-ui-doc-show-with-cursor nil)        ; Don't show doc on cursor hover
+    (lsp-ui-doc-show-with-mouse nil)         ; Don't show doc on mouse hover
+    (lsp-ui-doc-position 'at-point)          ; Show doc at point
+    (lsp-ui-doc-include-signature t)         ; Include signature in doc
+    (lsp-ui-doc-max-width 120)
+    (lsp-ui-doc-max-height 30)
+
+    ;; Sideline
+    (lsp-ui-sideline-enable t)
+    (lsp-ui-sideline-show-hover nil)
+    (lsp-ui-sideline-show-diagnostics t)
+    (lsp-ui-sideline-show-code-actions t)
+    (lsp-ui-sideline-diagnostic-max-lines 10)
+
+    ;; Peek
+    (lsp-ui-peek-enable t)
+    (lsp-ui-peek-always-show t)
+    (lsp-ui-peek-peek-height 30)
+    (lsp-ui-peek-list-width 50)
+
+    ;; Imenu
+    (lsp-ui-imenu-enable t)
+    (lsp-ui-imenu-kind-position 'top)
+
+    :bind (:map lsp-mode-map
+                ("C-c C-d" . lsp-ui-doc-glance)
+                ("C-c C-p" . lsp-ui-peek-find-definitions)
+                ("C-c C-r" . lsp-ui-peek-find-references)
+                ("C-c C-i" . lsp-ui-imenu)))
+
+  ;; ============================================================================
+  ;; Flycheck Configuration
+  ;; ============================================================================
+
+  (use-package flycheck
+    :ensure t
+    :hook (prog-mode . flycheck-mode)
+    :custom
+    (flycheck-display-errors-delay 0.3)
+    (flycheck-idle-change-delay 1.0)
+    (flycheck-indication-mode 'left-fringe)
+    (flycheck-highlighting-mode 'symbols)
+    (flycheck-check-syntax-automatically '(save mode-enabled))
+    :config
+    ;; Enhanced error navigation
+    (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
+    (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
+    (define-key flycheck-mode-map (kbd "C-c ! l") 'flycheck-list-errors)
+    (define-key flycheck-mode-map (kbd "C-c ! v") 'flycheck-verify-setup)
+
+    ;; Multiple checker support - example for TypeScript + ESLint
+    (add-hook 'lsp-managed-mode-hook
+              (lambda ()
+                (when (derived-mode-p 'typescript-ts-mode 'js-ts-mode 'tsx-ts-mode)
+                  (setq-local flycheck-local-cache
+                             '((lsp . ((next-checkers . (javascript-eslint))))))))))
+
+  ;; ============================================================================
+  ;; Corfu - Modern Completion UI
+  ;; ============================================================================
+
+  (use-package corfu
+    :ensure t
+    :custom
+    (corfu-auto t)                    ; Enable auto completion
+    (corfu-auto-delay 0.2)            ; Faster auto completion
+    (corfu-auto-prefix 2)             ; Minimum prefix length
+    (corfu-cycle t)                   ; Enable cycling for corfu-next/previous
+    (corfu-preselect 'prompt)         ; Preselect the prompt
+    (corfu-on-exact-match nil)        ; Don't auto-complete on exact match
+    (corfu-scroll-margin 5)           ; Use scroll margin
+    (corfu-popupinfo-delay '(0.5 . 0.2)) ; Documentation popup timing
+    :init
+    (global-corfu-mode)
+    :config
+    ;; Enhanced keybindings
+    (define-key corfu-map (kbd "TAB") 'corfu-next)
+    (define-key corfu-map (kbd "S-TAB") 'corfu-previous)
+    (define-key corfu-map (kbd "RET") 'corfu-insert)
+    (define-key corfu-map (kbd "M-.") 'corfu-show-location)
+    (define-key corfu-map (kbd "M-h") 'corfu-show-documentation)
+
+    ;; Enable Corfu in minibuffer
+    (defun corfu-enable-in-minibuffer ()
+      "Enable Corfu in the minibuffer."
+      (when (local-variable-p 'completion-at-point-functions)
+        (setq-local corfu-auto nil)
+        (corfu-mode 1)))
+    (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
+
+  ;; Corfu Popupinfo for documentation
+  (use-package corfu-popupinfo
+    :after corfu
+    :hook (corfu-mode . corfu-popupinfo-mode)
+    :custom
+    (corfu-popupinfo-delay '(0.5 . 0.2))
+    (corfu-popupinfo-hide nil))
+
+  ;; ============================================================================
+  ;; Cape - Completion At Point Extensions
+  ;; ============================================================================
+
+  (use-package cape
+    :ensure t
+    :init
+    ;; Add useful completion sources
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+    :config
+    ;; Silence pcomplete
+    (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+    (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
+    ;; Mode-specific configurations
+    (add-hook 'eshell-mode-hook
+              (lambda ()
+                (setq-local completion-at-point-functions
+                            (list #'cape-file #'pcomplete-completions-at-point))))
+
+    (add-hook 'org-mode-hook
+              (lambda ()
+                (add-to-list 'completion-at-point-functions #'cape-dabbrev))))
+
+  ;; ============================================================================
+  ;; Kind-icon - Beautiful Icons for Completion
+  ;; ============================================================================
+
+  (use-package kind-icon
+    :ensure t
+    :after corfu
+    :custom
+    (kind-icon-use-icons t)
+    (kind-icon-default-face 'corfu-default)
+    (kind-icon-blend-background nil)
+    (kind-icon-blend-frac 0.08)
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+
+    ;; Cache regeneration hooks
+    (add-hook 'modus-themes-after-load-theme-hook #'kind-icon-reset-cache)
+    (add-hook 'ef-themes-post-load-hook #'kind-icon-reset-cache))
+
+  ;; ============================================================================
+  ;; Enhanced Eldoc Configuration
+  ;; ============================================================================
+
+  (use-package eldoc
+    :ensure nil ; built-in
+    :custom
+    (eldoc-echo-area-use-multiline-p 3)
+    (eldoc-echo-area-display-truncation-message nil)
+    (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+    :config
+    (add-hook 'prog-mode-hook #'eldoc-mode)
+
+    ;; Better integration with lsp-mode
+    (add-hook 'lsp-managed-mode-hook
+              (lambda ()
+                (setq eldoc-documentation-functions
+                      (cons #'lsp-eldoc-function
+                            (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
+
+  ;; ============================================================================
+  ;; Orderless - Flexible Completion Style
+  ;; ============================================================================
+
+  (use-package orderless
+    :ensure t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-overrides '((file (styles basic partial-completion))))
+    (orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex)))
+
+  ;; ============================================================================
+  ;; Additional Development Enhancements
+  ;; ============================================================================
+
+  ;; Automatically install tree-sitter grammars
+  (defun install-common-tree-sitter-grammars ()
+    "Install commonly used tree-sitter grammars."
+    (interactive)
+    (dolist (lang '(bash c cpp css go html java javascript json lua python rust typescript tsx yaml))
+      (when (treesit-language-available-p lang)
+        (message "Grammar for %s already installed" lang))
+      (unless (treesit-language-available-p lang)
+        (message "Installing grammar for %s..." lang)
+        (treesit-install-language-grammar lang))))
+
+  ;; Improved indentation for tree-sitter modes
+  (add-hook 'prog-mode-hook
             (lambda ()
-              (setq-local completion-category-defaults
-                          (assoc-delete-all 'lsp-capf completion-category-defaults))))
+              (when (and (fboundp 'treesit-parser-list)
+                         (treesit-parser-list))
+                (setq-local indent-tabs-mode nil)
+                (setq-local tab-width 4))))
 
-  ;; Enhanced keybindings
-  (define-key lsp-mode-map (kbd "C-c l r") 'lsp-rename)
-  (define-key lsp-mode-map (kbd "C-c l a") 'lsp-execute-code-action)
-  (define-key lsp-mode-map (kbd "C-c l f") 'lsp-format-buffer)
-  (define-key lsp-mode-map (kbd "C-c l o") 'lsp-organize-imports)
-  (define-key lsp-mode-map (kbd "C-c l d") 'lsp-find-declaration)
-  (define-key lsp-mode-map (kbd "C-c l i") 'lsp-find-implementation)
-  (define-key lsp-mode-map (kbd "C-c l t") 'lsp-find-type-definition)
-  (define-key lsp-mode-map (kbd "C-c l s") 'lsp-signature-activate)
-  (define-key lsp-mode-map (kbd "C-c l h") 'lsp-describe-thing-at-point))
-
-;; LSP UI for additional features
-(use-package lsp-ui
-  :ensure t
-  :after lsp-mode
-  :custom
-  ;; Documentation
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-show-with-cursor nil)        ; Don't show doc on cursor hover
-  (lsp-ui-doc-show-with-mouse nil)         ; Don't show doc on mouse hover
-  (lsp-ui-doc-position 'at-point)          ; Show doc at point
-  (lsp-ui-doc-include-signature t)         ; Include signature in doc
-  (lsp-ui-doc-max-width 120)
-  (lsp-ui-doc-max-height 30)
-
-  ;; Sideline
-  (lsp-ui-sideline-enable t)
-  (lsp-ui-sideline-show-hover nil)
-  (lsp-ui-sideline-show-diagnostics t)
-  (lsp-ui-sideline-show-code-actions t)
-  (lsp-ui-sideline-diagnostic-max-lines 10)
-
-  ;; Peek
-  (lsp-ui-peek-enable t)
-  (lsp-ui-peek-always-show t)
-  (lsp-ui-peek-peek-height 30)
-  (lsp-ui-peek-list-width 50)
-
-  ;; Imenu
-  (lsp-ui-imenu-enable t)
-  (lsp-ui-imenu-kind-position 'top)
-
-  :bind (:map lsp-mode-map
-              ("C-c C-d" . lsp-ui-doc-glance)
-              ("C-c C-p" . lsp-ui-peek-find-definitions)
-              ("C-c C-r" . lsp-ui-peek-find-references)
-              ("C-c C-i" . lsp-ui-imenu)))
-
-;; ============================================================================
-;; Flycheck Configuration
-;; ============================================================================
-
-(use-package flycheck
-  :ensure t
-  :hook (prog-mode . flycheck-mode)
-  :custom
-  (flycheck-display-errors-delay 0.3)
-  (flycheck-idle-change-delay 1.0)
-  (flycheck-indication-mode 'left-fringe)
-  (flycheck-highlighting-mode 'symbols)
-  (flycheck-check-syntax-automatically '(save mode-enabled))
-  :config
-  ;; Enhanced error navigation
-  (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
-  (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
-  (define-key flycheck-mode-map (kbd "C-c ! l") 'flycheck-list-errors)
-  (define-key flycheck-mode-map (kbd "C-c ! v") 'flycheck-verify-setup)
-
-  ;; Multiple checker support - example for TypeScript + ESLint
-  (add-hook 'lsp-managed-mode-hook
-            (lambda ()
-              (when (derived-mode-p 'typescript-ts-mode 'js-ts-mode 'tsx-ts-mode)
-                (setq-local flycheck-local-cache
-                           '((lsp . ((next-checkers . (javascript-eslint))))))))))
-
-;; ============================================================================
-;; Corfu - Modern Completion UI
-;; ============================================================================
-
-(use-package corfu
-  :ensure t
-  :custom
-  (corfu-auto t)                    ; Enable auto completion
-  (corfu-auto-delay 0.2)            ; Faster auto completion
-  (corfu-auto-prefix 2)             ; Minimum prefix length
-  (corfu-cycle t)                   ; Enable cycling for corfu-next/previous
-  (corfu-preselect 'prompt)         ; Preselect the prompt
-  (corfu-on-exact-match nil)        ; Don't auto-complete on exact match
-  (corfu-scroll-margin 5)           ; Use scroll margin
-  (corfu-popupinfo-delay '(0.5 . 0.2)) ; Documentation popup timing
-  :init
-  (global-corfu-mode)
-  :config
-  ;; Enhanced keybindings
-  (define-key corfu-map (kbd "TAB") 'corfu-next)
-  (define-key corfu-map (kbd "S-TAB") 'corfu-previous)
-  (define-key corfu-map (kbd "RET") 'corfu-insert)
-  (define-key corfu-map (kbd "M-.") 'corfu-show-location)
-  (define-key corfu-map (kbd "M-h") 'corfu-show-documentation)
-
-  ;; Enable Corfu in minibuffer
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer."
-    (when (local-variable-p 'completion-at-point-functions)
-      (setq-local corfu-auto nil)
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer))
-
-;; Corfu Popupinfo for documentation
-(use-package corfu-popupinfo
-  :after corfu
-  :hook (corfu-mode . corfu-popupinfo-mode)
-  :custom
-  (corfu-popupinfo-delay '(0.5 . 0.2))
-  (corfu-popupinfo-hide nil))
-
-;; ============================================================================
-;; Cape - Completion At Point Extensions
-;; ============================================================================
-
-(use-package cape
-  :ensure t
-  :init
-  ;; Add useful completion sources
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
-  :config
-  ;; Silence pcomplete
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
-
-  ;; Mode-specific configurations
-  (add-hook 'eshell-mode-hook
-            (lambda ()
-              (setq-local completion-at-point-functions
-                          (list #'cape-file #'pcomplete-completions-at-point))))
-
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (add-to-list 'completion-at-point-functions #'cape-dabbrev))))
-
-;; ============================================================================
-;; Kind-icon - Beautiful Icons for Completion
-;; ============================================================================
-
-(use-package kind-icon
-  :ensure t
-  :after corfu
-  :custom
-  (kind-icon-use-icons t)
-  (kind-icon-default-face 'corfu-default)
-  (kind-icon-blend-background nil)
-  (kind-icon-blend-frac 0.08)
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-
-  ;; Cache regeneration hooks
-  (add-hook 'modus-themes-after-load-theme-hook #'kind-icon-reset-cache)
-  (add-hook 'ef-themes-post-load-hook #'kind-icon-reset-cache))
-
-;; ============================================================================
-;; Enhanced Eldoc Configuration
-;; ============================================================================
-
-(use-package eldoc
-  :ensure nil ; built-in
-  :custom
-  (eldoc-echo-area-use-multiline-p 3)
-  (eldoc-echo-area-display-truncation-message nil)
-  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  :config
-  (add-hook 'prog-mode-hook #'eldoc-mode)
-
-  ;; Better integration with lsp-mode
-  (add-hook 'lsp-managed-mode-hook
-            (lambda ()
-              (setq eldoc-documentation-functions
-                    (cons #'lsp-eldoc-function
-                          (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
-
-;; ============================================================================
-;; Orderless - Flexible Completion Style
-;; ============================================================================
-
-(use-package orderless
-  :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion))))
-  (orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex)))
-
-;; ============================================================================
-;; Additional Development Enhancements
-;; ============================================================================
-
-;; Automatically install tree-sitter grammars
-(defun install-common-tree-sitter-grammars ()
-  "Install commonly used tree-sitter grammars."
-  (interactive)
-  (dolist (lang '(bash c cpp css go html java javascript json lua python rust typescript tsx yaml))
-    (when (treesit-language-available-p lang)
-      (message "Grammar for %s already installed" lang))
-    (unless (treesit-language-available-p lang)
-      (message "Installing grammar for %s..." lang)
-      (treesit-install-language-grammar lang))))
-
-;; Improved indentation for tree-sitter modes
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (when (and (fboundp 'treesit-parser-list)
-                       (treesit-parser-list))
-              (setq-local indent-tabs-mode nil)
-              (setq-local tab-width 4))))
-
-;; ============================================================================
-;; Keybinding Enhancements
-;; ============================================================================
-
-;; Global development keybindings
-(global-set-key (kbd "M-/") 'hippie-expand)
-(global-set-key (kbd "C-c t g") 'install-common-tree-sitter-grammars)
-(global-set-key (kbd "C-c t r") 'treesit-install-language-grammar)
-
-;; ============================================================================
-;; Performance Monitoring (Optional - remove in production)
-;; ============================================================================
-
-;; Uncomment for debugging
-;; (setq lsp-log-io t)
-;; (setq lsp-print-performance t)
-```
-
-(setq-local flycheck-local-cache
-           '((lsp . ((next-checkers . (javascript-eslint))))))
+  ;; Global development keybindings
+  (global-set-key (kbd "M-/") 'hippie-expand)
+  (global-set-key (kbd "C-x t g") 'install-common-tree-sitter-grammars)
+  (global-set-key (kbd "C-x w r") 'treesit-install-language-grammar)
 #+end_src
