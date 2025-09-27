@@ -30,3 +30,29 @@ vim.api.nvim_create_autocmd("QuitPre", {
 		end
 	end,
 })
+
+-- INFO: Set the make command for C/C++ files (adjust based on your project)
+
+vim.g.makeprg = "gcc -O3 -march=native -flto -fno-rtti -o %:r % && ./%:r" -- Adjust for your project
+
+-- Function to trigger compilation
+local function compile_code()
+	vim.cmd("make") -- Runs the `make` command in Neovim
+end
+
+-- Keymap for compiling code (leader+c), you can adjust the leader key if needed
+vim.api.nvim_set_keymap("n", "<leader>c", ":lua compile_code()<CR>", { noremap = true, silent = true })
+
+-- Automatically open the quickfix window after running make
+vim.cmd([[autocmd QuickFixCmdPost make nested copen]])
+
+-- Optionally, set up a custom function for handling tmux integration
+vim.cmd([[
+  function! TmuxCompile()
+    " This function will trigger the tmux keybinding for C-c c
+    silent !tmux send-keys -t 0 ':make<CR>'
+  endfunction
+]])
+
+-- Bind the function to a key (for example, <leader>tmux to trigger tmux compile)
+vim.api.nvim_set_keymap("n", "<leader>tmux", ":call TmuxCompile()<CR>", { noremap = true, silent = true })

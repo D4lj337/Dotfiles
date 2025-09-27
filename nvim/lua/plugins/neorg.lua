@@ -3,7 +3,7 @@ return {
 	ft = { "norg" },
 	--lazy = false,
 	version = "*",
-	config = true,
+	--	config = true,
 	opts = {
 		load = {
 			["core.defaults"] = {},

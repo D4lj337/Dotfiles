@@ -58,6 +58,7 @@ return {
 			keymap("n", "<leader>sr", "<cmd>Telescope resume<cr>", opts)
 			keymap("n", "<leader>s.", "<cmd>Telescope oldfiles<cr>", opts)
 			keymap("n", "<leader><leader>", "<cmd>Telescope buffers<cr>", opts)
+			keymap("n", "<leader>or", "<cmd>Telescope orgmode search_headings<cr>", opts)
 		end,
 	},
 }

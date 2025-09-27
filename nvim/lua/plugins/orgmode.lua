@@ -1,9 +1,16 @@
 --INFO: Org mode
 return {
 	"nvim-orgmode/orgmode",
-	event = "VeryLazy",
 	ft = { "org" },
-	dependencies = { "nvim-orgmode/org-bullets.nvim", ft = { "org" }, after = "orgmode", lazy = true, opts = {} },
+	lazy = true,
+	event = { "BufReadPre", "BufNewFile" },
+	dependencies = {
+		"nvim-orgmode/org-bullets.nvim",
+		--		ft = { "org" },
+		opts = {},
+		after = { "orgmode" },
+		"nvim-orgmode/telescope-orgmode.nvim",
+	},
 	opts = {
 		org_agenda_files = { "~/Documents/org/**/*" },
 		org_default_notes_file = "~/Documents/org/",
@@ -107,3 +114,15 @@ return {
 		},
 	},
 }
+
+--return {
+--	"nvim-orgmode/orgmode",
+--	event = "VeryLazy",
+--	config = function()
+--		-- Setup orgmode
+--		require("orgmode").setup({
+--			org_agenda_files = "~/orgfiles/**/*",
+--			org_default_notes_file = "~/orgfiles/refile.org",
+--		})
+--	end,
+--}
