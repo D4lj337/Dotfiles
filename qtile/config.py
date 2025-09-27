@@ -243,6 +243,13 @@ def init_widgets_list():
             borderwidth=5,
         ),
         widget.Spacer(),
+       widget.GenPollCommand(
+       update_interval=60,
+       cmd="~/.config/qtile/scripts/emacs-daemon.sh",
+            shell=True,
+            fmt="[{}]",
+        ),
+        #widget.Spacer(),
         widget.Pomodoro(
             color_break={"ffff00"},
             notification_on=True,
@@ -280,7 +287,7 @@ def init_widgets_list():
             padding=5,
             update_interval=4,
         ),
-        widget.Spacer(),
+        #widget.Spacer(),
         widget.ThermalSensor(
             tag_sensor="Tctl",
             foreground=bfg,
