@@ -46,7 +46,7 @@ unset ***file-name-handler-alist*** during startup
  (setq corfu-debug t)
  (setq eglot-events-buffer-size 2000000)  ; Increase for debugging
 
-  ;; Use 'lsp-use-plists' for faster deserialization
+  ;; Tree-sitter performence enchancement
   (setenv "LSP_USE_PLISTS" "true")
   (setq lsp-use-plists t)
 
@@ -290,7 +290,7 @@ unset ***file-name-handler-alist*** during startup
     (setq-default prescient-history-length 1000)
 #+END_SRC
 
-** Fonts
+** COMMENT Fonts
 #+BEGIN_SRC elisp :tangle "early-init.el"
   (custom-set-faces
    ;; Default font for all text
@@ -302,15 +302,15 @@ unset ***file-name-handler-alist*** during startup
    '(mode-line ((t (:family "Roboto Mono" :weight Bold))))
 
    ;; Comments italic
-   '(font-lock-comment-face ((t (:family "JetBrains Mono":slant italic))))
+   '(font-lock-comment-face ((t (:family "Roboto Mono":slant italic))))
    ;; Keywords, functions, strings, etc. italic with no color change
-   '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
+   '(font-lock-keyword-face ((t (:family "Roboto Mono" :slant italic))))
    '(font-lock-function-name-face ((t (:slant italic))))
-   '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
-   '(font-lock-variable-name-face ((t (:family "JetBrains Mono":slant italic))))
-   '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
-   '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
-   '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
+   '(font-lock-string-face ((t (:family "Roboto Mono" :slant italic))))
+   '(font-lock-variable-name-face ((t (:family "Roboto Mono":slant italic))))
+   '(font-lock-constant-face ((t (:family "Roboto Mono" :slant italic))))
+   '(font-lock-type-face ((t (:family "Roboto Mono" :slant italic))))
+   '(font-lock-builtin-face ((t (:family "Roboto Mono" :slant italic))))
    )
   #+end_src
 
@@ -347,7 +347,6 @@ unset ***file-name-handler-alist*** during startup
 ** Maximum native eln speed.
 Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 #+BEGIN_SRC elisp
-
   (require 'use-package)
   (setq use-package-compute-statistics t)
 
@@ -355,9 +354,9 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (setq native-comp-speed 3)
 
   (native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively)
-  (setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+  (setq native-comp-compiler-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
-  (setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+  (setq native-comp-driver-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
      #+END_SRC
 
 * General settings
@@ -642,7 +641,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 
 * Pacakges
 
-** Dired Async
+** COMMENT Dired Async
 Builtin package allows =Dired= operations like copying and renaming files to run asynchronously.
 #+begin_src elisp
   (use-package dired-async
@@ -670,9 +669,10 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 #+END_SRC
 
 ** Kind icon
-#+begin_src
+#+begin_src elisp
   (use-package kind-icon
     :ensure t
+    :straight t
     :after corfu
     :custom
     (kind-icon-use-icons t)
@@ -886,8 +886,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (use-package evil-collection
     :ensure t
     :straight t
-    :after (evil)
-    :commands (evil-collection-init))
+    :hook (evil-mode . evil-collection-init))
 #+END_SRC
 
 ** Evil tutor
@@ -903,30 +902,31 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 #+BEGIN_SRC elisp
   (load-theme 'modus-vivendi-deuteranopia t)
 
-  ;;  (use-package catppuccin-theme
-  ;;    :ensure t
-  ;;    :straight t
-  ;;    :custom
-  ;;    (catppuccin-flavor 'mocha)
-  ;;    :hook
-  ;;    (emacs-startup . (lambda ()
-  ;;                       (catppuccin-set-color 'base "#000000")
-  ;;                       (catppuccin-set-color 'mantle "#000000" 'mocha)
-  ;;                       (catppuccin-set-color 'crust "#000000" 'mocha)
-  ;;                       (load-theme 'catppuccin t :no-confirm)
-  ;;                       (catppuccin-reload))))
+;;    (use-package catppuccin-theme
+;;      :ensure t
+;;      :straight t
+;;      :custom
+;;      (catppuccin-flavor 'mocha)
+;;      :hook
+;;      (emacs-startup . (lambda ()
+;;                         (catppuccin-set-color 'base "#000000")
+;;                         (catppuccin-set-color 'mantle "#000000" 'mocha)
+;;                         (catppuccin-set-color 'crust "#000000" 'mocha)
+;;                         (load-theme 'catppuccin t :no-confirm)
+;;                         (catppuccin-reload))))
 
 
-    ;;  (use-package catppuccin-theme
-    ;;    :ensure t
-    ;;    :straight t
-    ;;    :config
-    ;;    (setq catppuccin-flavor 'mocha)
-    ;;    (catppuccin-set-color 'base "#000000")
-    ;;    (catppuccin-set-color 'mantle "#000000" 'mocha)
-    ;;    (catppuccin-set-color 'crust "#000000" 'mocha)
-    ;;    (load-theme 'catppuccin t)
-    ;;    (catppuccin-reload))
+;;      (use-package catppuccin-theme
+;;        :ensure t
+;;        :straight t
+;;        :config
+;;        (setq catppuccin-flavor 'mocha)
+;;        :custom
+;;        (catppuccin-set-color 'base "#000000")
+;;        (catppuccin-set-color 'mantle "#000000" 'mocha)
+;;        (catppuccin-set-color 'crust "#000000" 'mocha)
+;;        (load-theme 'catppuccin t)
+;;        (catppuccin-reload))
 #+END_SRC
 
 * Programming
@@ -1050,10 +1050,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 
 ** Cape
 #+begin_src elisp
-  ;; ============================================================================
-  ;; Cape - Completion At Point Extensions
-  ;; ============================================================================
-
   (use-package cape
     :ensure t
     :straight t
@@ -1162,9 +1158,16 @@ Below is a modern Emacs completion system configuration using use-package, lever
   (use-package lua-mode
     :ensure t
     :straight t
-    :mode ("\\.org\\'" . org-mode))
+    :mode ("\\.lua\\'" . lua-ts-mode))
                #+end_src
 
+** Python mode
+#+begin_src elisp
+  (use-package lua-mode
+    :ensure nil
+    :straight nil
+    :mode ("\\.py\\'" . python-ts-mode))
+               #+end_src
 ** Treesitter
 #+begin_src elisp
   (use-package treesit
@@ -1196,8 +1199,11 @@ Below is a modern Emacs completion system configuration using use-package, lever
             (toml "https://github.com/tree-sitter/tree-sitter-toml")
             (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
             (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-            (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+            (yaml "https://github.com/ikatyang/tree-sitter-yaml"))))
+#+end_src
 
+** Auto remap
+#+begin_src elisp
     ;; Auto-remap major modes to tree-sitter versions
     (setq major-mode-remap-alist
           '((bash-mode . bash-ts-mode)
@@ -1212,10 +1218,10 @@ Below is a modern Emacs completion system configuration using use-package, lever
             (json-mode . json-ts-mode)
             (python-mode . python-ts-mode)
             (rust-mode . rust-ts-mode)
-            (typescript-mode . typescript-ts-mode))))
+            (typescript-mode . typescript-ts-mode)))
 #+end_src
 
-*** Treesit auto
+** Treesit auto
 #+begin_src elisp
   ;; Treesit-auto for automatic grammar management
   (use-package treesit-auto
@@ -1235,9 +1241,18 @@ Below is a modern Emacs completion system configuration using use-package, lever
     :straight t
     :hook ((prog-mode . lsp-deferred)
            (lsp-mode . lsp-enable-which-key-integration))
+    ;;    :hook ((c-ts-mode
+    ;;            c++-ts-mode
+    ;;            rust-ts-mode
+    ;;            python-ts-mode
+    ;;            js-ts-mode
+    ;;            typescript-ts-mode
+    ;;            tsx-ts-mode
+    ;;            go-ts-mode) . lsp-deferred)
+    :commands (lsp lsp-deferred)
     :custom
     ;; Performance optimizations
-    (lsp-completion-provider :none)          ; Use Corfu instead of company
+    (lsp-completion-provider :corfu)          ; Use Corfu instead of company
     (lsp-idle-delay 0.0)                     ; Debounce timer for after-change-function
     (lsp-log-io nil)                         ; Disable for performance
     (lsp-keep-workspace-alive nil)           ; Close LSP server when buffers are closed
@@ -1248,7 +1263,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 
     ;; UI and features
     (lsp-keymap-prefix "C-c l")              ; LSP command prefix
-    (lsp-diagnostics-provider :flycheck)     ; Use flycheck for diagnostics
     (lsp-eldoc-enable-hover t)               ; Enable hover documentation
     (lsp-signature-render-documentation nil) ; Disable to reduce noise
     (lsp-signature-doc-lines 1)              ; Limit signature lines
@@ -1264,8 +1278,8 @@ Below is a modern Emacs completion system configuration using use-package, lever
     ;; UI elements
                                           ;    (lsp-headerline-breadcrumb-enable t)
     (lsp-headerline-breadcrumb-enable-diagnostics nil)
-    (lsp-modeline-code-actions-enable nil)
-    (lsp-modeline-diagnostics-enable nil)
+    (lsp-modeline-code-actions-enable t)
+    (lsp-modeline-diagnostics-enable t)
     (lsp-modeline-workspace-status-enable t)
 
     ;; Semantic tokens (let tree-sitter handle syntax highlighting)
@@ -1295,7 +1309,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
     (define-key lsp-mode-map (kbd "C-c l h") 'lsp-describe-thing-at-point))
 
   ;; Hook the lsp to the language mode
-  (add-hook 'lua-mode-hook #'lsp)
+                                          ;  (add-hook 'lua-mode-hook #'lsp)
 #+end_src
 
 ** LSP UI
@@ -1350,14 +1364,17 @@ Below is a modern Emacs completion system configuration using use-package, lever
     (flycheck-idle-change-delay 0.0)
     (flycheck-indication-mode 'left-fringe)
     (flycheck-highlighting-mode 'symbols)
+    (flycheck-mode-line-prefix "FlyC")
     (flycheck-check-syntax-automatically '(idle-change mode-enabled save))
+    ;; Integration with LSP
+    (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+    :bind
+    (("C-c f n" . my/flycheck-next-error-with-wrap)
+     ("C-c f p" . my/flycheck-previous-error-with-wrap)
+     ("C-c f l" . flycheck-list-errors)
+     ("C-c f v" . flycheck-verify-setup)
+     ("C-c f h" . flycheck-display-error-at-point))
     :config
-    ;; Enhanced error navigation
-    (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
-    (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
-    (define-key flycheck-mode-map (kbd "C-c ! l") 'flycheck-list-errors)
-    (define-key flycheck-mode-map (kbd "C-c ! v") 'flycheck-verify-setup)
-
     ;; Multiple checker support - example for TypeScript + ESLint
     (add-hook 'lsp-managed-mode-hook
               (lambda ()
@@ -1412,7 +1429,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
   (global-set-key (kbd "C-x w r") 'treesit-install-language-grammar)
 #+end_src
 
-** Format-all
+** COMMENT Format-all
 #+begin_src elisp
   (use-package format-all
     :ensure t
@@ -1501,6 +1518,94 @@ Below is a modern Emacs completion system configuration using use-package, lever
   (setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
 #+end_src
 
+* Modeline
+#+begin_src elisp
+  (use-package doom-modeline
+    :ensure t
+    :hook (after-init . doom-modeline-mode)
+    :custom
+    ;; Core appearance
+    (doom-modeline-height 28)
+    (doom-modeline-bar-width 3)
+    (doom-modeline-window-width-limit 120)
+    (doom-modeline-project-detection 'auto)
+
+    ;; Icons and styling
+    (doom-modeline-icon t)
+    (doom-modeline-major-mode-icon t)
+    (doom-modeline-major-mode-color-icon t)
+    (doom-modeline-buffer-state-icon t)
+    (doom-modeline-buffer-modification-icon t)
+    (doom-modeline-unicode-fallback t)
+
+    ;; Buffer information
+    (doom-modeline-buffer-name t)
+    (doom-modeline-highlight-modified-buffer-name t)
+    (doom-modeline-buffer-file-name-style 'auto)
+
+    ;; Git integration
+    (doom-modeline-vcs-max-length 20)
+    (doom-modeline-enable-word-count nil)
+
+    ;; LSP integration
+    (doom-modeline-lsp t)
+    (doom-modeline-lsp-icon t)
+
+    ;; Flycheck integration
+    (doom-modeline-checker-simple-format t)
+
+    ;; Workspace and environment
+    (doom-modeline-workspace-name t)
+    (doom-modeline-persp-name t)
+    (doom-modeline-env-version t)
+    (doom-modeline-env-enable-python t)
+    (doom-modeline-env-enable-ruby t)
+    (doom-modeline-env-enable-perl t)
+    (doom-modeline-env-enable-go t)
+    (doom-modeline-env-enable-elixir t)
+    (doom-modeline-env-enable-rust t)
+
+    ;; System monitoring
+    (doom-modeline-battery t)
+    (doom-modeline-time t)
+    (doom-modeline-display-misc-in-all-mode-lines t)
+
+    ;; Modal editing support
+    (doom-modeline-modal-icon t)
+    (doom-modeline-modal-modern-icon t)
+
+    :config
+    ;; Custom segments for enhanced functionality
+    (defun my/doom-modeline-treesit-indicator ()
+      "Show tree-sitter status in modeline."
+      (when (and (fboundp 'treesit-available-p)
+                 (treesit-available-p)
+                 (treesit-language-at (point)))
+        (format " TS[%s]" (treesit-language-at (point)))))
+
+    ;; Add custom segments
+    (doom-modeline-def-segment my-treesit
+      (my/doom-modeline-treesit-indicator))
+
+    ;; Enhanced LSP segment with more details
+    (doom-modeline-def-segment my-lsp-enhanced
+      (when (and (bound-and-true-p lsp-mode)
+                 (lsp-workspaces))
+        (concat
+         (doom-modeline-lsp)
+         (when (lsp-workspace-folders)
+           (format " [%d]" (length (lsp-workspace-folders)))))))
+
+    ;; Custom modeline format
+    (doom-modeline-def-modeline 'my-main
+      '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+      '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs my-treesit time))
+
+    ;; Apply custom modeline
+    (add-hook 'doom-modeline-mode-hook
+              (lambda () (doom-modeline-set-modeline 'my-main 'default))))
+#+end_src
+
 * Disbaled packages
 
 ** COMMENT Eglot
@@ -1584,23 +1689,23 @@ Below is a modern Emacs completion system configuration using use-package, lever
            (flycheck-mode .
                           (lambda ()
                             (define-fringe-bitmap 'my-flycheck-fringe-indicator
-                              (vector #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111
-                                      #b00011111)
+                              (vector #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111
+                                      #b011111)
                               20  ;; height
                               12) ;; width
                             (flycheck-define-error-level 'error
@@ -1636,19 +1741,4 @@ Below is a modern Emacs completion system configuration using use-package, lever
     (flycheck-relevant-error-other-file-show t)
     (flycheck-auto-display-errors-after-checking t)
     (flymake-mode nil))
-    #+end_src
-
-* Modeline
-#+begin_src elisp
-;; Doom modeline configuration
-(use-package doom-modeline
-  :init
-  (setq doom-modeline-height 25
-        doom-modeline-bar-width 4
-        doom-modeline-icon t
-        doom-modeline-major-mode-icon t
-        doom-modeline-minor-modes nil
-        doom-modeline-buffer-file-name-style 'relative-from-project
-        doom-modeline-vcs-max-length 20)
-  :hook (after-init . doom-modeline-mode))
-#+end_src
+        #+end_src
