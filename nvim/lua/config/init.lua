@@ -31,28 +31,25 @@ vim.api.nvim_create_autocmd("QuitPre", {
 	end,
 })
 
--- INFO: Set the make command for C/C++ files (adjust based on your project)
-
-vim.g.makeprg = "gcc -O3 -march=native -flto -fno-rtti -o %:r % && ./%:r" -- Adjust for your project
-
--- Function to trigger compilation
-local function compile_code()
-	vim.cmd("make") -- Runs the `make` command in Neovim
+-- :INFO: Function to resize window if its buffer name matches "compilation"
+local function resize_compilation_window()
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local buf = vim.api.nvim_win_get_buf(win)
+		local buf_name = vim.api.nvim_buf_get_name(buf)
+		if buf_name:match("compilation") then
+			-- Resize window height to 15 lines (adjust number as needed)
+			vim.api.nvim_win_set_height(win, 10)
+			-- Optionally resize the width:
+			-- vim.api.nvim_win_set_width(win, 80)
+		end
+	end
 end
 
--- Keymap for compiling code (leader+c), you can adjust the leader key if needed
-vim.api.nvim_set_keymap("n", "<leader>c", ":lua compile_code()<CR>", { noremap = true, silent = true })
-
--- Automatically open the quickfix window after running make
-vim.cmd([[autocmd QuickFixCmdPost make nested copen]])
-
--- Optionally, set up a custom function for handling tmux integration
-vim.cmd([[
-  function! TmuxCompile()
-    " This function will trigger the tmux keybinding for C-c c
-    silent !tmux send-keys -t 0 ':make<CR>'
-  endfunction
-]])
-
--- Bind the function to a key (for example, <leader>tmux to trigger tmux compile)
-vim.api.nvim_set_keymap("n", "<leader>tmux", ":call TmuxCompile()<CR>", { noremap = true, silent = true })
+-- Example to call after running a compilation command:
+-- Here attaching to an autocmd for buffer window enter on compile buffer filetype
+vim.api.nvim_create_autocmd("BufWinEnter", {
+	pattern = "*",
+	callback = function()
+		resize_compilation_window()
+	end,
+})

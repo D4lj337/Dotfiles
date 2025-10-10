@@ -1,128 +1,124 @@
 --INFO: Org mode
+--return {
+--	"nvim-orgmode/orgmode",
+--	ft = { "org" },
+--	lazy = true,
+--	event = { "BufReadPre", "BufNewFile" },
+--	dependencies = {
+--		"nvim-orgmode/org-bullets.nvim",
+--		--		ft = { "org" },
+--		opts = {},
+--		after = { "orgmode" },
+--		"nvim-orgmode/telescope-orgmode.nvim",
+--	},
+--	opts = {
+--		org_agenda_files = { "~/Documents/org/**/*" },
+--		org_default_notes_file = "~/Documents/org/",
+--		org_todo_keywords = { "TODO", "DOING", "WAITING", "|", "DONE", "DELEGATED", "CANCELLED" },
+--		org_todo_keyword_faces = {
+--			TODO = ":foreground red :weight bold",
+--			DOING = ":foreground yellow :weight bold",
+--			WAITING = ":foreground orange :weight bold",
+--			DONE = ":foreground green :weight bold",
+--			DELEGATED = ":foreground blue :weight bold",
+--			CANCELLED = ":foreground grey :weight bold",
+--		},
+--		org_deadline_warning_days = 14,
+--		org_agenda_start_on_weekday = 1, -- Mondayorg
+--		org_hide_emphasis_markers = true,
+--		org_startup_indented = false,
+--		org_adapt_indentation = false,
+--		org_startup_folded = "showeverything",
+--		org_hide_leading_stars = true,
+--		org_log_done = "time",
+--		org_log_repeat = "time",
+--
+--		-- Enhanced capture templates for cybersecurity workflow
+--		org_capture_templates = {
+--			-- Task management
+--			t = {
+--				description = "Task",
+--				template = "* TODO %?\n  SCHEDULED: %t\n  :PROPERTIES:\n  :CREATED: %U\n  :EFFORT: \n  :END:",
+--				target = "~/orgfiles/tasks.org",
+--			},
+--
+--			-- Meeting notes
+--			m = {
+--				description = "Meeting",
+--				template = "* Meeting: %? :meeting:\n  %U\n  ** Attendees\n  ** Agenda\n  ** Notes\n  ** Action Items\n  *** TODO ",
+--				target = "~/orgfiles/meetings.org",
+--			},
+--			-- Research and learning
+--			r = {
+--				description = "Research",
+--				template = "* %? :research:\n  %U\n  ** Objective\n  ** Resources\n  *** Links\n  *** Papers\n  *** Tools\n  ** Notes\n  ** Findings\n  ** Next Steps",
+--				target = "~/orgfiles/research.org",
+--			},
+--			-- Code snippets and solutions
+--			c = {
+--				description = "Code",
+--				template = "* %? :code:%^{Language|C|Lua|Python|Bash}:\n  %U\n  ** Description\n  ** Use Case\n  #+BEGIN_SRC %\3\n  %i\n  #+END_SRC\n  ** Notes\n  ** References",
+--				target = "~/orgfiles/code_snippets.org",
+--			},
+--
+--			-- Security findings and vulnerabilities
+--			s = {
+--				description = "Security Finding",
+--				template = "* %? :security:\n  %U\n  ** Severity: %^{Severity|Critical|High|Medium|Low}\n  ** Asset: %^{Asset}\n  ** Description\n  %i\n  ** Technical Details\n  ** Impact\n  ** Remediation\n  *** TODO Immediate Actions\n  *** TODO Long-term Solutions\n  ** References\n  ** Timeline",
+--				target = "~/orgfiles/security.org",
+--			},
+--
+--			-- Learning notes
+--			l = {
+--				description = "Learning Note",
+--				template = "* %? :learning:\n  %U\n  ** Topic: %^{Topic}\n  ** Source: %^{Source}\n  ** Key Concepts\n  ** Examples\n  #+BEGIN_SRC %^{Language|text|c|lua|python}\n  \n  #+END_SRC\n  ** Questions\n  ** Practice Ideas",
+--				target = "~/orgfiles/learning.org",
+--			},
+--
+--			-- Project planning
+--			p = {
+--				description = "Project",
+--				template = "* PROJECT %? :project:\n  %U\n  ** Objectives\n  ** Requirements\n  ** Timeline\n  *** DOING Phase 1\n  *** TODO Phase 2\n  *** TODO Phase 3\n  ** Resources\n  ** Notes",
+--				target = "~/orgfiles/projects.org",
+--			},
+--			-- Quick notes
+--			n = {
+--				description = "Note",
+--				template = "* %? :note:\n  %U\n  %i",
+--				target = "~/Documents/org/",
+--			},
+--		},
+--
+--		mappings = {
+--			global = {
+--				org_agenda = "<leader>oa",
+--				org_capture = "<leader>oc",
+--			},
+--			org = {
+--				org_timestamp_up = "<C-a>",
+--				org_timestamp_down = "<C-x>",
+--				org_change_date = "cid",
+--				org_todo = "cit",
+--				org_todo_prev = "ciT",
+--				org_toggle_checkbox = "<C-space>",
+--				org_open_at_point = "<leader>oo",
+--				org_refile = "<leader>or",
+--				org_archive_subtree = "<leader>o$",
+--				org_set_tags_command = "<leader>ot",
+--				org_toggle_archive_tag = "<leader>oA",
+--				org_add_note = "<leader>on",
+--				org_store_link = "<leader>ol",
+--				org_insert_link = "<leader>oli",
+--				org_export = "<leader>oe",
+--			},
+--		},
+--	},
+--}
+
 return {
 	"nvim-orgmode/orgmode",
 	ft = { "org" },
 	lazy = true,
 	event = { "BufReadPre", "BufNewFile" },
-	dependencies = {
-		"nvim-orgmode/org-bullets.nvim",
-		--		ft = { "org" },
-		opts = {},
-		after = { "orgmode" },
-		"nvim-orgmode/telescope-orgmode.nvim",
-	},
-	opts = {
-		org_agenda_files = { "~/Documents/org/**/*" },
-		org_default_notes_file = "~/Documents/org/",
-		org_todo_keywords = { "TODO", "DOING", "WAITING", "|", "DONE", "DELEGATED", "CANCELLED" },
-		org_todo_keyword_faces = {
-			TODO = ":foreground red :weight bold",
-			DOING = ":foreground yellow :weight bold",
-			WAITING = ":foreground orange :weight bold",
-			DONE = ":foreground green :weight bold",
-			DELEGATED = ":foreground blue :weight bold",
-			CANCELLED = ":foreground grey :weight bold",
-		},
-		org_deadline_warning_days = 14,
-		org_agenda_start_on_weekday = 1, -- Mondayorg
-		org_hide_emphasis_markers = true,
-		org_startup_indented = false,
-		org_adapt_indentation = false,
-		org_startup_folded = "showeverything",
-		org_hide_leading_stars = true,
-		org_log_done = "time",
-		org_log_repeat = "time",
-
-		-- Enhanced capture templates for cybersecurity workflow
-		org_capture_templates = {
-			-- Task management
-			t = {
-				description = "Task",
-				template = "* TODO %?\n  SCHEDULED: %t\n  :PROPERTIES:\n  :CREATED: %U\n  :EFFORT: \n  :END:",
-				target = "~/orgfiles/tasks.org",
-			},
-
-			-- Meeting notes
-			m = {
-				description = "Meeting",
-				template = "* Meeting: %? :meeting:\n  %U\n  ** Attendees\n  ** Agenda\n  ** Notes\n  ** Action Items\n  *** TODO ",
-				target = "~/orgfiles/meetings.org",
-			},
-			-- Research and learning
-			r = {
-				description = "Research",
-				template = "* %? :research:\n  %U\n  ** Objective\n  ** Resources\n  *** Links\n  *** Papers\n  *** Tools\n  ** Notes\n  ** Findings\n  ** Next Steps",
-				target = "~/orgfiles/research.org",
-			},
-			-- Code snippets and solutions
-			c = {
-				description = "Code",
-				template = "* %? :code:%^{Language|C|Lua|Python|Bash}:\n  %U\n  ** Description\n  ** Use Case\n  #+BEGIN_SRC %\3\n  %i\n  #+END_SRC\n  ** Notes\n  ** References",
-				target = "~/orgfiles/code_snippets.org",
-			},
-
-			-- Security findings and vulnerabilities
-			s = {
-				description = "Security Finding",
-				template = "* %? :security:\n  %U\n  ** Severity: %^{Severity|Critical|High|Medium|Low}\n  ** Asset: %^{Asset}\n  ** Description\n  %i\n  ** Technical Details\n  ** Impact\n  ** Remediation\n  *** TODO Immediate Actions\n  *** TODO Long-term Solutions\n  ** References\n  ** Timeline",
-				target = "~/orgfiles/security.org",
-			},
-
-			-- Learning notes
-			l = {
-				description = "Learning Note",
-				template = "* %? :learning:\n  %U\n  ** Topic: %^{Topic}\n  ** Source: %^{Source}\n  ** Key Concepts\n  ** Examples\n  #+BEGIN_SRC %^{Language|text|c|lua|python}\n  \n  #+END_SRC\n  ** Questions\n  ** Practice Ideas",
-				target = "~/orgfiles/learning.org",
-			},
-
-			-- Project planning
-			p = {
-				description = "Project",
-				template = "* PROJECT %? :project:\n  %U\n  ** Objectives\n  ** Requirements\n  ** Timeline\n  *** DOING Phase 1\n  *** TODO Phase 2\n  *** TODO Phase 3\n  ** Resources\n  ** Notes",
-				target = "~/orgfiles/projects.org",
-			},
-			-- Quick notes
-			n = {
-				description = "Note",
-				template = "* %? :note:\n  %U\n  %i",
-				target = "~/Documents/org/",
-			},
-		},
-
-		mappings = {
-			global = {
-				org_agenda = "<leader>oa",
-				org_capture = "<leader>oc",
-			},
-			org = {
-				org_timestamp_up = "<C-a>",
-				org_timestamp_down = "<C-x>",
-				org_change_date = "cid",
-				org_todo = "cit",
-				org_todo_prev = "ciT",
-				org_toggle_checkbox = "<C-space>",
-				org_open_at_point = "<leader>oo",
-				org_refile = "<leader>or",
-				org_archive_subtree = "<leader>o$",
-				org_set_tags_command = "<leader>ot",
-				org_toggle_archive_tag = "<leader>oA",
-				org_add_note = "<leader>on",
-				org_store_link = "<leader>ol",
-				org_insert_link = "<leader>oli",
-				org_export = "<leader>oe",
-			},
-		},
-	},
+	opts = {},
 }
-
---return {
---	"nvim-orgmode/orgmode",
---	event = "VeryLazy",
---	config = function()
---		-- Setup orgmode
---		require("orgmode").setup({
---			org_agenda_files = "~/orgfiles/**/*",
---			org_default_notes_file = "~/orgfiles/refile.org",
---		})
---	end,
---}

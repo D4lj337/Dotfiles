@@ -1,6 +1,9 @@
 -- INFO: Enabling the lsp servers for various programming languges
 vim.lsp.enable({ "Lua_ls", "pyright", "clangd", "bashls", "pylsp" })
 
+-- INFO: Disable logging
+vim.lsp.log.set_level(vim.log.levels.OFF)
+
 -- INFO: attaching to lsp server
 vim.api.nvim_create_autocmd("LspAttach", {
 	group = vim.api.nvim_create_augroup("my.lsp", {}),
@@ -8,6 +11,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
 		if client:supports_method("textDocument/implementation") then
 			-- Create a keymap for vim.lsp.buf.implementation ...
+		end
+
+		-- Lsp capabilities with Blink
+		if vim.fn.has("nvim-0.11") == 1 and vim.lsp.config then
+			vim.lsp.config("*", {
+				capabilities = require("blink.cmp").get_lsp_capabilities(),
+			})
 		end
 
 		-- INFO: Enable auto-completion. Note: Use CTRL-Y to select an item. |complete_CTRL-Y|
@@ -54,27 +64,40 @@ vim.diagnostic.config({
 	underline = true,
 	update_in_insert = true,
 	severity_sort = true,
-	float = {
-		border = "rounded",
-		source = true,
-	},
+	--	float = {
+	--		border = "rounded",
+	--		source = true,
+	--	},
 	signs = {
 		text = {
 			[vim.diagnostic.severity.ERROR] = "┃", --- Red
+
 			[vim.diagnostic.severity.WARN] = "┃", --- Organge
+
 			[vim.diagnostic.severity.HINT] = "┃", --- Blue
+
 			[vim.diagnostic.severity.INFO] = "┃", --- Green
 		},
 	},
 })
 
 vim.cmd([[
-  highlight DiagnosticSignError guifg=#FF0000 guibg=NONE gui=bold
-  highlight DiagnosticSignWarn guifg=#FFAA00 guibg=NONE gui=bold
-  highlight DiagnosticSignHint guifg=#0099FF guibg=NONE gui=bold
-  highlight DiagnosticSignInfo guifg=#00CC55 guibg=NONE gui=bold
+   highlight DiagnosticSignError guifg=#FF0000 guibg=NONE gui=bold
+   highlight DiagnosticSignWarn guifg=#FFAA00 guibg=NONE gui=bold
+   highlight DiagnosticSignHint guifg=#0099FF guibg=NONE gui=bold
+   highlight DiagnosticSignInfo guifg=#00CC55 guibg=NONE gui=bold
 ]])
 
+--vim.diagnostic.config({
+--	signs = {
+--		text = {
+--			[vim.diagnostic.severity.ERROR] = "", -- or other icon of your choice here, this is just what my config has:
+--			[vim.diagnostic.severity.WARN] = "",
+--			[vim.diagnostic.severity.INFO] = "",
+--			[vim.diagnostic.severity.HINT] = "󰌵",
+--		},
+--	},
+--})
 -----------------
 --- languges ----
 -----------------

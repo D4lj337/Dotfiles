@@ -11,7 +11,6 @@ o.relativenumber = true
 o.wrap = true
 o.linebreak = true
 o.breakindent = true
-o.tabstop = 4
 o.swapfile = false
 o.shiftwidth = 4
 o.signcolumn = "yes"
@@ -44,6 +43,7 @@ o.ignorecase = true
 o.smartcase = true
 o.incsearch = true
 o.hlsearch = true
+o.splitbelow = true
 
 -- INFO: Fix slow scrolling in the terminal
 o.ttyfast = true

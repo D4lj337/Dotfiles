@@ -1,8 +1,8 @@
 return {
 	"saghen/blink.cmp",
+	event = { "InsertEnter", "CmdlineEnter" },
 	--	event = { "CmdlineEnter", "InsertEnter" },
-
-	event = { "BufReadPre", "BufNewFile", "InsertEnter" },
+	--event = { "BufReadPre", "BufNewFile", "InsertEnter", "CmdlineEnter" },
 	-- optional: provides snippets for the snippet source
 	dependencies = { "rafamadriz/friendly-snippets" },
 
@@ -37,15 +37,63 @@ return {
 		},
 
 		-- (Default) Only show the documentation popup when manually triggered
-		completion = { documentation = { auto_show = true } },
-		signature = { enabled = true },
+		completion = {
+			accept = {
+				-- experimental auto-brackets support
+				auto_brackets = {
+					enabled = true,
+				},
+			},
+			menu = {
+				draw = {
+					treesitter = { "lsp" },
+				},
+			},
+			documentation = {
+				auto_show = true,
+				auto_show_delay_ms = 0,
+				window = {
+					border = "rounded",
+				},
+			},
+			ghost_text = {
+				enabled = vim.g.ai_cmp,
+			},
+			--signature = {
+			--	enabled = true,
+			--},
+		},
 
 		-- Default list of enabled providers defined so that you can extend it
 		-- elsewhere in your config, without redefining it, due to `opts_extend`
 		sources = {
 			default = { "lsp", "path", "snippets", "buffer" },
+			providers = {
+				lsp = {
+					name = "lsp",
+					enabled = true,
+					module = "blink.cmp.sources.lsp",
+				},
+			},
 		},
 
+		cmdline = {
+			enabled = true,
+			keymap = {
+				preset = "cmdline",
+				["<Right>"] = false,
+				["<Left>"] = false,
+			},
+			completion = {
+				list = { selection = { preselect = false } },
+				menu = {
+					auto_show = function(ctx)
+						return vim.fn.getcmdtype() == ":"
+					end,
+				},
+				ghost_text = { enabled = true },
+			},
+		},
 		-- (Default) Rust fuzzy matcher for typo resistance and significantly better performance
 		-- You may use a lua implementation instead by using `implementation = "lua"` or fallback to the lua implementation,
 		-- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`

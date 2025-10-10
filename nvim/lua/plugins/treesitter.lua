@@ -43,6 +43,7 @@ return {
 				"json",
 				"jsonc",
 				"lua",
+				"go",
 				"markdown",
 				"markdown_inline",
 				"python",

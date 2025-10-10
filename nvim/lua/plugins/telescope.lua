@@ -2,7 +2,8 @@
 return {
 	{
 		"nvim-telescope/telescope.nvim",
-		event = "VimEnter",
+		cmd = "Telescope",
+		keys = { "<leader>s.", "<leader>ff", "<leader>fg" },
 		branch = "master", -- avoiding deprecated warnings, use latest stable if preferred
 		dependencies = {
 			"nvim-lua/plenary.nvim",
@@ -41,6 +42,7 @@ return {
 		},
 		-- Keybindings for Telescope commands
 		config = function()
+			require("telescope").load_extension("noice")
 			--			local wk = require("which-key")
 			local opts = { noremap = true, silent = true }
 			local keymap = vim.api.nvim_set_keymap
@@ -49,6 +51,8 @@ return {
 			keymap("n", "<leader>fb", "<cmd>Telescope buffers<cr>", opts)
 			keymap("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", opts)
 			keymap("n", "<leader>fc", "<cmd>Telescope file_browser<cr>", opts)
+
+			keymap("n", "<leader>j", "<cmd>Telescope jumplist<cr>", opts)
 
 			keymap("n", "<leader>sh", "<cmd>Telescope help_tags<cr>", opts)
 			keymap("n", "<leader>sk", "<cmd>Telescope keymaps<cr>", opts)

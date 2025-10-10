@@ -1,79 +1,71 @@
---return {
---	"nvimdev/dashboard-nvim",
---	event = "VimEnter",
---	dependencies = { { "nvim-tree/nvim-web-devicons", lazy = true } },
---	opts = {
---		theme = "hyper",
---		config = {
---			week_header = {
---				enable = true,
---			},
---			shortcut = {
---				{ desc = "󰊳 Update", group = "@property", action = "Lazy update", key = "u" },
---				{ icon = " ", desc = "Files", group = "Label", action = "Telescope find_files", key = "f" },
---				{ desc = " Projects", group = "DiagnosticHint", action = "Telescope projects", key = "p" },
---			},
---			project = {
---				enable = true,
---				limit = 8,
---				icon = "",
---				label = "Recent Projects",
---				action = "Telescope find_files cwd=",
---			},
---			mru = {
---				enable = true,
---				limit = 10,
---				icon = "",
---				label = "Recent Files",
---			},
---			packages = { enable = true },
---		},
---	},
---}
---
 return {
 	"nvimdev/dashboard-nvim",
-	event = "VimEnter",
-	dependencies = { { "nvim-tree/nvim-web-devicons", lazy = true } },
-	opts = {
-		theme = "hyper",
-		config = {
-			header = {
-				"    ╔══════════════════════════════════╗",
-				"    ║           SECURE ZONE            ║",
-				"    ╠══════════════════════════════════╣",
-				"    ║                                  ║",
-				"    ║        ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄        ║",
-				"    ║       ███████████████████        ║",
-				"    ║      ██████████████████████      ║",
-				"    ║     ████████████████████████     ║",
-				"    ║    ██████████████████████████    ║",
-				"    ║   ████████████████████████████   ║",
-				"    ║  ██████████████████████████████  ║",
-				"    ║ ████████████████████████████████ ║",
-				"    ║ ████████████████████████████████ ║",
-				"    ║ ████████████████████████████████ ║",
-				"    ║ ████████████████████████████████ ║",
-				"    ║  ██████████████████████████████  ║",
-				"    ║   ████████████████████████████   ║",
-				"    ║    ██████████████████████████    ║",
-				"    ║     ████████████████████████     ║",
-				"    ║      ██████████████████████      ║",
-				"    ║       ███████████████████        ║",
-				"    ║        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀        ║",
-				"    ║                                  ║",
-				"    ╚══════════════════════════════════╝",
+	lazy = false,
+	opts = function()
+		local logo = [[
+      ___           ___           ___           ___                       ___     
+     /\__\         /\  \         /\  \         /\__\          ___        /\__\    
+    /::|  |       /::\  \       /::\  \       /:/  /         /\  \      /::|  |   
+   /:|:|  |      /:/\:\  \     /:/\:\  \     /:/  /          \:\  \    /:|:|  |   
+  /:/|:|  |__   /::\~\:\  \   /:/  \:\  \   /:/__/  ___      /::\__\  /:/|:|__|__ 
+ /:/ |:| /\__\ /:/\:\ \:\__\ /:/__/ \:\__\  |:|  | /\__\  __/:/\/__/ /:/ |::::\__\
+ \/__|:|/:/  / \:\~\:\ \/__/ \:\  \ /:/  /  |:|  |/:/  / /\/:/  /    \/__/~~/:/  /
+     |:/:/  /   \:\ \:\__\    \:\  /:/  /   |:|__/:/  /  \::/__/           /:/  / 
+     |::/  /     \:\ \/__/     \:\/:/  /     \::::/__/    \:\__\          /:/  /  
+     /:/  /       \:\__\        \::/  /       ~~~~         \/__/         /:/  /   
+     \/__/         \/__/         \/__/                                   \/__/    
+    ]]
+
+		logo = string.rep("\n", 8) .. logo .. "\n\n"
+
+		local opts = {
+			theme = "doom",
+			preview = {
+				file_width = 10,
 			},
-			week_header = {
-				enable = true,
+			hide = {
+				-- this is taken care of by lualine
+				-- enabling this messes up the actual laststatus setting after loading a file
+				statusline = false,
 			},
-			shortcut = {
-				{ desc = "󰊳 Update", group = "@property", action = "Lazy update", key = "u" },
-				{ desc = " Files", group = "Label", action = "Telescope find_files", key = "f" },
-				{ desc = " Projects", group = "DiagnosticHint", action = "Telescope projects", key = "p" },
+			config = {
+				header = vim.split(logo, "\n"),
+          -- stylua: ignore
+          center = {
+            { action = 'lua LazyVim.pick()()',                           desc = " Find File",       icon = " ", key = "f" },
+            { action = "ene | startinsert",                              desc = " New File",        icon = " ", key = "n" },
+            { action = 'lua LazyVim.pick("oldfiles")()',                 desc = " Recent Files",    icon = " ", key = "r" },
+            { action = 'lua LazyVim.pick("live_grep")()',                desc = " Find Text",       icon = " ", key = "g" },
+            { action = 'lua LazyVim.pick.config_files()()',              desc = " Config",          icon = " ", key = "c" },
+            { action = 'lua require("persistence").load()',              desc = " Restore Session", icon = " ", key = "s" },
+            { action = "Lazy",                                           desc = " Lazy",            icon = "󰒲 ", key = "l" },
+          },
+				footer = function()
+					local stats = require("lazy").stats()
+					local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
+					return { "⚡ Neovim loaded " .. stats.loaded .. "/" .. stats.count .. " plugins in " .. ms .. "ms" }
+				end,
 			},
-			project = { enable = true, limit = 8, icon = "", label = "Recent Projects" },
-			mru = { enable = true, limit = 10, icon = "", label = "Recent Files" },
-		},
-	},
+		}
+
+		for _, button in ipairs(opts.config.center) do
+			button.desc = button.desc .. string.rep(" ", 43 - #button.desc)
+			button.key_format = "  %s"
+		end
+
+		-- open dashboard after closing lazy
+		if vim.o.filetype == "lazy" then
+			vim.api.nvim_create_autocmd("WinClosed", {
+				pattern = tostring(vim.api.nvim_get_current_win()),
+				once = true,
+				callback = function()
+					vim.schedule(function()
+						vim.api.nvim_exec_autocmds("UIEnter", { group = "dashboard" })
+					end)
+				end,
+			})
+		end
+
+		return opts
+	end,
 }
