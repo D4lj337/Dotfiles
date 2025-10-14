@@ -1,7 +1,7 @@
 #+TITLE: Emacs configuration
 #+DESCRIPTION: Emacs configuration is written in orgmode. Code is directly written to the files using org-babel-tangle without the need to start orgmode at startup.
 #+PROPERTY: header-args :lexical t :tangle "init.el" :mkdirp "lisp"
-#+STARTUP: showeverything  hidestars
+#+STARTUP: showeverything:  hidestars: align
 
 * Guides to follow
 #+begin_src org
@@ -125,12 +125,10 @@ use-package
 
 ** Show parenthesis.
 #+BEGIN_SRC elisp :tangle "early-init.el"
-(setq show-paren-style 'expression)
 (show-paren-mode 1)
+(setq show-paren-style 'expression)
 (set-face-background 'show-paren-match (face-background 'default))
 (set-face-foreground 'show-paren-match "#def")
-(custom-set-faces
- '(show-paren-match ((t (:weight extra-bold)))))
 #+END_SRC
 
 ** UTF
@@ -306,30 +304,36 @@ use-package
 #+END_SRC
 
 ** Fonts
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :tangle "early-init.el"
 (custom-set-faces
  ;; Default font for all text
- '(default ((t (:family "Roboto Mono" :height 110))))
- '(fixed-pitch ((t (:family "Roboto Mono" :height 100))))
+ '(default ((t (:family "JetBrains Mono" :height 100 :weight bold))))
+ '(fixed-pitch ((t (:family "JetBrains Mono" :height 90 :weight bold))))
 
  ;; Current line number
  '(line-number-current-line ((t (:foreground "yellow" :inherit line-number))))
- '(mode-line ((t (:family "Roboto Mono" :weight Bold))))
+ '(mode-line ((t (:family "JetBrains Mono" :weight Bold))))
 
  ;; Comments italic
- ;;   '(font-lock-comment-face ((t (:family "Roboto Mono":slant italic))))
- ;;   ;; Keywords, functions, strings, etc. italic with no color change
- ;;   '(font-lock-keyword-face ((t (:family "Roboto Mono" :slant italic))))
- '(font-lock-function-name-face ((t (:family "Roboto Mono":slant italic))))
- ;;   '(font-lock-string-face ((t (:family "Roboto Mono" :slant italic))))
- '(font-lock-variable-name-face ((t (:family "Roboto Mono":weight bold))))
- ;;   '(font-lock-constant-face ((t (:family "Roboto Mono" :slant italic))))
- ;;   '(font-lock-type-face ((t (:family "Roboto Mono" :slant italic))))
- ;;   '(font-lock-builtin-face ((t (:family "Roboto Mono" :slant italic))))
+ '(font-lock-comment-face ((t (:family "JetBrains Mono" :weight bold :slant italic))))
+ ;;   Keywords, functions, strings, etc. italic with no color change
+ '(font-lock-keyword-face ((t (:family "JetBrains Mono" :weight bold))))
+ ;; '(font-lock-function-name-face ((t (:family "JetBrains Mono":weight bold))))
+ ;;    '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; '(font-lock-variable-name-face ((t (:family "JetBrains Mono":weight bold))))
+ ;; '(show-paren-match ((t (:family "JetBrains Mono" :weight bold))))
+ ;;    '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;    '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;    '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
+
+ '(minibuffer-prompt ((t (:font "JetBrains Mono" :weight bold))))
+ '(dired-directory ((t (:font "JetBrains Mono" :weight bold))))
+ '(help-key-binding ((t (:font "JetBrains Mono" :weight bold))))
  )
   #+end_src
 
 * Package Management
+
 ** Straight
 #+BEGIN_SRC elisp
 (defvar bootstrap-version)
@@ -397,7 +401,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("C-c w h" . 'my/highlight-word)
    ("C-c i" . 'my/indent-whole-buffer)
    ("C-c v" . view-mode)
-   ("C-x r" . restart-emacs)              ;; restart emacs
+   ("C-c r R" . restart-emacs)              ;; restart emacs
    ("C-c r" . recentf)                    ;; recent files list
    ("C-x C-k" . kill-buffer)              ;; kill buffer
    ("C-c p" . dmenu)
@@ -409,7 +413,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("C--" . text-scale-decrease)
    ("<C-wheel-down>" . text-scale-increase)
    ("<C-wheel-up>" . text-scale-decrease)
-   ("C-c n" . neotree-toggle)
    ("C-." . avy-goto-char)
    ("C-c c" . compile)
    ("C-c b" . nyan-mode)
@@ -418,11 +421,12 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("M-y" . popup-kill-ring)
    ("C-z" . repeat)
    ;; Consult
-   ("M-J" . consult-line-multi)
-   ("M-j" . consult-line)
-   ("M-f" . consult-ripgrep)
-   ("M-F" . consult-recent-file)
-   ("M-o" . consult-outline)
+   ("M-s M-m" . consult-line-multi)
+   ("M-s M-g" . consult-ripgrep)       ;; Search with ripgrep
+   ("M-s M-f" . consult-find)       ;; Find files
+   ("M-s M-l" . consult-line)       ;; Search in buffer
+   ("M-s M-r" . consult-recent-file)
+   ("M-s M-o" . consult-outline)
    ;; fzf
    ("C-c f" . fzf-find-in-buffer))
   :custom
@@ -454,7 +458,8 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 
 ;; Do not allow the cursor in the minibuffer prompt
 (setq minibuffer-prompt-properties
-      '(read-only t cursor-intangible t face minibuffer-prompt))
+
+'(read-only t cursor-intangible t face minibuffer-prompt))
 (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
                                         ;  (add-hook 'after-save-hook #'indent-region)
                                         ; (add-hook 'after-save-hook #'my/tangle-config-org-on-save)
@@ -501,7 +506,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 ;; 'warning
 ;; 'highlight
 ;; or any value of M-x list-faces-display
-
+n
 (defun infu-bionic-reading-buffer ()
   "Bold the first few chars of every word in current buffer.
   Version 2022-05-21"
@@ -788,17 +793,33 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (prog-mode . hardtime-mode))
 #+END_SRC
 
-** Ace jump mode
+** Avy
 #+begin_src elisp
-(use-package ace-jump-mode
+(use-package avy
   :ensure t
   :straight t
-  :hook (emacs-startup . ace-jump-mode)
-  :bind
-  ("C-c j" . 'ace-jump-mode))
-(add-hook 'ace-jump-mode-before-jump-hook (lambda ()
-                                            (message "I am jumping")))
-    #+end_src
+  :diminish avy-mode
+  :bind (("C-:" . avy-goto-char)
+         ("C-'" . avy-goto-char-2)
+         ("M-g f" . avy-goto-line)
+         ("M-g w" . avy-goto-word-1)
+         ("C-c j" . avy-goto-char-timer))
+  :init
+  (setq avy-background t)                     ;; Dim background for focus
+  (setq avy-keys (string-to-list "asdfjkl;")) ;; Home row keys for quick selection
+  (setq avy-all-windows nil)                  ;; Limit Avy to current window
+  (setq avy-style 'at)                        ;; Show keys at target char
+  ;; Define a custom Avy action example (optional)
+  (defun my/avy-action-embark (pt)
+    "Run `embark-act` at point PT."
+    (interactive)
+    (save-excursion
+      (goto-char pt)
+      (embark-act)))
+  ;; Add the custom action to Avy dispatch
+  (with-eval-after-load 'avy
+    (add-to-list 'avy-dispatch-alist '(?e . my/avy-action-embark))))
+#+end_src
 
 * Writing
 
@@ -885,7 +906,9 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 #+end_src
 
 * Vim Layer
+
 ** Evil mode
+
 #+BEGIN_SRC elisp
 (use-package evil
   :ensure t
@@ -944,36 +967,131 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 #+END_SRC
 
 * Theme
-** Catppuccin
+
+** Modus Catppucin
 #+BEGIN_SRC elisp
-                                        ;(load-theme 'modus-vivendi-deuteranopia t)
-
-;;    (use-package catppuccin-theme
-;;      :ensure t
-;;      :straight t
-;;      :custom
-;;      (catppuccin-flavor 'mocha)
-;;      :hook
-;;      (emacs-startup . (lambda ()
-;;                         (catppuccin-set-color 'base "#000000")
-;;                         (catppuccin-set-color 'mantle "#000000" 'mocha)
-;;                         (catppuccin-set-color 'crust "#000000" 'mocha)
-;;                         (load-theme 'catppuccin t :no-confirm)
-;;                         (catppuccin-reload))))
-
-
-;;      (use-package catppuccin-theme
-;;        :ensure t
-;;        :straight t
-;;        :config
-;;        (setq catppuccin-flavor 'mocha)
-;;        :custom
-;;        (catppuccin-set-color 'base "#000000")
-;;        (catppuccin-set-color 'mantle "#000000" 'mocha)
-;;        (catppuccin-set-color 'crust "#000000" 'mocha)
-;;        (load-theme 'catppuccin t)
-;;        (catppuccin-reload))
-
+(use-package modus-themes
+  :ensure nil
+  :straight nil
+  :defer t
+  :custom
+  (modus-themes-italic-constructs t)
+  (modus-themes-bold-constructs t)
+  (modus-themes-mixed-fonts nil)
+  (modus-themes-prompts '(bold intense))
+  (modus-themes-common-palette-overrides
+   '((accent-0 "#89b4fa")
+     (accent-1 "#89dceb")
+     (bg-active bg-main)
+     (bg-added "#364144")
+     (bg-added-refine "#4A5457")
+     (bg-changed "#3e4b6c")
+     (bg-changed-refine "#515D7B")
+     (bg-completion "#45475a")
+     (bg-completion-match-0 "#1e1e2e")
+     (bg-completion-match-1 "#1e1e2e")
+     (bg-completion-match-2 "#1e1e2e")
+     (bg-completion-match-3 "#1e1e2e")
+     (bg-hl-line "#2a2b3d")
+     (bg-hover-secondary "#585b70")
+     (bg-line-number-active unspecified)
+     (bg-line-number-inactive "#1e1e2e")
+     (bg-main "#1e1e2e")
+     (bg-mark-delete "#443245")
+     (bg-mark-select "#3e4b6c")
+     (bg-mode-line-active "#181825")
+     (bg-mode-line-inactive "#181825")
+     (bg-prominent-err "#443245")
+     (bg-prompt unspecified)
+     (bg-prose-block-contents "#313244")
+     (bg-prose-block-delimiter bg-prose-block-contents)
+     (bg-region "#585b70")
+     (bg-removed "#443245")
+     (bg-removed-refine "#574658")
+     (bg-tab-bar      "#1e1e2e")
+     (bg-tab-current  bg-main)
+     (bg-tab-other    "#1e1e2e")
+     (border-mode-line-active nil)
+     (border-mode-line-inactive nil)
+     (builtin "#89b4fa")
+     (comment "#9399b2")
+     (constant  "#f38ba8")
+     (cursor  "#f5e0dc")
+     (date-weekday "#89b4fa")
+     (date-weekend "#fab387")
+     (docstring "#a6adc8")
+     (err     "#f38ba8")
+     (fg-active fg-main)
+     (fg-completion "#cdd6f4")
+     (fg-completion-match-0 "#89b4fa")
+     (fg-completion-match-1 "#f38ba8")
+     (fg-completion-match-2 "#a6e3a1")
+     (fg-completion-match-3 "#fab387")
+     (fg-heading-0 "#f38ba8")
+     (fg-heading-1 "#fab387")
+     (fg-heading-2 "#f9e2af")
+     (fg-heading-3 "#a6e3a1")
+     (fg-heading-4 "#74c7ec")
+     (fg-line-number-active "#b4befe")
+     (fg-line-number-inactive "#7f849c")
+     (fg-link  "#89b4fa")
+     (fg-main "#cdd6f4")
+     (fg-mark-delete "#f38ba8")
+     (fg-mark-select "#89b4fa")
+     (fg-mode-line-active "#bac2de")
+     (fg-mode-line-inactive "#585b70")
+     (fg-prominent-err "#f38ba8")
+     (fg-prompt "#cba6f7")
+     (fg-prose-block-delimiter "#9399b2")
+     (fg-prose-verbatim "#a6e3a1")
+     (fg-region "#cdd6f4")
+     (fnname    "#89b4fa")
+     (fringe "#1e1e2e")
+     (identifier "#cba6f7")
+     (info    "#94e2d5")
+     (keyword   "#cba6f7")
+     (keyword "#cba6f7")
+     (name "#89b4fa")
+     (number "#fab387")
+     (property "#89b4fa")
+     (string "#a6e3a1")
+     (type      "#f9e2af")
+     (variable  "#fab387")
+     (warning "#f9e2af")))
+  :config
+  (modus-themes-with-colors
+    (custom-set-faces
+     `(change-log-acknowledgment ((,c :foreground "#b4befe")))
+     `(change-log-date ((,c :foreground "#a6e3a1")))
+     `(change-log-name ((,c :foreground "#fab387")))
+     `(diff-context ((,c :foreground "#89b4fa")))
+     `(diff-file-header ((,c :foreground "#f5c2e7")))
+     `(diff-header ((,c :foreground "#89b4fa")))
+     `(diff-hunk-header ((,c :foreground "#fab387")))
+     `(gnus-button ((,c :foreground "#8aadf4")))
+     `(gnus-group-mail-3 ((,c :foreground "#8aadf4")))
+     `(gnus-group-mail-3-empty ((,c :foreground "#8aadf4")))
+     `(gnus-header-content ((,c :foreground "#7dc4e4")))
+     `(gnus-header-from ((,c :foreground "#cba6f7")))
+     `(gnus-header-name ((,c :foreground "#a6e3a1")))
+     `(gnus-header-subject ((,c :foreground "#8aadf4")))
+     `(log-view-message ((,c :foreground "#b4befe")))
+     `(match ((,c :background "#3e5768" :foreground "#cdd6f5")))
+     `(modus-themes-search-current ((,c :background "#f38ba8" :foreground "#11111b" ))) ;; :foreground "#cdd6f4" -- Catppuccin default, not that visible...
+     `(modus-themes-search-lazy ((,c :background "#3e5768" :foreground "#cdd6f5")))     ;; :foreground "#cdd6f4" :background "#94e2d5" -- Catppuccin default, not that visible...
+     `(newsticker-extra-face ((,c :foreground "#9399b2" :height 0.8 :slant italic)))
+     `(newsticker-feed-face ((,c :foreground "#f38ba8" :height 1.2 :weight bold)))
+     `(newsticker-treeview-face ((,c :foreground "#cdd6f4")))
+     `(newsticker-treeview-selection-face ((,c :background "#3e5768" :foreground "#cdd6f5")))
+     `(tab-bar ((,c :background "#1e1e2e" :foreground "#bac2de")))
+     `(tab-bar-tab ((,c :background "#1e1e2e" :underline t)))
+     `(tab-bar-tab-group-current ((,c :background "#1e1e2e" :foreground "#bac2de" :underline t)))
+     `(tab-bar-tab-group-inactive ((,c :background "#1e1e2e" :foreground "#9399b2"))))
+    `(tab-bar-tab-inactive ((,c :background "#1e1e2e" :foreground "#a6adc8")))
+    `(vc-dir-file ((,c :foreground "#89b4fa")))
+    `(vc-dir-header-value ((,c :foreground "#b4befe"))))
+  :init
+  (load-theme 'modus-vivendi t))
 #+END_SRC
 
 * Programming
@@ -1156,16 +1274,26 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package consult
   :ensure t
+  :straight t
   :commands (consult-grep consult-find consult-line consult-buffer)
   :custom
+  (max-mini-window-height 0.2)
+  (resize-mini-windows 'grow-only)
   (consult-buffer-filter
    '(
      "\\` "
      "\\`\\*Completions\\*\\'"
      "\\`\\*Backtrace\\*\\'"
      "\\`\\*Messages\\*\\'"
+     "\\`\\*lua-language-server\\*\\'"
+     "\\`\\*lua-language-server::stderr\\*\\'"
      "\\`\\*Warnings\\*\\'"
+     "\\`\\*Shell Command Output\\*\\'"
+     "\\`\\*clangd\\*\\'"
+     "\\`\\*Native-compile-Log\\*\\'"
      "\\`\\*straight-process\\*\\'"
+     "\\`\\*compilation\\*\\'"
+     "\\`\\*clangd::stderr\\*\\'"
      "\\`\\*XELB-DEBUG\\*\\'"
      "magit*"
      "\\`\\*Org Preview LaTeX Output\\*\\'"
@@ -1174,10 +1302,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
      "\\`\\*tramp/.*\\*\\'"
      )))
 
-;;  :bind (("M-s M-g" . consult-grep)       ;; Search with ripgrep
-;;         ("M-s M-f" . consult-find)       ;; Find files
-;;         ("M-s M-l" . consult-line)       ;; Search in buffer
-;;         ("M-s M-b" . consult-buffer)))   ;; Buffer switching
 
 (defvar consult--source-bookmark
   `(:name     "Bookmark"
@@ -1207,19 +1331,8 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package yasnippet
   :ensure t
-  :straight t
-  :demand t
   :config
-  (yas-reload-all)
-  (yas-global-mode))
-
-;;(use-package yasnippet
-;;  :ensure t
-;;  :straight t
-;;  :hook ((prog-mode . yas-minor-mode)
-;;         (org-mode . yas-minor-mode)
-;;         (text-mode . yas-minor-mode))
-;;  :commands (yas-expand yas-minor-mode))
+  (yas-global-mode 1))
 #+end_src
 
 *** Source Code block
@@ -1303,32 +1416,31 @@ $0
   :ensure nil ; built-in
   :straight nil
   :custom
-  (setq treesit-font-lock-level 4)
-  :config
+  (treesit-font-lock-level 4)
   ;; Configure treesit-language-source-alist for grammar installation
-  (setq treesit-language-source-alist
-        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-          (c "https://github.com/tree-sitter/tree-sitter-c")
-          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-          (css "https://github.com/tree-sitter/tree-sitter-css")
-          (cmake "https://github.com/uyha/tree-sitter-cmake")
-          (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-          (go "https://github.com/tree-sitter/tree-sitter-go")
-          (html "https://github.com/tree-sitter/tree-sitter-html")
-          (java "https://github.com/tree-sitter/tree-sitter-java")
-          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          (json "https://github.com/tree-sitter/tree-sitter-json")
-          (lua "https://github.com/Azganoth/tree-sitter-lua")
-          (make "https://github.com/alemuller/tree-sitter-make")
-          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-          (python "https://github.com/tree-sitter/tree-sitter-python")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          (sql "https://github.com/m-novikov/tree-sitter-sql")
-          (toml "https://github.com/tree-sitter/tree-sitter-toml")
-          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml"))))
+  (treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (c "https://github.com/tree-sitter/tree-sitter-c")
+     (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (java "https://github.com/tree-sitter/tree-sitter-java")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (lua "https://github.com/Azganoth/tree-sitter-lua")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (rust "https://github.com/tree-sitter/tree-sitter-rust")
+     (sql "https://github.com/m-novikov/tree-sitter-sql")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml"))))
 #+end_src
 
 ** Auto remap
@@ -1361,6 +1473,33 @@ $0
   :config
   (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode))
+#+end_src
+
+** Install additional Treesitter Parsers
+#+begin_src elisp
+;; Automatically install tree-sitter grammars
+(defun install-common-tree-sitter-grammars ()
+  "Install commonly used tree-sitter grammars."
+  (interactive)
+  (dolist (lang '(bash c cpp css go html java javascript json lua python rust typescript tsx yaml))
+    (when (treesit-language-available-p lang)
+      (message "Grammar for %s already installed" lang))
+    (unless (treesit-language-available-p lang)
+      (message "Installing grammar for %s..." lang)
+      (treesit-install-language-grammar lang))))
+
+;; Improved indentation for tree-sitter modes
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (when (and (fboundp 'treesit-parser-list)
+                       (treesit-parser-list))
+              (setq-local indent-tabs-mode nil)
+              (setq-local tab-width 4))))
+
+;; Global development keybindings
+(global-set-key (kbd "M-/") 'hippie-expand)
+(global-set-key (kbd "C-x t g") 'install-common-tree-sitter-grammars)
+(global-set-key (kbd "C-x w r") 'treesit-install-language-grammar)
 #+end_src
 
 ** LSP mode
@@ -1561,64 +1700,6 @@ $0
                           (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
 #+end_src
 
-** Install additional Treesitter Parsers
-#+begin_src elisp
-;; Automatically install tree-sitter grammars
-(defun install-common-tree-sitter-grammars ()
-  "Install commonly used tree-sitter grammars."
-  (interactive)
-  (dolist (lang '(bash c cpp css go html java javascript json lua python rust typescript tsx yaml))
-    (when (treesit-language-available-p lang)
-      (message "Grammar for %s already installed" lang))
-    (unless (treesit-language-available-p lang)
-      (message "Installing grammar for %s..." lang)
-      (treesit-install-language-grammar lang))))
-
-;; Improved indentation for tree-sitter modes
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (when (and (fboundp 'treesit-parser-list)
-                       (treesit-parser-list))
-              (setq-local indent-tabs-mode nil)
-              (setq-local tab-width 4))))
-
-;; Global development keybindings
-(global-set-key (kbd "M-/") 'hippie-expand)
-(global-set-key (kbd "C-x t g") 'install-common-tree-sitter-grammars)
-(global-set-key (kbd "C-x w r") 'treesit-install-language-grammar)
-#+end_src
-
-** COMMENT Format-all
-#+begin_src elisp
-(use-package format-all
-  :ensure t
-  :straight t
-  :commands format-all-mode
-  :hook (prog-mode . format-all-mode) ;; Enable format-all in programming modes
-  :config
-  ;; Set default formatters for specific languages
-  (setq-default format-all-formatters
-                '(("C"   (clang-format))
-                  ("Python" (black))
-                  ("JavaScript" (prettier))
-                  ("Shell" (shfmt "-i" "4" "-ci"))))
-  ;; Optional: ensure a formatter is chosen whenever format-all-mode is enabled
-  (add-hook 'format-all-mode-hook #'format-all-ensure-formatter)
-
-  (add-hook 'python-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("Python" (black)))))
-            )
-
-  (add-hook c-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("clangd" "--offset-encoding=utf-16" "ccls" (black)))))
-            )
-  (add-hook 'java-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
-    #+end_src
-
 ** COMMENT Lsp bridge
 #+begin_src elisp
 (use-package lsp-bridge
@@ -1678,6 +1759,7 @@ $0
 #+end_src
 
 * Modeline
+
 #+begin_src elisp
 (use-package doom-modeline
   :ensure t
@@ -1765,97 +1847,6 @@ $0
             (lambda () (doom-modeline-set-modeline 'my-main 'default))))
 #+end_src
 
-
-** Doom Theme
-#+begin_src elisp
-(use-package doom-themes
-  :ensure t
-  :straight t
-  :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-org-config)
-  (doom-theme-enable-italic t))
-
-
-(setq custom-safe-themes t)
-(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/doom-themes/" user-emacs-directory))
-(load-theme 'doom-1337 t)
-#+end_src
-
-* Disbaled packages
-
-** COMMENT Eglot
-#+begin_src elisp
-(use-package eglot
-  :ensure nil
-  :straight nil
-  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure)
-  :config
-  ;; CRITICAL: Disable flymake integration - we use flycheck exclusively
-  (add-to-list 'eglot-stay-out-of 'flymake)
-  (eglot-sync-connect nil)
-
-  ;; Enhanced LSP communication settings
-  (eglot-events-buffer-size 0)            ; Disable events buffer for performance
-  (eglot-autoshutdown t)                  ; Auto-shutdown unused servers
-  (eglot-sync-connect nil)                ; Async connection for responsiveness
-  (eglot-extend-to-xref t)                ; Enhanced cross-references
-  (eglot-report-progress nil)            ; Disable progress reports for focus
-
-  :custom
-  ;; Server performance optimizations
-  (eglot-events-buffer-config '(:size 0 :format short))
-  (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs
-                 '(c-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
-    (add-to-list 'eglot-server-programs
-                 '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
-    (add-to-list 'eglot-server-programs
-                 '(python-ts-mode . ("python-flake8")))
-    (add-to-list 'eglot-server-programs
-                 '(lua-ts-mode . ("lua-language-server")))
-    (add-to-list 'eglot-server-programs
-                 '(bash-ts-mode . ("bash-language-server" "start" "spellcheck"))))
-
-  ;; Ensure eglot starts with Tree-sitter modes
-  (dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
-    (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
-
-  ;; Key bindings for LSP operations
-  :bind (:map eglot-mode-map
-              ("C-c l r" . eglot-rename)
-              ("C-c l a" . eglot-code-actions)
-              ("C-c l f" . eglot-format)
-              ("C-c l d" . eglot-find-declaration)
-              ("C-c l i" . eglot-find-implementation)
-              ("C-c l t" . eglot-find-typeDefinition)))
-#+end_src
-
-** COMMENT Flymake
-#+begin_src elisp
-(use-package flymake
-  :ensure nil
-  :straight nil
-  :hook (lsp-mode . flymake-mode)
-  :custom
-  (flymake-indicator-type 'margins)
-  (flymake-margin-indicators-string
-   `((error ,(propertize "┃"
-                         'face '(:inherit compilation-error
-                                          'display '((margin left-margin)))
-                         compilation-error)
-
-            (warning ,(propertize "┃"
-                                  'face '(:inherit compilation-warning
-                                                   'display '((margin left-margin)))
-                                  compilation-warning)
-
-                     (note ,(propertize "┃"
-                                        'face '(:inherit compilation-info
-                                                         'display '((margin left-margin)))
-                                        compilation-info)))))))
-                                  #+end_src
-
 ** Testing
 #+begin_src elisp
 (use-package request
@@ -1934,81 +1925,123 @@ $0
   :commands (chess))
 #+end_src
 
-** Tux
+* Disbaled packages
+
+** COMMENT Format-all
 #+begin_src elisp
-(straight-use-package 'request)
-(straight-use-package 'url-util)
-(straight-use-package 'dom)
+(use-package format-all
+  :ensure t
+  :straight t
+  :commands format-all-mode
+  :hook (prog-mode . format-all-mode) ;; Enable format-all in programming modes
+  :config
+  ;; Set default formatters for specific languages
+  (setq-default format-all-formatters
+                '(("C"   (clang-format))
+                  ("Python" (black))
+                  ("JavaScript" (prettier))
+                  ("Shell" (shfmt "-i" "4" "-ci"))))
+  ;; Optional: ensure a formatter is chosen whenever format-all-mode is enabled
+  (add-hook 'format-all-mode-hook #'format-all-ensure-formatter)
 
-;;; emacs-search.el --- A tool to search DuckDuckGo and display AI answers.
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("Python" (black)))))
+            )
 
-;;; Commentary:
-;; This package provides a simple interface to search DuckDuckGo and display
-;; the AI-powered instant answers directly within Emacs.
+  (add-hook c-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("clangd" "--offset-encoding=utf-16" "ccls" (black)))))
+            )
+  (add-hook 'java-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("ava" (astyle "--mode=java")))))))
+    #+end_src
 
-;;; Code:
-
-(require 'url)
-(require 'url-util)
-(require 'dom)
-
-;; It's good practice to set a user-agent.
-(defvar emacs-search-user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
-  "The User-Agent string to use for requests.")
-
-(defun emacs-search--extract-ai-answer (html-content)
-  "Parse HTML-CONTENT and extract the text from the AI answer block.
-This function searches for a specific div with class 'zci__result'
-in the provided HTML and returns its trimmed text content."
-  (with-temp-buffer
-    (insert html-content)
-    (goto-char (point-min))
-    ;; Use libxml to parse the buffer content into a DOM structure.
-    (let* ((dom (libxml-parse-html-region (point-min) (point-max)))
-           ;; Find the first element with the class "zci__result".
-           (zci-node (car (dom-by-class dom "zci__result"))))
-      (if zci-node
-          ;; If found, extract and clean up the text content.
-          (string-trim (dom-text zci-node))
-        ;; Otherwise, return nil.
-        nil))))
-
-(defun emacs-search (query)
-  "Search DuckDuckGo for QUERY and display the AI-powered answer.
-
-When called interactively, prompts for a search QUERY in the
-minibuffer. It then fetches the HTML content from DuckDuckGo,
-parses it to find the AI-powered \"zero-click info\" answer,
-and displays the result in a new buffer named after the query.
-
-If no AI answer is found, the buffer will display the message
-\"no search available\". The result buffer is set to
-`fundamental-mode`.
-
-The User-Agent for the request can be customized by setting the
-`emacs-search-user-agent` variable."
-  (interactive "sSearch DuckDuckGo for: ")
-  (let ((url-request-extra-headers `(("User-Agent" . ,emacs-search-user-agent)))
-        (search-url (format "https://html.duckduckgo.com/html/?q=%s"
-                            (url-hexify-string query))))
-    (let ((result-buffer (url-retrieve-synchronously search-url)))
-      (if (not result-buffer)
-          (message "Failed to fetch search results.")
-        (let ((html-content (with-current-buffer result-buffer
-                              (buffer-string))))
-          (kill-buffer result-buffer) ; Clean up the temp buffer
-          (let* ((answer (emacs-search--extract-ai-answer html-content))
-                 (display-buffer (get-buffer-create (format "*emacs-search: %s*" query))))
-            (with-current-buffer display-buffer
-              (erase-buffer)
-              (fundamental-mode)
-              (insert (if answer answer "no search available"))
-              (goto-char (point-min))
-              (switch-to-buffer-preserve-window (current-buffer)))))))))
-
-(provide 'emacs-search)
-
-;;; emacs-search.el ends here
+** COMMENT Doom Theme
+#+begin_src elisp
+(use-package doom-themes
+  :ensure t
+  :straight t
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-org-config)
+  (doom-theme-enable-italic t))
 
 
+(setq custom-safe-themes t)
+(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/doom-themes/" user-emacs-directory))
+(load-theme 'doom-1337 t)
 #+end_src
+
+** COMMENT Eglot
+#+begin_src elisp
+(use-package eglot
+  :ensure nil
+  :straight nil
+  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure)
+  :config
+  ;; CRITICAL: Disable flymake integration - we use flycheck exclusively
+  (add-to-list 'eglot-stay-out-of 'flymake)
+  (eglot-sync-connect nil)
+
+  ;; Enhanced LSP communication settings
+  (eglot-events-buffer-size 0)            ; Disable events buffer for performance
+  (eglot-autoshutdown t)                  ; Auto-shutdown unused servers
+  (eglot-sync-connect nil)                ; Async connection for responsiveness
+  (eglot-extend-to-xref t)                ; Enhanced cross-references
+  (eglot-report-progress nil)            ; Disable progress reports for focus
+
+  :custom
+  ;; Server performance optimizations
+  (eglot-events-buffer-config '(:size 0 :format short))
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(c-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
+    (add-to-list 'eglot-server-programs
+                 '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
+    (add-to-list 'eglot-server-programs
+                 '(python-ts-mode . ("python-flake8")))
+    (add-to-list 'eglot-server-programs
+                 '(lua-ts-mode . ("lua-language-server")))
+    (add-to-list 'eglot-server-programs
+                 '(bash-ts-mode . ("bash-language-server" "start" "spellcheck"))))
+
+  ;; Ensure eglot starts with Tree-sitter modes
+  (dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
+    (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
+
+  ;; Key bindings for LSP operations
+  :bind (:map eglot-mode-map
+              ("C-c l r" . eglot-rename)
+              ("C-c l a" . eglot-code-actions)
+              ("C-c l f" . eglot-format)
+              ("C-c l d" . eglot-find-declaration)
+              ("C-c l i" . eglot-find-implementation)
+              ("C-c l t" . eglot-find-typeDefinition)))
+#+end_src
+
+** COMMENT Flymake
+#+begin_src elisp
+(use-package flymake
+  :ensure nil
+  :straight nil
+  :hook (lsp-mode . flymake-mode)
+  :custom
+  (flymake-indicator-type 'margins)
+  (flymake-margin-indicators-string
+   `((error ,(propertize "┃"
+                         'face '(:inherit compilation-error
+                                          'display '((margin left-margin)))
+                         compilation-error)
+
+            (warning ,(propertize "┃"
+                                  'face '(:inherit compilation-warning
+                                                   'display '((margin left-margin)))
+                                  compilation-warning)
+
+                     (note ,(propertize "┃"
+                                        'face '(:inherit compilation-info
+                                                         'display '((margin left-margin)))
+                                        compilation-info)))))))
+                                  #+end_src
