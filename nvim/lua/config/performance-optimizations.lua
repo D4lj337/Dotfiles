@@ -78,34 +78,22 @@ vim.opt.diffopt = {
 	"hiddenoff", -- turn off diff when buffer becomes hidden
 	"algorithm:patience", -- use patience algorithm for better diffs
 }
-
--- Optimize for large diffs
-vim.api.nvim_create_autocmd("BufEnter", {
-	callback = function()
-		if vim.wo.diff then
-			-- Disable expensive features during diff
-			vim.wo.cursorline = false
-			vim.wo.relativenumber = false
-			vim.opt_local.syntax = "off"
-		end
-	end,
-})
-
--- Large file detection and optimization
+-- large file detection and optimization
 local function optimize_for_large_file(bufnr)
 	local file_size = vim.fn.getfsize(vim.api.nvim_buf_get_name(bufnr))
 
-	if file_size > 1024 * 1024 then -- > 1MB
-		-- Disable expensive features
+	if file_size > 1024 * 1024 then -- > 1mb
+		-- disable expensive features
 		vim.bo[bufnr].syntax = "off"
 		vim.bo[bufnr].filetype = ""
 		vim.bo[bufnr].swapfile = false
 		vim.bo[bufnr].undolevels = -1
 		vim.wo.foldmethod = "manual"
 		vim.wo.list = false
-
-		-- Show warning
-		vim.notify("Large file detected - some features disabled for performance")
+		vim.wo.cursorline = false
+		
+		-- show warning
+		vim.notify("large file detected - some features disabled for performance")
 	end
 end
 
