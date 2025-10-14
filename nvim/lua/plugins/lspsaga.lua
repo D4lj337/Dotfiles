@@ -3,7 +3,7 @@ return {
 	event = "LspAttach",
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter", -- optional
-		"nvim-tree/nvim-web-devicons", -- optional
+		--		"nvim-tree/nvim-web-devicons", -- optional
 		opts = {
 			enable = true,
 			sign = true,

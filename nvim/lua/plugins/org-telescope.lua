@@ -1,7 +1,7 @@
 return {
+	-- In your plugins list
 	"nvim-orgmode/telescope-orgmode.nvim",
-	--	ft = { "org" },
-	lazy = "VeryLazy",
-	keys = { "<leader>or" },
+	cmd = "Telescope",
+	--event = { "CmdlineEnter", "InsertEnter" },
 	opts = {},
 }

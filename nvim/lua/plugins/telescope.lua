@@ -8,14 +8,18 @@ return {
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
-			"nvim-tree/nvim-web-devicons",
-			event = "VimEnter",
+			--"nvim-tree/nvim-web-devicons",
+			--event = "VimEnter",
 			"folke/which-key.nvim",
 			event = "VeryLazy",
+
 			"andrew-george/telescope-themes",
 			event = "VimEnter",
+
 			"nvim-telescope/telescope-file-browser.nvim",
 			event = "VimEnter",
+
+			"crispgm/telescope-heading.nvim",
 		},
 		opts = {
 			defaults = {
@@ -27,9 +31,25 @@ return {
 				find_files = {
 					theme = "dropdown",
 					previewer = false,
+					find_command = {
+						"rg",
+						"--files",
+						"--glob",
+						"*.org",
+					},
 				},
 			},
 			extensions = {
+				heading = {
+					picker_opts = {
+						layout_config = {
+							width = 0.8,
+							preview_width = 0.5,
+						},
+						layout_strategy = "horizontal",
+					},
+					treesitter = true,
+				},
 				file_browser = {
 					theme = "ivy",
 					hijack_netrw = true,
@@ -43,7 +63,9 @@ return {
 		-- Keybindings for Telescope commands
 		config = function()
 			require("telescope").load_extension("noice")
-			--			local wk = require("which-key")
+			require("telescope").load_extension("heading")
+			--			require("telescope").load_extension("orgmode")
+			local wk = require("which-key")
 			local opts = { noremap = true, silent = true }
 			local keymap = vim.api.nvim_set_keymap
 			keymap("n", "<leader>ff", "<cmd>Telescope find_files<cr>", opts)
@@ -51,6 +73,7 @@ return {
 			keymap("n", "<leader>fb", "<cmd>Telescope buffers<cr>", opts)
 			keymap("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", opts)
 			keymap("n", "<leader>fc", "<cmd>Telescope file_browser<cr>", opts)
+			keymap("n", "<leader>s.", "<cmd>Telescope oldfiles<cr>", opts)
 
 			keymap("n", "<leader>j", "<cmd>Telescope jumplist<cr>", opts)
 
@@ -60,7 +83,6 @@ return {
 			keymap("n", "<leader>sw", "<cmd>Telescope grep_string<cr>", opts)
 			keymap("n", "<leader>sd", "<cmd>Telescope diagnostics<cr>", opts)
 			keymap("n", "<leader>sr", "<cmd>Telescope resume<cr>", opts)
-			keymap("n", "<leader>s.", "<cmd>Telescope oldfiles<cr>", opts)
 			keymap("n", "<leader><leader>", "<cmd>Telescope buffers<cr>", opts)
 			keymap("n", "<leader>or", "<cmd>Telescope orgmode search_headings<cr>", opts)
 		end,

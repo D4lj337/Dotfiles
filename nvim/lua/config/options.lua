@@ -86,3 +86,6 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 		vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "yellow", bold = true })
 	end,
 })
+
+-- INFO: Deleting a word with backspace default option is C-w
+vim.api.nvim_set_keymap("i", "<C-BS>", "<C-w>", { noremap = true, silent = true })

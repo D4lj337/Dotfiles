@@ -35,7 +35,7 @@ return {
 	"nvim-lualine/lualine.nvim",
 	enabled = false,
 	event = "VeryLazy", -- optional
-	dependencies = { "nvim-tree/nvim-web-devicons" },
+	--dependencies = { "nvim-tree/nvim-web-devicons" },
 
 	opts = {
 		options = {

@@ -53,3 +53,36 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 		resize_compilation_window()
 	end,
 })
+
+vim.api.nvim_create_autocmd("BufEnter", {
+	callback = function()
+		local fname = vim.fn.expand("%:t")
+		if fname:match("^mini") then
+			vim.bo.filetype = "" -- Disable filetype to avoid treesitter
+			vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+				buffer = 0,
+				callback = function()
+					local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+					if #text > 250 then
+						vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(text:sub(1, 250), "\n"))
+					end
+				end,
+			})
+		end
+	end,
+})
+
+-- If using lazy.nvim, add to your config:
+vim.api.nvim_create_autocmd("User", {
+	pattern = "VeryLazy",
+	callback = function()
+		vim.api.nvim_create_autocmd({ "BufEnter" }, {
+			callback = function()
+				local filename = vim.fn.expand("%:t")
+				if filename:match("^mini") then
+					-- Your character limit code here
+				end
+			end,
+		})
+	end,
+})

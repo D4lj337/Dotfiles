@@ -8,8 +8,8 @@ return {
 			-- list symbol
 			list = "•",
 			-- headlines can be a list
-			--headlines = { "◉", "○", "✸", "✿" },
-			headlines = { "", "○", "✸", "✿" },
+			headlines = { "◉", "○", "✸", "✿" },
+			--headlines = { "", "○", "✸", "✿" },
 			-- or a function that receives the defaults and returns a list
 			--      headlines = function(default_list)
 			--        table.insert(default_list, "♥")
