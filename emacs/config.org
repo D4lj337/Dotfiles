@@ -97,6 +97,7 @@ use-package
 (blink-cursor-mode -1)
 (recentf-mode 1)
 (winner-mode t)
+                                        ;(desktop-save-mode 1)
 #+END_SRC
 
 ** Remeber last place you were in file.
@@ -316,7 +317,7 @@ use-package
 #+END_SRC
 
 ** Fonts
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :tangle "early-init.el"
 (custom-set-faces
  ;; Default font for all text
  '(default ((t (:family "Roboto Mono" :height 110))))
@@ -342,6 +343,7 @@ use-package
 * Package Management
 ** Straight
 #+BEGIN_SRC elisp
+;; init.el -*- lexical-binding: t; -*-
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -406,7 +408,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("C-x b" . consult-buffer)
    ("C-c w h" . 'my/highlight-word)
    ("C-c i" . 'my/indent-whole-buffer)
-      ("C-c v" . view-mode)
+   ("C-c v" . view-mode)
    ("C-x r" . restart-emacs)              ;; restart emacs
    ("C-c r" . recentf)                    ;; recent files list
    ("C-x C-k" . kill-buffer)              ;; kill buffer
@@ -468,7 +470,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
                                         ;  (add-hook 'after-save-hook #'indent-region)
                                         ; (add-hook 'after-save-hook #'my/tangle-config-org-on-save)
-                #+END_SRC
+#+END_SRC
 
 ** Visible bell
 #+BEGIN_SRC elisp
@@ -780,7 +782,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (which-key-idle-delay 0.3) ;; company-idle-delay set to low causes latency while typing use with caution.
   (which-key-setup-side-window-bottom)
   (which-key-setup-minibuffer))
-                                        #+END_SRC
+#+END_SRC
 
 ** Persistent history.
 #+BEGIN_SRC elisp
@@ -839,7 +841,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (org-src-tab-acts-natively t)
   (org-pretty-entities t)
   (org-edit-src-content-indentation 0)
-
+  :config
   ;; Org babel
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -869,7 +871,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   "Force font-lock to apply to the whole buffer"
   (font-lock-ensure))
 (add-hook 'org-mode-hook #'my/force-org-font-lock)
-#+END_SRC
+  #+END_SRC
 
 *** Org Modern
 #+begin_src elisp
@@ -1034,7 +1036,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 (use-package gdb-mi
   :ensure t
   :straight (:host github :repo "weirdNox/emacs-gdb" :files ("*.el" "*.c" "*.h" "Makefile"))
-  :custom
+  :init
   (fmakunbound 'gdb)
   (fmakunbound 'gdb-enable-debug))
 #+END_SRC
@@ -1137,7 +1139,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
   :ensure t
   :straight t
   :custom
-  (completion-styles '(orderless basic))
+  (completion-styles '(basic))
   (completion-category-overrides '((file (styles basic partial-completion))))
   (orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex)))
 #+end_src
@@ -1161,6 +1163,8 @@ Below is a modern Emacs completion system configuration using use-package, lever
           (consult-bindings buffer)
           (consult-locate buffer)
           (consult-project-buffer buffer)
+          (vertico-resize t)            ;; Resize the Vertico minibuffer dynamically
+          (vertico-count 15)            ;; Limit the number of completion candidates
           (consult-ripgrep buffer)
           (consult-fd buffer))))
 #+end_src
@@ -1193,7 +1197,11 @@ Below is a modern Emacs completion system configuration using use-package, lever
      "\\`\\*Flymake log\\*\\'"
      "\\`\\*Semantic SymRef\\*\\'"
      "\\`\\*tramp/.*\\*\\'"
-     )))
+     ))
+  (consult-line-threshold 100000000)
+  (consult-line-fallback (lambda () (error "Buffer too large"))
+                         (consult-line-fallback (lambda () (consult-ripgrep ...))
+                                                (consult-line-fallback (lambda () (occur ...))))))
 
 ;;  :bind (("M-s M-g" . consult-grep)       ;; Search with ripgrep
 ;;         ("M-s M-f" . consult-find)       ;; Find files
@@ -1300,7 +1308,7 @@ $0
   :ensure t
   :straight t
   :mode ("\\.lua\\'" . lua-ts-mode))
-               #+end_src
+#+end_src
 
 ** Python mode
 #+begin_src elisp
@@ -1308,7 +1316,7 @@ $0
   :ensure nil
   :straight nil
   :mode ("\\.py\\'" . python-ts-mode))
-               #+end_src
+#+end_src
 
 ** Go
 #+begin_src elisp
@@ -1316,7 +1324,7 @@ $0
   :ensure nil
   :straight nil
   :mode ("\\.go\\'" . go-ts-mode))
-               #+end_src
+#+end_src
 
 ** Auto remap
 #+begin_src elisp
@@ -1528,115 +1536,8 @@ $0
   (flycheck-relevant-error-other-file-show t)
   (flycheck-auto-display-errors-after-checking t)
   (flymake-mode nil))
-           #+end_src
-
-** COMMENT Eldoc
-#+begin_src elisp
-(use-package eldoc
-  :ensure nil ; built-in
-  :custom
-  (eldoc-echo-area-use-multiline-p 3)
-  (eldoc-echo-area-display-truncation-message nil)
-  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  :config
-  (add-hook 'prog-mode-hook #'eldoc-mode)
-
-  ;; Better integration with lsp-mode
-  (add-hook 'lsp-managed-mode-hook
-            (lambda ()
-              (setq eldoc-documentation-functions
-                    (cons #'lsp-eldoc-function
-                          (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
 #+end_src
 
-** COMMENT Format-all
-#+begin_src elisp
-(use-package format-all
-  :ensure t
-  :straight t
-  :commands format-all-mode
-  :hook (prog-mode . format-all-mode) ;; Enable format-all in programming modes
-  :config
-  ;; Set default formatters for specific languages
-  (setq-default format-all-formatters
-                '(("C"   (clang-format))
-                  ("Python" (black))
-                  ("JavaScript" (prettier))
-                  ("Shell" (shfmt "-i" "4" "-ci"))))
-  ;; Optional: ensure a formatter is chosen whenever format-all-mode is enabled
-  (add-hook 'format-all-mode-hook #'format-all-ensure-formatter)
-
-  (add-hook 'python-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("Python" (black)))))
-            )
-
-  (add-hook c-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("clangd" "--offset-encoding=utf-16" "ccls" (black)))))
-            )
-  (add-hook 'java-mode-hook
-            (lambda ()
-              (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
-    #+end_src
-
-** COMMENT Lsp bridge
-#+begin_src elisp
-(use-package lsp-bridge
-  :ensure t
-  :straight (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-                        :build (:not compile))
-  :hook (lsp-mode . lsp-bridge-mode)
-  ;; ;; Enable lsp-bridge globally
-  ;; (global-lsp-bridge-mode)
-
-  :config
-  ;; Custom advanced settings
-  (setq
-   ;; Enable automatic code formatting on save
-   lsp-bridge-enable-auto-format-code t
-
-   ;; Show function signature help in minibuffer
-   lsp-bridge-enable-signature-help t
-
-   ;; Disable debug mode for normal use
-   lsp-bridge-enable-debug nil
-
-   ;; Disable Emacs backup files for lsp-bridge managed files
-   lsp-bridge-disable-backup t
-
-   ;; Popup menu for code actions
-   lsp-bridge-code-action-enable-popup-menu t
-
-   ;; Delay before fetching diagnostics after idle (seconds)
-   lsp-bridge-diagnostic-fetch-idle 0.0
-
-   ;; Signature display function - minibuffer by default
-   lsp-bridge-signature-show-function #'lsp-bridge-signature-show-in-minibuffer
-
-   ;; Enable word indexing for searching symbols
-   lsp-bridge-enable-search-words t
-
-   ;; Org babel language list nil means enable all languages
-   lsp-bridge-org-babel-lang-list t
-
-   ;; Remote editing options
-   lsp-bridge-remote-save-password nil
-   lsp-bridge-remote-heartbeat-interval nil
-
-   ;; Mode hooks where lsp-bridge activates automatically
-   lsp-bridge-default-mode-hooks '(prog-mode python-mode js-mode go-mode c-mode c++-mode)
-
-   ;; Enable which-func backend using LSP (default disabled)
-   lsp-bridge-symbols-enable-which-func nil))
-
-;; Optional: Customize workspace folder detection
-(defun my-get-workspace-folder (project-root)
-  "Custom function to get workspace folder for PROJECT-ROOT."
-  project-root)
-(setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
-#+end_src
 
 * Modeline
 #+begin_src elisp
@@ -1726,21 +1627,6 @@ $0
             (lambda () (doom-modeline-set-modeline 'my-main 'default))))
 #+end_src
 
-** COMMENT Doom Theme
-#+begin_src elisp
-(use-package doom-themes
-  :ensure t
-  :straight t
-  :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-org-config)
-  (doom-theme-enable-italic t))
-
-
-(setq custom-safe-themes t)
-(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/doom-themes/" user-emacs-directory))
-(load-theme 'doom-1337 t)
-#+end_src
 
 ** Catppuccin-Theme with modus
 #+begin_src elisp
@@ -1860,11 +1746,174 @@ $0
      `(tab-bar-tab ((,c :background "#1e1e2e" :underline t)))
      `(tab-bar-tab-group-current ((,c :background "#1e1e2e" :foreground "#bac2de" :underline t)))
      `(tab-bar-tab-group-inactive ((,c :background "#1e1e2e" :foreground "#9399b2"))))
-     `(tab-bar-tab-inactive ((,c :background "#1e1e2e" :foreground "#a6adc8")))
-     `(vc-dir-file ((,c :foreground "#89b4fa")))
-     `(vc-dir-header-value ((,c :foreground "#b4befe"))))
+    `(tab-bar-tab-inactive ((,c :background "#1e1e2e" :foreground "#a6adc8")))
+    `(vc-dir-file ((,c :foreground "#89b4fa")))
+    `(vc-dir-header-value ((,c :foreground "#b4befe"))))
   :init
   (load-theme 'modus-vivendi t))
+#+end_src
+
+** COMMENT Testing
+#+begin_src elisp
+(use-package request
+  :ensure t
+  :straight t)
+(defvar my/dashboard-mode-map (make-sparse-keymap)
+  "Keymap for my scratch dashboard minor mode.")
+
+;; Define minor mode for scratch dashboard
+(define-minor-mode my/dashboard-mode
+  "Minor mode for scratch buffer dashboard."
+  :lighter " Dash"
+  :keymap my/dashboard-mode-map
+  (unless (eq major-mode 'text-mode)
+    (text-mode)))  ;; force text-mode
+
+;; Functions for actions
+(defun my/dashboard-new-org-file ()
+  "Create a new org file in ~/Documents/org/"
+  (interactive)
+  (let ((default-directory (expand-file-name "~/Documents/org/")))
+    (call-interactively 'find-file)
+    (unless (string-suffix-p ".org" (buffer-name))
+      (rename-buffer (concat (buffer-name) ".org") t))
+    (org-mode)))
+
+(defun my/dashboard-new-project ()
+  "Open project inside ~/Documents/Project/"
+  (interactive)
+  (let ((project-dir (expand-file-name "~/Documents/Project/")))
+    (project-find-file nil project-dir)))
+
+(defun my/dashboard-open-agenda ()
+  "Open agenda from ~/Documents/org/agenda/"
+  (interactive)
+  (let ((org-agenda-files (list (expand-file-name "~/Documents/org/agenda/"))))
+    (org-agenda)))
+
+;; Bind keys local to dashboard
+(define-key my/dashboard-mode-map (kbd "C-c d o") 'my/dashboard-new-org-file)
+(define-key my/dashboard-mode-map (kbd "C-c d p") 'my/dashboard-new-project)
+(define-key my/dashboard-mode-map (kbd "C-c d a") 'my/dashboard-open-agenda)
+
+;; Setup dashboard content
+(defun my/scratch-dashboard ()
+  "Setup scratch buffer as dashboard."
+  (with-current-buffer "*scratch*"
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert "Emacs Minimal Dashboard\n\n")
+      (insert "Actions (use C-c d + key):\n")
+      (insert "  o: New org files")
+      (insert "  p: New project")
+      (insert "  a: Open agenda")
+      (insert "Scratch buffer for notes below.\n")
+      (goto-char (point-min))
+      (my/dashboard-mode 1))))
+
+;; Activate dashboard on startup
+(add-hook 'emacs-startup-hook 'my/scratch-dashboard)
+
+;; Ensure the scratch buffer always enables the dashboard mode
+(add-hook 'buffer-list-update-hook
+          (lambda ()
+            (when (string= (buffer-name) "*scratch*")
+              (my/dashboard-mode 1))))
+#+end_src
+
+** Chess
+#+begin_src elisp
+(use-package chess
+  :ensure t
+  :straight t
+  :commands (chess))
+#+end_src
+
+** COMMENT Disable line number with large files
+#+begin_src elisp
+(defun disable-line-numbers-if-large-file ()
+  "Disable line numbers if the buffer has more than 1000 lines."
+  (when (> (count-lines (point-min) (point-max)) 1000)
+    (display-line-numbers-mode 0)))
+
+(add-hook 'find-file-hook #'disable-line-numbers-if-large-file)
+#+end_src
+
+** COMMENT Mini-essays
+#+begin_src elisp
+(use-package mini-essays
+  :ensure nil
+  :straight nil
+  :custom
+  (defvar my/mini-max-chars 1000)
+
+  (define-minor-mode my/mini-hard-limit-mode
+    "Prevent inserting beyond `my/mini-max-chars`."
+    :init-value nil :lighter " ⛔"
+    (if my/mini-hard-limit-mode
+        (progn
+          (add-hook 'post-self-insert-hook #'my/mini--enforce-limit nil t)
+          (advice-add 'yank :around #'my/mini--yank-guard)
+          (advice-add 'yank-pop :around #'my/mini--yank-guard))
+      (remove-hook 'post-self-insert-hook #'my/mini--enforce-limit t)
+      (advice-remove 'yank #'my/mini--yank-guard)
+      (advice-remove 'yank-pop #'my/mini--yank-guard)))
+
+  (defun my/mini--over-limit-p () (> (buffer-size) my/mini-max-chars)
+
+         (defun my/mini--enforce-limit ()
+           (when (and (derived-mode-p 'org-mode)
+                      (buffer-file-name)
+                      (string-match-p "/\\?\\|\\`" (buffer-name)) ; dummy guard; replaced below
+                      (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name))
+                      (my/mini--over-limit-p))
+             (let ((inhibit-read-only t) (inhibit-modification-hooks t))
+               (undo-boundary)
+               (backward-delete-char-untabify 1)
+               (message "Limit %d chars reached" my/mini-max-chars))))
+
+         (defun my/mini--yank-guard (orig-fun &rest args)
+           (if (and (derived-mode-p 'org-mode)
+                    (buffer-file-name)
+                    (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
+               (let ((before (buffer-size)))
+                 (apply orig-fun args)
+                 (when (> (buffer-size) my/mini-max-chars)
+                   (let ((excess (- (buffer-size) my/mini-max-chars)))
+                     (delete-region (- (point) excess) (point))
+                     (message "Trimmed yank to %d chars" my/mini-max-chars))))
+             (apply orig-fun args))
+
+           (defun my/org-mini-setup ()
+             (when (and (derived-mode-p 'org-mode)
+                        (buffer-file-name)
+                        (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
+               (setq-local fill-column 72)
+               (auto-fill-mode 1)
+               (display-fill-column-indicator-mode 1)
+               (my/mini-hard-limit-mode 1)))
+
+           (add-hook 'org-mode-hook #'my/org-mini-setup)
+
+           (auto-insert-mode 1)
+           (auto-insert-query nil)
+
+           (define-skeleton my/mini-org-skeleton
+             "Header/template for new mini*.org files."
+             nil
+             "#+title: " (file-name-base (or (buffer-file-name) (buffer-name))) "\n"
+             "#+author: " user-full-name "\n"
+             "#+date: " (format-time-string "%Y-%m-%d") "\n"
+             "#+options: toc:nil num:nil\n"
+             "#+property: reference: " (skeleton-read "Reference (URL, ID, or note): ") "\n"
+             "\n"
+             "* Draft\n"
+             "\n")
+
+           (add-to-list 'auto-insert-alist
+                        '(("\\`\\(.*/\\)?mini[^/]*\\.org\\'" . "mini org")
+                          . my/mini-org-skeleton))
+           )
 #+end_src
 
 * Disbaled packages
@@ -1939,165 +1988,196 @@ $0
                                         'face '(:inherit compilation-info
                                                          'display '((margin left-margin)))
                                         compilation-info)))))))
-                                  #+end_src
-
-** Testing
-#+begin_src elisp
-(use-package request
-  :ensure t
-  :straight t)
-(defvar my/dashboard-mode-map (make-sparse-keymap)
-  "Keymap for my scratch dashboard minor mode.")
-
-;; Define minor mode for scratch dashboard
-(define-minor-mode my/dashboard-mode
-  "Minor mode for scratch buffer dashboard."
-  :lighter " Dash"
-  :keymap my/dashboard-mode-map
-  (unless (eq major-mode 'text-mode)
-    (text-mode)))  ;; force text-mode
-
-;; Functions for actions
-(defun my/dashboard-new-org-file ()
-  "Create a new org file in ~/Documents/org/"
-  (interactive)
-  (let ((default-directory (expand-file-name "~/Documents/org/")))
-    (call-interactively 'find-file)
-    (unless (string-suffix-p ".org" (buffer-name))
-      (rename-buffer (concat (buffer-name) ".org") t))
-    (org-mode)))
-
-(defun my/dashboard-new-project ()
-  "Open project inside ~/Documents/Project/"
-  (interactive)
-  (let ((project-dir (expand-file-name "~/Documents/Project/")))
-    (project-find-file nil project-dir)))
-
-(defun my/dashboard-open-agenda ()
-  "Open agenda from ~/Documents/org/agenda/"
-  (interactive)
-  (let ((org-agenda-files (list (expand-file-name "~/Documents/org/agenda/"))))
-    (org-agenda)))
-
-;; Bind keys local to dashboard
-(define-key my/dashboard-mode-map (kbd "C-c d o") 'my/dashboard-new-org-file)
-(define-key my/dashboard-mode-map (kbd "C-c d p") 'my/dashboard-new-project)
-(define-key my/dashboard-mode-map (kbd "C-c d a") 'my/dashboard-open-agenda)
-
-;; Setup dashboard content
-(defun my/scratch-dashboard ()
-  "Setup scratch buffer as dashboard."
-  (with-current-buffer "*scratch*"
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert "Emacs Minimal Dashboard\n\n")
-      (insert "Actions (use C-c d + key):\n")
-      (insert "  o: New org files")
-      (insert "  p: New project")
-      (insert "  a: Open agenda")
-      (insert "Scratch buffer for notes below.\n")
-      (goto-char (point-min))
-      (my/dashboard-mode 1))))
-
-;; Activate dashboard on startup
-(add-hook 'emacs-startup-hook 'my/scratch-dashboard)
-
-;; Ensure the scratch buffer always enables the dashboard mode
-(add-hook 'buffer-list-update-hook
-          (lambda ()
-            (when (string= (buffer-name) "*scratch*")
-              (my/dashboard-mode 1))))
-
-
 #+end_src
 
-** Chess
+** COMMENT Doom Theme
 #+begin_src elisp
-(use-package chess
+(use-package doom-themes
   :ensure t
   :straight t
-  :commands (chess))
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-org-config)
+  (doom-theme-enable-italic t))
+
+
+(setq custom-safe-themes t)
+(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/doom-themes/" user-emacs-directory))
+(load-theme 'doom-1337 t)
 #+end_src
 
-** Disable line number with large files
+** COMMENT Eldoc
 #+begin_src elisp
-(defun disable-line-numbers-if-large-file ()
-  "Disable line numbers if the buffer has more than 1000 lines."
-  (when (> (count-lines (point-min) (point-max)) 1000)
-    (display-line-numbers-mode 0)))
+(use-package eldoc
+  :ensure nil ; built-in
+  :custom
+  (eldoc-echo-area-use-multiline-p 3)
+  (eldoc-echo-area-display-truncation-message nil)
+  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  :config
+  (add-hook 'prog-mode-hook #'eldoc-mode)
 
-(add-hook 'find-file-hook #'disable-line-numbers-if-large-file)
+  ;; Better integration with lsp-mode
+  (add-hook 'lsp-managed-mode-hook
+            (lambda ()
+              (setq eldoc-documentation-functions
+                    (cons #'lsp-eldoc-function
+                          (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
 #+end_src
 
-** Mini-essays
+** COMMENT Format-all
 #+begin_src elisp
-(defvar my/mini-max-chars 1000)
+(use-package format-all
+  :ensure t
+  :straight t
+  :commands format-all-mode
+  :hook (prog-mode . format-all-mode) ;; Enable format-all in programming modes
+  :config
+  ;; Set default formatters for specific languages
+  (setq-default format-all-formatters
+                '(("C"   (clang-format))
+                  ("Python" (black))
+                  ("JavaScript" (prettier))
+                  ("Shell" (shfmt "-i" "4" "-ci"))))
+  ;; Optional: ensure a formatter is chosen whenever format-all-mode is enabled
+  (add-hook 'format-all-mode-hook #'format-all-ensure-formatter)
 
-(define-minor-mode my/mini-hard-limit-mode
-  "Prevent inserting beyond `my/mini-max-chars`."
-  :init-value nil :lighter " ⛔"
-  (if my/mini-hard-limit-mode
-      (progn
-        (add-hook 'post-self-insert-hook #'my/mini--enforce-limit nil t)
-        (advice-add 'yank :around #'my/mini--yank-guard)
-        (advice-add 'yank-pop :around #'my/mini--yank-guard))
-    (remove-hook 'post-self-insert-hook #'my/mini--enforce-limit t)
-    (advice-remove 'yank #'my/mini--yank-guard)
-    (advice-remove 'yank-pop #'my/mini--yank-guard)))
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("Python" (black)))))
+            )
 
-(defun my/mini--over-limit-p () (> (buffer-size) my/mini-max-chars))
+  (add-hook c-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("clangd" "--offset-encoding=utf-16" "ccls" (black)))))
+            )
+  (add-hook 'java-mode-hook
+            (lambda ()
+              (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
+    #+end_src
 
-(defun my/mini--enforce-limit ()
-  (when (and (derived-mode-p 'org-mode)
-             (buffer-file-name)
-             (string-match-p "/\\?\\|\\`" (buffer-name)) ; dummy guard; replaced below
-             (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name))
-             (my/mini--over-limit-p))
-    (let ((inhibit-read-only t) (inhibit-modification-hooks t))
-      (undo-boundary)
-      (backward-delete-char-untabify 1)
-      (message "Limit %d chars reached" my/mini-max-chars))))
+** COMMENT Lsp bridge
+#+begin_src elisp
+(use-package lsp-bridge
+  :ensure t
+  :straight (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                        :build (:not compile))
+  :hook (lsp-mode . lsp-bridge-mode)
+  ;; ;; Enable lsp-bridge globally
+  ;; (global-lsp-bridge-mode)
 
-(defun my/mini--yank-guard (orig-fun &rest args)
-  (if (and (derived-mode-p 'org-mode)
-           (buffer-file-name)
-           (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
-      (let ((before (buffer-size)))
-        (apply orig-fun args)
-        (when (> (buffer-size) my/mini-max-chars)
-          (let ((excess (- (buffer-size) my/mini-max-chars)))
-            (delete-region (- (point) excess) (point))
-            (message "Trimmed yank to %d chars" my/mini-max-chars))))
-    (apply orig-fun args)))
+  :config
+  ;; Custom advanced settings
+  (setq
+   ;; Enable automatic code formatting on save
+   lsp-bridge-enable-auto-format-code t
 
-(defun my/org-mini-setup ()
-  (when (and (derived-mode-p 'org-mode)
-             (buffer-file-name)
-             (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
-    (setq-local fill-column 72)
-    (auto-fill-mode 1)
-    (display-fill-column-indicator-mode 1)
-    (my/mini-hard-limit-mode 1)))
+   ;; Show function signature help in minibuffer
+   lsp-bridge-enable-signature-help t
 
-(add-hook 'org-mode-hook #'my/org-mini-setup)
+   ;; Disable debug mode for normal use
+   lsp-bridge-enable-debug nil
 
-(auto-insert-mode 1)
-(setq auto-insert-query nil)
+   ;; Disable Emacs backup files for lsp-bridge managed files
+   lsp-bridge-disable-backup t
 
-(define-skeleton my/mini-org-skeleton
-  "Header/template for new mini*.org files."
-  nil
-  "#+title: " (file-name-base (or (buffer-file-name) (buffer-name))) "\n"
-  "#+author: " user-full-name "\n"
-  "#+date: " (format-time-string "%Y-%m-%d") "\n"
-  "#+options: toc:nil num:nil\n"
-  "#+property: reference: " (skeleton-read "Reference (URL, ID, or note): ") "\n"
-  "\n"
-  "* Draft\n"
-  "\n")
+   ;; Popup menu for code actions
+   lsp-bridge-code-action-enable-popup-menu t
 
-(add-to-list 'auto-insert-alist
-             '(("\\`\\(.*/\\)?mini[^/]*\\.org\\'" . "mini org")
-               . my/mini-org-skeleton))
+   ;; Delay before fetching diagnostics after idle (seconds)
+   lsp-bridge-diagnostic-fetch-idle 0.0
+
+   ;; Signature display function - minibuffer by default
+   lsp-bridge-signature-show-function #'lsp-bridge-signature-show-in-minibuffer
+
+   ;; Enable word indexing for searching symbols
+   lsp-bridge-enable-search-words t
+
+   ;; Org babel language list nil means enable all languages
+   lsp-bridge-org-babel-lang-list t
+
+   ;; Remote editing options
+   lsp-bridge-remote-save-password nil
+   lsp-bridge-remote-heartbeat-interval nil
+
+   ;; Mode hooks where lsp-bridge activates automatically
+   lsp-bridge-default-mode-hooks '(prog-mode python-mode js-mode go-mode c-mode c++-mode)
+
+   ;; Enable which-func backend using LSP (default disabled)
+   lsp-bridge-symbols-enable-which-func nil))
+
+;; Optional: Customize workspace folder detection
+(defun my-get-workspace-folder (project-root)
+  "Custom function to get workspace folder for PROJECT-ROOT."
+  project-root)
+(setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
 #+end_src
 
+* Code review
+
+** Hexl-mode
+#+begin_src elisp
+(use-package hexl
+  :ensure nil ; hexl-mode is built-in
+  :hook ((find-file . my/maybe-open-in-hexl-mode))
+  :config
+  (defun my/binary-file-p (file)
+    "Return non-nil if FILE is binary."
+    (let ((coding-system-for-read 'no-conversion))
+      (with-temp-buffer
+        (insert-file-contents-literally file nil 0 1024)
+        (goto-char (point-min))
+        (re-search-forward "[\x00-\x08\x0E-\x1F]" nil t))))
+
+  (defun my/maybe-open-in-hexl-mode ()
+    "Ask to open binary files in `hexl-mode`."
+    (when (and buffer-file-name
+               (my/binary-file-p buffer-file-name)
+               (not (eq major-mode 'hexl-mode)))
+      (when (y-or-n-p (format "File `%s` looks binary. Open in hexl-mode? " buffer-file-name))
+        (hexl-mode)))))
+#+end_src
+
+** Dashboard
+#+begin_src elisp
+(use-package minimal-dashboard
+  :straight (:host github :repo "dheerajshenoy/minimal-dashboard.el")
+  ;; :load-path "<path-to-cloned-directory>" ;; uncomment this line if you have downloaded and don't want to use VC
+  :init
+  (setq initial-buffer-choice #'minimal-dashboard) ;; set initial buffer as dashboard
+  :custom
+
+  (minimal-dashboard-buffer-name "Dashboard")
+  ;; (minimal-dashboard-buffer-name #'some-func-that-returns-a-string)
+
+  (minimal-dashboard-image-path "~/.config/emacs/logo.svg") ;; path to image
+  ;; (minimal-dashboard-image-path #'some-func-that-returns-a-valid-image-path)
+
+  (minimal-dashboard-text "Welcome to Emacs") ;; plain text
+
+  ;; You can have function returning a string as well
+  ;; (minimal-dashboard-text (lambda () (format "started in %s" (emacs-init-time))))
+
+  ;; Multi-line text (with center alignment) is also supported
+  ;; (minimal-dashboard-text "My multiline\nstring is here")
+
+  ;; Click support for image
+  ;; (minimal-dashboard-image-click-handler
+  ;;   (lambda (event)
+  ;;     (pcase (event-basic-type event)
+  ;;       ('mouse-1 (message "Left click on image"))
+  ;;       ('mouse-2 (message "Middle click on image"))
+  ;;       ('mouse-3 (message "Right click on image")))))
+
+  ;; Click support for text
+  ;; (minimal-dashboard-text-click-handler
+  ;;   (lambda (event)
+  ;;     (pcase (event-basic-type event)
+  ;;       ('mouse-1 (message "Left click on text"))
+  ;;       ('mouse-2 (message "Middle click on text"))
+  ;;       ('mouse-3 (message "Right click on text")))))
+  (minimal-dashboard-image-scale 1.25)
+  (minimal-dashboard-enable-resize-handling t) ;; to refresh when buffer is resized
+  (minimal-dashboard-modeline-shown nil)) ;; visibility of the modeline
+#+end_src
