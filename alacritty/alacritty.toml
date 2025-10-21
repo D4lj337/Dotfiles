@@ -1,4 +1,4 @@
-#import = [ "~/.config/alacritty/catppuccin-mocha.toml" ]
+general.import = [ "~/.config/alacritty/simple-dark.toml" ]
 
 #[colors.primary]
 #background = "#000000"
@@ -7,20 +7,21 @@
 TERM = "xterm-256color"
 
 [font]
-size = 10.0
+size = 8.0
+
+#[font.bold]
+#family = "JetBrainsMono Nerd Font Mono"
+#style = "Bold"
+#
+#[font.bold_italic]
+#family = "JetBrainsMono Nerd Font Mono"
+#style = "Bold Italic"
+#
+#[font.italic]
+#family = "JetBrainsMono Nerd Font Mono"
+#style = "Italic"
 
 [font.normal]
-family = "JetBrains Mono"
-style = "Bold"
-
-[font.bold]
-family = "JetBrains Mono"
-style = "Bold"
-
-[font.bold_italic]
-family = "JetBrains Mono"
-style = "Bold Italic"
-
-[font.italic]
-family = "JetBrains Mono"
-style = "Italic"
+#family = "JetBrainsMono Nerd Font Mono"
+family = "Roboto Mono"
+style = "Medium"
