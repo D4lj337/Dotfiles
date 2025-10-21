@@ -323,25 +323,25 @@ use-package
 #+BEGIN_SRC elisp :tangle "early-init.el"
 (custom-set-faces
  ;; Default font for all text
- '(default ((t (:family "Roboto Mono" :height 110))))
- '(fixed-pitch ((t (:family "Roboto Mono" :height 100))))
+ '(default ((t (:family "JetBrains Mono" :height 100))))
+ '(fixed-pitch ((t (:family "JetBrains Mono" :height 90))))
 
  ;; Current line number
  '(line-number-current-line ((t (:foreground "yellow" :inherit line-number))))
- '(mode-line ((t (:family "Roboto Mono" :weight Bold))))
+ '(mode-line ((t (:family "JetBrains Mono" :weight Bold))))
 
  ;; Comments italic
- '(font-lock-comment-face ((t (:family "Roboto Mono" :slant italic))))
+ '(font-lock-comment-face ((t (:family "JetBrains Mono" :slant italic))))
  ;;   ;; Keywords, functions, strings, etc. italic with no color change
- ;;   '(font-lock-keyword-face ((t (:family "Roboto Mono" :slant italic))))
- '(font-lock-function-name-face ((t (:family "Roboto Mono":slant italic))))
- ;;   '(font-lock-string-face ((t (:family "Roboto Mono" :slant italic))))
- '(font-lock-variable-name-face ((t (:family "Roboto Mono":weight bold))))
- ;;   '(font-lock-constant-face ((t (:family "Roboto Mono" :slant italic))))
- ;;   '(font-lock-type-face ((t (:family "Roboto Mono" :slant italic))))
- ;;   '(font-lock-builtin-face ((t (:family "Roboto Mono" :slant italic))))
+    '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
+ '(font-lock-function-name-face ((t (:family "JetBrains Mono":slant italic))))
+    '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
+ '(font-lock-variable-name-face ((t (:family "JetBrains Mono":weight bold))))
+ ;;   '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;   '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;   '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
  )
-  #+end_src
+#+end_src
 
 * Package Management
 
@@ -384,17 +384,16 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 #+BEGIN_SRC elisp
 (setq native-comp-speed 3)
 
-(native-compile-async "/usr/local/lib/emacs/31.0.50/native-lisp" 'recursively)
+(native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively)
 (setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
 (setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
-     #+END_SRC
+#+END_SRC
 
 * General settings
 
 ** Emacs
 #+BEGIN_SRC elisp
-;; init.el -*- lexical-binding: t; -*-
 ;; Global tab width and use spaces
 (use-package emacs
   :ensure nil
@@ -530,13 +529,13 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 
 (defun infu-bionic-reading-buffer ()
   "Bold the first few chars of every word in current buffer.
-  Version 2022-05-21"
+Version 2022-05-21"
   (interactive)
   (infu-bionic-reading-region (point-min) (point-max)))
 
 (defun infu-bionic-reading-region (Begin End)
   "Bold the first few chars of every word in region.
-  Version 2022-05-21"
+Version 2022-05-21"
   (interactive "r")
   (let (xBounds xWordBegin xWordEnd  )
     (save-restriction
@@ -593,18 +592,6 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
     (message "Tangling completed")))
 (add-hook 'after-save-hook #'my/tangle-config-org-on-save)
 #+end_src
-
-*** Eshell mini
-#+begin_src elisp
-(defun open-mini-eshell ()
-  "Open Eshell in a small window at the bottom of the current frame."
-  (interactive)
-  (let ((height 10)) ; Set mini-buffer like height (in lines)
-    (let ((new-win (split-window (frame-root-window) (- height) 'below)))
-      (select-window new-win)
-      (eshell))))
-#+end_src
-
 
 *** Don't let the specified get killed.
 #+BEGIN_SRC elisp
@@ -721,11 +708,28 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 Builtin package allows =Dired= operations like copying and renaming files to run asynchronously.
 #+begin_src elisp
 (use-package dired-async
-  :ensure nil
   :straight (:type built-in)
   :after dired
   :config
   (dired-async-mode 1))
+#+end_src
+
+** Eshell
+However, Eshell will likely not recognize bash-specific syntax like alias or some functions because Eshell syntax differs from bash.
+#+begin_src elisp
+;; Load environment variables from bash in Emacs.
+(use-package eshell
+  :ensure t
+  :custom
+  (exec-path-from-shell-initialize))
+
+(defun open-mini-eshell ()
+  "Open Eshell in a small window at the bottom of the current frame."
+  (interactive)
+  (let ((height 10)) ; Set mini-buffer like height (in lines)
+    (let ((new-win (split-window (frame-root-window) (- height) 'below)))
+      (select-window new-win)
+      (eshell))))
 #+end_src
 
 ** Icons
@@ -837,7 +841,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   ("C-c j" . 'ace-jump-mode))
 (add-hook 'ace-jump-mode-before-jump-hook (lambda ()
                                             (message "I am jumping")))
-    #+end_src
+#+end_src
 
 * Writing
 
@@ -869,24 +873,37 @@ Builtin package allows =Dired= operations like copying and renaming files to run
      (calc . t)
      (sql . t)
      (C . t))))
+
 (with-eval-after-load 'org
   ;; Org document title color and size
-  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
-  ;; Org headings levels 1-7 beautiful colors
-  (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.7 :weight 'bold)
-  (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.6 :weight 'bold)
-  (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.5 :weight 'bold)
-  (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 1.4 :weight 'bold)
-  (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
-  (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
-  (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
+  (set-face-attribute 'org-document-title nil :height 2.0 :weight 'bold)
+  ;; Org headings levels 1-7 without foreground color
+  (set-face-attribute 'org-level-1 nil :height 1.7 :weight 'bold)
+  (set-face-attribute 'org-level-2 nil :height 1.6 :weight 'bold)
+  (set-face-attribute 'org-level-3 nil :height 1.5 :weight 'bold)
+  (set-face-attribute 'org-level-4 nil :height 1.4 :weight 'bold)
+  (set-face-attribute 'org-level-5 nil :weight 'bold)
+  (set-face-attribute 'org-level-6 nil :weight 'bold)
+  (set-face-attribute 'org-level-7 nil :weight 'bold))
 
-    ;;;; Overcome the problem of 'org-mode' font lock after opening a file.
+;; (with-eval-after-load 'org
+;;   ;; Org document title color and size
+;;   (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
+;;   ;; Org headings levels 1-7 beautiful colors
+;;   (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.7 :weight 'bold)
+;;   (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.6 :weight 'bold)
+;;   (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.5 :weight 'bold)
+;;   (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 1.4 :weight 'bold)
+;;   (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
+;;   (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
+;;   (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
+
+;;;; Overcome the problem of 'org-mode' font lock after opening a file.
 (defun my/force-org-font-lock ()
   "Force font-lock to apply to the whole buffer"
   (font-lock-ensure))
 (add-hook 'org-mode-hook #'my/force-org-font-lock)
-  #+END_SRC
+#+END_SRC
 
 *** Org Modern
 #+begin_src elisp
@@ -1125,7 +1142,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
   (corfu-scroll-margin 5)
   :init
   (global-corfu-mode))
-  #+end_src
+#+end_src
 
 ** Corfu Popupinfo
 #+begin_src elisp
@@ -1157,7 +1174,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
                                  ;; Silence pcomplete
                                  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
                                  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)))))
-  #+end_src
+#+end_src
 
 ** orderless
 #+begin_src elisp
@@ -1501,64 +1518,26 @@ $0
 #+begin_src elisp
 (use-package flycheck
   :ensure t
-  :straight t
   :hook ((lsp-mode . flycheck-mode)
-         (eglot . flycheck-mode)
-         (flycheck-mode .
-                        (lambda ()
-                          (define-fringe-bitmap 'my-flycheck-fringe-indicator
-                            (vector #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111
-                                    #b011111)
-                            20  ;; height
-                            12) ;; width
-                          (flycheck-define-error-level 'error
-                            :severity 2
-                            :overlay-category 'flycheck-error-overlay
-                            :fringe-bitmap 'my-flycheck-fringe-indicator
-                            :fringe-face 'flycheck-fringe-error)
-                          (flycheck-define-error-level 'warning
-                            :severity 1
-                            :overlay-category 'flycheck-warning-overlay
-                            :fringe-bitmap 'my-flycheck-fringe-indicator
-                            :fringe-face 'flycheck-fringe-warning)
-                          (flycheck-define-error-level 'info
-                            :severity 0
-                            :overlay-category 'flycheck-info-overlay
-                            :fringe-bitmap 'my-flycheck-fringe-indicator
-                            :fringe-face 'flycheck-fringe-info))))
-  :bind (("C-c n" . flycheck-next-error)
-         ("C-c p" . flycheck-previous-error)
-         ("C-c l" . flycheck-list-errors)
-         ("C-c v" . flycheck-verify-setup)
-         ("C-c ?" . flycheck-describe-checker)
-         ("C-c s" . flycheck-select-checker))
-  :custom
-  (flycheck-check-syntax-automatically '(save idle-change mode-enabled))
-  (flycheck-highlighting-mode 'symbols)
-  (flycheck-indication-mode 'left-fringe)
-  (flycheck-standard-error-navigation t)
-  (flycheck-deferred-syntax-check nil)
-  (flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list)
-  (flycheck-mode-line-prefix "⚠️")
-  (flycheck-checker-error-threshold nil)
-  (flycheck-relevant-error-other-file-show t)
-  (flycheck-auto-display-errors-after-checking t)
-  (flymake-mode nil))
+         (eglot . flycheck-mode))
+  :config
+  (with-eval-after-load 'flycheck
+    (setq flycheck-mode-line
+          '(:eval
+            (pcase flycheck-last-status-change
+              (`finished (if flycheck-current-errors
+                             (let ((count (let-alist (flycheck-count-errors flycheck-current-errors)
+                                            (+ (or .error 0) (or .warning 0)))))
+                               (concat
+                                (all-the-icons-faicon "exclamation-triangle" :face 'error)
+                                (format " %d" count)))
+                           (concat (all-the-icons-faicon "check" :face 'success) " OK")))
+              (`running (all-the-icons-faicon "spinner" :face 'warning))
+              (`no-checker (all-the-icons-faicon "question" :face 'warning))
+              (`not-checked (all-the-icons-faicon "ban" :face 'warning))
+              (`errored (all-the-icons-faicon "times-circle" :face 'error))
+              (`interrupted (all-the-icons-faicon "pause" :face 'warning))
+              (_ (all-the-icons-faicon "question" :face 'warning)))))))
 #+end_src
 
 * Modeline
@@ -2047,7 +2026,7 @@ $0
                           (remove #'lsp-eldoc-function eldoc-documentation-functions))))))
 #+end_src
 
-** COMMENT Format-all
+** Format-all
 #+begin_src elisp
 (use-package format-all
   :ensure t
@@ -2076,7 +2055,7 @@ $0
   (add-hook 'java-mode-hook
             (lambda ()
               (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
-    #+end_src
+#+end_src
 
 ** Lsp bridge
 #+begin_src elisp
@@ -2209,13 +2188,13 @@ $0
   (minimal-dashboard-image-path "~/.config/emacs/logo.svg") ;; path to image
   ;; (minimal-dashboard-image-path #'some-func-that-returns-a-valid-image-path)
 
-  (minimal-dashboard-text "Welcome to Emacs") ;; plain text
+                                        ;  (minimal-dashboard-text "Welcome Emacs") ;; plain text
 
   ;; You can have function returning a string as well
   ;; (minimal-dashboard-text (lambda () (format "started in %s" (emacs-init-time))))
 
   ;; Multi-line text (with center alignment) is also supported
-  ;; (minimal-dashboard-text "My multiline\nstring is here")
+  ;;   (minimal-dashboard-text "")
 
   ;; Click support for image
   ;; (minimal-dashboard-image-click-handler
@@ -2237,66 +2216,57 @@ $0
   (minimal-dashboard-modeline-shown nil)) ;; visibility of the modeline
 #+end_src
 
-** linum line number
-#+begin_src elisp
-(use-package nlinum
-  :ensure t
-  :straight t
-  :disabled t
-  :hook (prog-mode . global-nlinum-mode))
-#+end_src
-
 ** Speed type
 #+begin_src elisp
 (use-package speed-type
   :ensure t
   :straight t)
-   #+end_src
+#+end_src
 
 ** ibuffer
- #+begin_src elisp
- (use-package ibuffer
-   :straight (:type built-in)
-   :bind ("C-x C-b" . ibuffer)
-   :init
-   (use-package ibuffer-vc
-     :commands (ibuffer-vc-set-filter-groups-by-vc-root)
-     :custom
-     (ibuffer-vc-skip-if-remote 'nil))
-   :custom
-   (ibuffer-formats
-    '((mark modified read-only locked " "
-            (name 35 35 :left :elide)
-            " "
-            (size 9 -1 :right)
-            " "
-            (mode 16 16 :left :elide)
-            " " filename-and-process)
-      (mark " "
-            (name 16 -1)
-            " " filename))))
- #+end_src
+#+begin_src elisp
+(use-package ibuffer
+  :straight (:type built-in)
+  :bind ("C-x C-b" . ibuffer)
+  :init
+  (use-package ibuffer-vc
+    :commands (ibuffer-vc-set-filter-groups-by-vc-root)
+    :custom
+    (ibuffer-vc-skip-if-remote 'nil))
+  :custom
+  (ibuffer-formats
+   '((mark modified read-only locked " "
+           (name 35 35 :left :elide)
+           " "
+           (size 9 -1 :right)
+           " "
+           (mode 16 16 :left :elide)
+           " " filename-and-process)
+     (mark " "
+           (name 16 -1)
+           " " filename))))
+#+end_src
 
 ** COMMENT Pdf-Tools
- #+begin_src elisp
- (use-package pdf-tools
-   :ensure t
-   :straight t)
+#+begin_src elisp
+(use-package pdf-tools
+  :ensure t
+  :straight t)
 
- (use-package pdf-tools-install
-   :ensure t
-   :straight t
-   :if (and (display-graphic-p) (not *sys/win32*) (not eaf-env-p))
-   :mode "\\.pdf\\'"
-   :commands (pdf-loader-install)
-   :custom
-   (TeX-view-program-selection '((output-pdf "pdf-tools")))
-   (TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
-   :hook
-   (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
-   :config
-   (pdf-loader-install))
- #+end_src
+(use-package pdf-tools-install
+  :ensure t
+  :straight t
+  :if (and (display-graphic-p) (not *sys/win32*) (not eaf-env-p))
+  :mode "\\.pdf\\'"
+  :commands (pdf-loader-install)
+  :custom
+  (TeX-view-program-selection '((output-pdf "pdf-tools")))
+  (TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
+  :hook
+  (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
+  :config
+  (pdf-loader-install))
+#+end_src
 
 ** Winner mode
 #+begin_src elisp
@@ -2319,13 +2289,11 @@ $0
 (use-package undo-tree
   :ensure t
   :straight t
-  :init
-  (global-treesit-auto-mode))
-;; :hook (prog-mode . global-undo-tree-mode)
-;; :custom
-;; (undo-tree-visualizer-diff t)
-;; (undo-tree-history-directory-alist `(("." . ,(expand-file-name ".backup" user-emacs-directory))))
-;; (undo-tree-visualizer-timestamps t))
+  :hook (text-mode . global-undo-tree-mode)
+  :custom
+  (undo-tree-visualizer-diff t)
+  (undo-tree-history-directory-alist `(("." . ,(expand-file-name "~/.local/share/Trash/files" user-emacs-directory))))
+  (undo-tree-visualizer-timestamps t))
 #+end_src
 
 ** Discover My Major
@@ -2341,7 +2309,7 @@ $0
 (use-package battery
   :ensure t
   :straight (:type built-in)
-  :custom
+    :custom
   (display-time-mode 1)
 
   (display-battery-mode 1))
@@ -2353,15 +2321,44 @@ $0
   :straight (:host github :repo "tek256/simple-dark" :files ("simple-dark-theme.el")))
 
 (setq custom-safe-themes t)
-(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/simple-dark/simple-dark-autoloads.el" user-emacs-directory))
+(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/simple-dark/simple-dark-theme.el" user-emacs-directory))
 (load-theme 'simple-dark t)
 #+end_src
 
-** Undo-Tree
+*** Testing
 #+begin_src elisp
-(use-package undo-tree
-  :ensure t
-  :straight t
-  :bind ("C-x u" . undo-tree)
-  :hook (text-mode . undo-tree-mode))
+(defun check-command-exists (cmd)
+  "Check if CMD exists in the system executable path."
+  (executable-find cmd))
+
+(defun check-python-flake8 ()
+  "Check if flake8 is installed for Python."
+  (unless (check-command-exists "flake8")
+    (display-warning 'flake8-warning
+                     "Warning: flake8 is not installed. Please install it using 'pip install flake8' or your system package manager."
+                     :warning)))
+
+(defun check-lsp-server ()
+  "Check if an LSP server is installed for relevant languages.
+This example checks for common LSP executables: pylsp for Python, and rust-analyzer for Rust, etc.
+You can extend it for other languages."
+  (let ((language-lsp-map '(("python-mode" . "pylsp")
+                            ("rust-mode" . "rust-analyzer")
+                            ("typescript-mode" . "typescript-language-server")
+                            ("javascript-mode" . "javascript-typescript-stdio")
+                            ("c-mode" . "clangd")
+                            ("c++-mode" . "clangd"))))
+    (let ((lsp-cmd (assoc-default major-mode language-lsp-map #'string=)))
+      (when (and lsp-cmd (not (check-command-exists lsp-cmd)))
+        (display-warning 'lsp-warning
+                         (format "Warning: LSP server '%s' for %s is not installed." lsp-cmd major-mode)
+                         :warning)))))
+
+(defun check-lint-and-lsp-on-open ()
+  "Check for linters and LSP servers when opening a file."
+  (cond
+   ((eq major-mode 'python-mode) (check-python-flake8))
+   (t (check-lsp-server))))
+
+(add-hook 'find-file-hook 'check-lint-and-lsp-on-open)
 #+end_src
