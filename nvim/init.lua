@@ -6,4 +6,6 @@ require("config.lsp")
 require("config.lazy")
 
 -- INFO: Theme
-vim.cmd.colorscheme("catppuccin")
+vim.cmd.colorscheme("simple-dark")
+
+vim.o.winborder = "rounded"
