@@ -94,7 +94,7 @@ use-package
 (global-display-line-numbers-mode t) ; Slow down with big files.
 (electric-pair-mode t) ;; auto brackets.
 (electric-indent-mode -1)
-(blink-cursor-mode -1)
+                                        ;(blink-cursor-mode -1)
 (recentf-mode 1)
 (winner-mode t)
                                         ;(desktop-save-mode 1)
@@ -124,14 +124,6 @@ use-package
 ** Preventing flickering.
 #+begin_src elisp :tangle "early-init.el"
 (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
-#+end_src
-
-** Disbale auto-encryption
-#+begin_src elisp :tangle "early-init.el"
-(epa-file-disable)
-
-(setq epa-file-cache-passphrase-for-symmetric-enc nil)
-
 #+end_src
 
 ** Show parenthesis.
@@ -246,6 +238,17 @@ use-package
  x-stretch-cursor nil
 
 
+ ;; Vertical Scroll
+ scroll-step 1
+ scroll-margin 1
+ scroll-conservatively 101
+ scroll-up-aggressively 0.01
+ scroll-down-aggressively 0.01
+ auto-window-vscroll nil
+ fast-but-imprecise-scrolling nil
+ mouse-wheel-scroll-amount '(1 ((shift) . 1))
+ mouse-wheel-progressive-speed nil
+ ;; Horizontal Scroll
  hscroll-margin 2
  hscroll-step 1
  ;; Emacs spends too much effort recentering the screen if you scroll the
@@ -328,7 +331,7 @@ use-package
  '(mode-line ((t (:family "Roboto Mono" :weight Bold))))
 
  ;; Comments italic
- ;;   '(font-lock-comment-face ((t (:family "Roboto Mono":slant italic))))
+ '(font-lock-comment-face ((t (:family "Roboto Mono" :slant italic))))
  ;;   ;; Keywords, functions, strings, etc. italic with no color change
  ;;   '(font-lock-keyword-face ((t (:family "Roboto Mono" :slant italic))))
  '(font-lock-function-name-face ((t (:family "Roboto Mono":slant italic))))
@@ -341,15 +344,13 @@ use-package
   #+end_src
 
 * Package Management
+
 ** Straight
 #+BEGIN_SRC elisp
 ;; init.el -*- lexical-binding: t; -*-
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 7))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
@@ -360,13 +361,20 @@ use-package
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-(straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
+(setq package-check-signature nil)
+
+;; Compile everything.
+(setq straight-byte-compile t) ;; ensure byte compilation is enabled
+(native-compile-async (expand-file-name "straight/build" straight-base-dir) 'recursively)
 #+END_SRC
 
 ** Use-package
 #+BEGIN_SRC elisp
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+(require 'use-package)
+
+(setq use-package-compute-statistics t
+      package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 #+END_SRC
@@ -374,16 +382,12 @@ use-package
 ** Maximum native eln speed.
 Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 #+BEGIN_SRC elisp
-(require 'use-package)
-(setq use-package-compute-statistics t)
-
-;; init.el -*- lexical-binding: t; -*-
 (setq native-comp-speed 3)
 
 (native-compile-async "/usr/local/lib/emacs/31.0.50/native-lisp" 'recursively)
-(setq native-comp-compiler-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+(setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
-(setq native-comp-driver-options '("-march=znver3" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
+(setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
      #+END_SRC
 
 * General settings
@@ -501,6 +505,16 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 (add-hook 'before-save-hook 'whitespace-cleanup)
 #+end_src
 
+** isearch
+#+begin_src elisp
+;; (setq isearch-allow-motion t
+;;       isearch-motion-changes-direction t)
+
+(setq isearch-lazy-count t)
+(setq lazy-highlight-cleanup nil) ;; Keep highlights after search ends
+(setq lazy-highlight-initial-delay 0) ;; No delay in highlighting
+#+end_src
+
 ** Bionic Reading
 #+BEGIN_SRC elisp :tangle "lisp/bionic-reading.el"
 ;; -*- lexical-binding: t; -*-
@@ -550,10 +564,12 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
   (if olivetti-mode
       (progn
         (olivetti-mode 0)
-        (display-line-numbers-mode 1))  ;; Re-enable line numbers
+        (display-line-numbers-mode 1)
+        (message "Zen Mode disbaled"))  ;; Re-enable line numbers
     (progn
       (olivetti-mode 1)
-      (display-line-numbers-mode -1)))) ;; Disable line numbers
+      (display-line-numbers-mode -1)
+      (message "Zen Mode enabled")))) ;; Disable line numbers
 #+end_src
 
 *** Auto indent
@@ -706,7 +722,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 #+begin_src elisp
 (use-package dired-async
   :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :after dired
   :config
   (dired-async-mode 1))
@@ -787,7 +803,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 ** Persistent history.
 #+BEGIN_SRC elisp
 (use-package savehist
-  :straight nil
+  :straight (:type built-in)
   :hook (emacs-startup-hook . savehist-mode)
   :custom
   (history-length 15))
@@ -853,15 +869,14 @@ Builtin package allows =Dired= operations like copying and renaming files to run
      (calc . t)
      (sql . t)
      (C . t))))
-
 (with-eval-after-load 'org
   ;; Org document title color and size
-  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 1.0 :weight 'bold)
+  (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
   ;; Org headings levels 1-7 beautiful colors
-  (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.3 :weight 'bold)
-  (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.2 :weight 'bold)
-  (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.0 :weight 'bold)
-  (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 0.9 :weight 'bold)
+  (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.7 :weight 'bold)
+  (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.6 :weight 'bold)
+  (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.5 :weight 'bold)
+  (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 1.4 :weight 'bold)
   (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
   (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
   (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
@@ -885,6 +900,17 @@ Builtin package allows =Dired= operations like copying and renaming files to run
   (org-pretty-entities t)
   (org-insert-heading-respect-content t)
   (org-agenda-tags-column 0))
+#+end_src
+
+*** Org bullet
+#+begin_src elisp
+(use-package org-bullets
+  :ensure t
+  :straight t
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list
+   '("⁖")))
 #+end_src
 
 ** olivetti
@@ -1053,7 +1079,7 @@ Builtin package allows =Dired= operations like copying and renaming files to run
 Below is a modern Emacs completion system configuration using use-package, leveraging only built-in packages (no Vertico, Ivy, or Helm). This setup uses fido-mode, fido-vertical-mode, and modern completion styles for a smooth, efficient experience:
 #+begin_src elisp
 (use-package minibuffer
-  :straight nil
+  :straight (:type built-in)
   :ensure nil
   :hook (emacs-startup . (lambda ()
                            (fido-mode 1)
@@ -1139,7 +1165,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
   :ensure t
   :straight t
   :custom
-  (completion-styles '(basic))
+  (completion-styles '(orderless))
   (completion-category-overrides '((file (styles basic partial-completion))))
   (orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex)))
 #+end_src
@@ -1305,7 +1331,6 @@ $0
 ** Lua mode
 #+begin_src elisp
 (use-package lua-mode
-  :ensure t
   :straight t
   :mode ("\\.lua\\'" . lua-ts-mode))
 #+end_src
@@ -1313,16 +1338,14 @@ $0
 ** Python mode
 #+begin_src elisp
 (use-package lua-mode
-  :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :mode ("\\.py\\'" . python-ts-mode))
 #+end_src
 
 ** Go
 #+begin_src elisp
 (use-package go-mode
-  :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :mode ("\\.go\\'" . go-ts-mode))
 #+end_src
 
@@ -1538,7 +1561,6 @@ $0
   (flymake-mode nil))
 #+end_src
 
-
 * Modeline
 #+begin_src elisp
 (use-package doom-modeline
@@ -1628,10 +1650,10 @@ $0
 #+end_src
 
 
-** Catppuccin-Theme with modus
+** COMMENT Catppuccin-Theme with modus
 #+begin_src elisp
 (use-package modus-themes
-  :ensure nil
+  :straight (:type built-in)
   :defer t
   :custom
   (modus-themes-italic-constructs t)
@@ -1719,36 +1741,36 @@ $0
      (warning "#f9e2af")))
   :config
   (modus-themes-with-colors
-    (custom-set-faces
-     `(change-log-acknowledgment ((,c :foreground "#b4befe")))
-     `(change-log-date ((,c :foreground "#a6e3a1")))
-     `(change-log-name ((,c :foreground "#fab387")))
-     `(diff-context ((,c :foreground "#89b4fa")))
-     `(diff-file-header ((,c :foreground "#f5c2e7")))
-     `(diff-header ((,c :foreground "#89b4fa")))
-     `(diff-hunk-header ((,c :foreground "#fab387")))
-     `(gnus-button ((,c :foreground "#8aadf4")))
-     `(gnus-group-mail-3 ((,c :foreground "#8aadf4")))
-     `(gnus-group-mail-3-empty ((,c :foreground "#8aadf4")))
-     `(gnus-header-content ((,c :foreground "#7dc4e4")))
-     `(gnus-header-from ((,c :foreground "#cba6f7")))
-     `(gnus-header-name ((,c :foreground "#a6e3a1")))
-     `(gnus-header-subject ((,c :foreground "#8aadf4")))
-     `(log-view-message ((,c :foreground "#b4befe")))
-     `(match ((,c :background "#3e5768" :foreground "#cdd6f5")))
-     `(modus-themes-search-current ((,c :background "#f38ba8" :foreground "#11111b" ))) ;; :foreground "#cdd6f4" -- Catppuccin default, not that visible...
-     `(modus-themes-search-lazy ((,c :background "#3e5768" :foreground "#cdd6f5")))     ;; :foreground "#cdd6f4" :background "#94e2d5" -- Catppuccin default, not that visible...
-     `(newsticker-extra-face ((,c :foreground "#9399b2" :height 0.8 :slant italic)))
-     `(newsticker-feed-face ((,c :foreground "#f38ba8" :height 1.2 :weight bold)))
-     `(newsticker-treeview-face ((,c :foreground "#cdd6f4")))
-     `(newsticker-treeview-selection-face ((,c :background "#3e5768" :foreground "#cdd6f5")))
-     `(tab-bar ((,c :background "#1e1e2e" :foreground "#bac2de")))
-     `(tab-bar-tab ((,c :background "#1e1e2e" :underline t)))
-     `(tab-bar-tab-group-current ((,c :background "#1e1e2e" :foreground "#bac2de" :underline t)))
-     `(tab-bar-tab-group-inactive ((,c :background "#1e1e2e" :foreground "#9399b2"))))
-    `(tab-bar-tab-inactive ((,c :background "#1e1e2e" :foreground "#a6adc8")))
-    `(vc-dir-file ((,c :foreground "#89b4fa")))
-    `(vc-dir-header-value ((,c :foreground "#b4befe"))))
+   (custom-set-faces
+    `(change-log-acknowledgment ((,c :foreground "#b4befe")))
+    `(change-log-date ((,c :foreground "#a6e3a1")))
+    `(change-log-name ((,c :foreground "#fab387")))
+    `(diff-context ((,c :foreground "#89b4fa")))
+    `(diff-file-header ((,c :foreground "#f5c2e7")))
+    `(diff-header ((,c :foreground "#89b4fa")))
+    `(diff-hunk-header ((,c :foreground "#fab387")))
+    `(gnus-button ((,c :foreground "#8aadf4")))
+    `(gnus-group-mail-3 ((,c :foreground "#8aadf4")))
+    `(gnus-group-mail-3-empty ((,c :foreground "#8aadf4")))
+    `(gnus-header-content ((,c :foreground "#7dc4e4")))
+    `(gnus-header-from ((,c :foreground "#cba6f7")))
+    `(gnus-header-name ((,c :foreground "#a6e3a1")))
+    `(gnus-header-subject ((,c :foreground "#8aadf4")))
+    `(log-view-message ((,c :foreground "#b4befe")))
+    `(match ((,c :background "#3e5768" :foreground "#cdd6f5")))
+    `(modus-themes-search-current ((,c :background "#f38ba8" :foreground "#11111b" ))) ;; :foreground "#cdd6f4" -- Catppuccin default, not that visible...
+    `(modus-themes-search-lazy ((,c :background "#3e5768" :foreground "#cdd6f5")))     ;; :foreground "#cdd6f4" :background "#94e2d5" -- Catppuccin default, not that visible...
+    `(newsticker-extra-face ((,c :foreground "#9399b2" :height 0.8 :slant italic)))
+    `(newsticker-feed-face ((,c :foreground "#f38ba8" :height 1.2 :weight bold)))
+    `(newsticker-treeview-face ((,c :foreground "#cdd6f4")))
+    `(newsticker-treeview-selection-face ((,c :background "#3e5768" :foreground "#cdd6f5")))
+    `(tab-bar ((,c :background "#1e1e2e" :foreground "#bac2de")))
+    `(tab-bar-tab ((,c :background "#1e1e2e" :underline t)))
+    `(tab-bar-tab-group-current ((,c :background "#1e1e2e" :foreground "#bac2de" :underline t)))
+    `(tab-bar-tab-group-inactive ((,c :background "#1e1e2e" :foreground "#9399b2"))))
+   `(tab-bar-tab-inactive ((,c :background "#1e1e2e" :foreground "#a6adc8")))
+   `(vc-dir-file ((,c :foreground "#89b4fa")))
+   `(vc-dir-header-value ((,c :foreground "#b4befe"))))
   :init
   (load-theme 'modus-vivendi t))
 #+end_src
@@ -1843,7 +1865,7 @@ $0
 #+begin_src elisp
 (use-package mini-essays
   :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :custom
   (defvar my/mini-max-chars 1000)
 
@@ -1922,7 +1944,7 @@ $0
 #+begin_src elisp
 (use-package eglot
   :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure)
   :config
   ;; CRITICAL: Disable flymake integration - we use flycheck exclusively
@@ -1969,7 +1991,7 @@ $0
 #+begin_src elisp
 (use-package flymake
   :ensure nil
-  :straight nil
+  :straight (:type built-in)
   :hook (lsp-mode . flymake-mode)
   :custom
   (flymake-indicator-type 'margins)
@@ -2056,62 +2078,100 @@ $0
               (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
     #+end_src
 
-** COMMENT Lsp bridge
+** Lsp bridge
 #+begin_src elisp
+;; (use-package lsp-bridge
+;;   :ensure t
+;;   :straight (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+;;                         :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+;;                         :build (:not compile))
+;;   :hook (lsp-mode . lsp-bridge-mode)
+;;   ;; ;; Enable lsp-bridge globally
+;;   ;; (global-lsp-bridge-mode)
+
+;;   :config
+;;   ;; Custom advanced settings
+;;   (setq
+;;    ;; Enable automatic code formatting on save
+;;    lsp-bridge-enable-auto-format-code t
+
+;;    ;; Show function signature help in minibuffer
+;;    lsp-bridge-enable-signature-help t
+
+;;    ;; Disable debug mode for normal use
+;;    lsp-bridge-enable-debug nil
+
+;;    ;; Disable Emacs backup files for lsp-bridge managed files
+;;    lsp-bridge-disable-backup t
+
+;;    ;; Popup menu for code actions
+;;    lsp-bridge-code-action-enable-popup-menu t
+
+;;    ;; Delay before fetching diagnostics after idle (seconds)
+;;    lsp-bridge-diagnostic-fetch-idle 0.0
+
+;;    ;; Signature display function - minibuffer by default
+;;    lsp-bridge-signature-show-function #'lsp-bridge-signature-show-in-minibuffer
+
+;;    ;; Enable word indexing for searching symbols
+;;    lsp-bridge-enable-search-words t
+
+;;    ;; Org babel language list nil means enable all languages
+;;    lsp-bridge-org-babel-lang-list t
+
+;;    ;; Remote editing options
+;;    lsp-bridge-remote-save-password nil
+;;    lsp-bridge-remote-heartbeat-interval nil
+
+;;    ;; Mode hooks where lsp-bridge activates automatically
+;;    lsp-bridge-default-mode-hooks '(prog-mode python-mode js-mode go-mode c-mode c++-mode)
+
+;;    ;; Enable which-func backend using LSP (default disabled)
+;;    lsp-bridge-symbols-enable-which-func nil))
+
+;; ;; Optional: Customize workspace folder detection
+;; (defun my-get-workspace-folder (project-root)
+;;   "Custom function to get workspace folder for PROJECT-ROOT."
+;;   project-root)
+;; (setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
+
 (use-package lsp-bridge
-  :ensure t
-  :straight (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-                        :build (:not compile))
-  :hook (lsp-mode . lsp-bridge-mode)
-  ;; ;; Enable lsp-bridge globally
-  ;; (global-lsp-bridge-mode)
-
+  :straight (lsp-bridge
+             :type git
+             :host github
+             :repo "manateelazycat/lsp-bridge"
+             :files ("*"))
+  :defer 1
+  :commands (global-lsp-bridge-mode lsp-bridge-mode)
+  :custom
+  (acm-enable-codeium nil)
+  (acm-enable-tabnine nil)
+  (acm-enable-yas nil)
+  (acm-enable-quick-access t)
+  (lsp-bridge-enable-hover-diagnostic t)
+  (lsp-bridge-python-lsp-server "pyright")
+  (lsp-bridge-c-lsp-server "ccls")
+  :bind (("M-." . lsp-bridge-find-def)
+         ("M-," . lsp-bridge-find-def-return)
+         ("M-i" . lsp-bridge-popup-documentation)
+         ("C-M-." . lsp-bridge-peek)
+         :map lsp-bridge-ref-mode-map
+         ("n" . lsp-bridge-ref-jump-next-keyword)
+         ("p" . lsp-bridge-ref-jump-prev-keyword)
+         ("M-n" . lsp-bridge-ref-jump-next-file)
+         ("M-p" . lsp-bridge-ref-jump-prev-file) ;
+         ("C-x C-q" . lsp-bridge-ref-switch-to-edit-mode)
+         :map lsp-bridge-ref-mode-edit-map
+         ("C-x C-q" . lsp-bridge-ref-apply-changed)
+         ("C-x C-s" . lsp-bridge-ref-apply-changed)
+         ("C-c C-k" . lsp-bridge-ref-quit)
+         ("M-n" . lsp-bridge-ref-jump-next-file)
+         ("M-p" . lsp-bridge-ref-jump-prev-file)
+         :map acm-mode-map
+         ([remap next-line] . nil)
+         ([remap previous-line] . nil))
   :config
-  ;; Custom advanced settings
-  (setq
-   ;; Enable automatic code formatting on save
-   lsp-bridge-enable-auto-format-code t
-
-   ;; Show function signature help in minibuffer
-   lsp-bridge-enable-signature-help t
-
-   ;; Disable debug mode for normal use
-   lsp-bridge-enable-debug nil
-
-   ;; Disable Emacs backup files for lsp-bridge managed files
-   lsp-bridge-disable-backup t
-
-   ;; Popup menu for code actions
-   lsp-bridge-code-action-enable-popup-menu t
-
-   ;; Delay before fetching diagnostics after idle (seconds)
-   lsp-bridge-diagnostic-fetch-idle 0.0
-
-   ;; Signature display function - minibuffer by default
-   lsp-bridge-signature-show-function #'lsp-bridge-signature-show-in-minibuffer
-
-   ;; Enable word indexing for searching symbols
-   lsp-bridge-enable-search-words t
-
-   ;; Org babel language list nil means enable all languages
-   lsp-bridge-org-babel-lang-list t
-
-   ;; Remote editing options
-   lsp-bridge-remote-save-password nil
-   lsp-bridge-remote-heartbeat-interval nil
-
-   ;; Mode hooks where lsp-bridge activates automatically
-   lsp-bridge-default-mode-hooks '(prog-mode python-mode js-mode go-mode c-mode c++-mode)
-
-   ;; Enable which-func backend using LSP (default disabled)
-   lsp-bridge-symbols-enable-which-func nil))
-
-;; Optional: Customize workspace folder detection
-(defun my-get-workspace-folder (project-root)
-  "Custom function to get workspace folder for PROJECT-ROOT."
-  project-root)
-(setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
+  (global-lsp-bridge-mode))
 #+end_src
 
 * Code review
@@ -2119,24 +2179,19 @@ $0
 ** Hexl-mode
 #+begin_src elisp
 (use-package hexl
-  :ensure nil ; hexl-mode is built-in
-  :hook ((find-file . my/maybe-open-in-hexl-mode))
-  :config
-  (defun my/binary-file-p (file)
-    "Return non-nil if FILE is binary."
-    (let ((coding-system-for-read 'no-conversion))
-      (with-temp-buffer
-        (insert-file-contents-literally file nil 0 1024)
-        (goto-char (point-min))
-        (re-search-forward "[\x00-\x08\x0E-\x1F]" nil t))))
+  :defer t
+  :init
+  (defun my/binary-file-warning ()
+    "Warn before opening binary executable files in hexl-mode."
+    (let ((extensions '("out" "o" "so" "dll" "exe" ""))) ;; add any relevant extensions or empty for no extension
+      (when (and buffer-file-name
+                 (or (member (file-name-extension buffer-file-name) extensions)
+                     ;; You can add magic number checks here if wanted
+                     ))
+        (when (yes-or-no-p (format "Open file %s in hexl-mode? " (file-name-nondirectory buffer-file-name)))
+          (hexl-mode)))))
+  :hook (find-file . my/binary-file-warning))
 
-  (defun my/maybe-open-in-hexl-mode ()
-    "Ask to open binary files in `hexl-mode`."
-    (when (and buffer-file-name
-               (my/binary-file-p buffer-file-name)
-               (not (eq major-mode 'hexl-mode)))
-      (when (y-or-n-p (format "File `%s` looks binary. Open in hexl-mode? " buffer-file-name))
-        (hexl-mode)))))
 #+end_src
 
 ** Dashboard
@@ -2180,4 +2235,133 @@ $0
   (minimal-dashboard-image-scale 1.25)
   (minimal-dashboard-enable-resize-handling t) ;; to refresh when buffer is resized
   (minimal-dashboard-modeline-shown nil)) ;; visibility of the modeline
+#+end_src
+
+** linum line number
+#+begin_src elisp
+(use-package nlinum
+  :ensure t
+  :straight t
+  :disabled t
+  :hook (prog-mode . global-nlinum-mode))
+#+end_src
+
+** Speed type
+#+begin_src elisp
+(use-package speed-type
+  :ensure t
+  :straight t)
+   #+end_src
+
+** ibuffer
+ #+begin_src elisp
+ (use-package ibuffer
+   :straight (:type built-in)
+   :bind ("C-x C-b" . ibuffer)
+   :init
+   (use-package ibuffer-vc
+     :commands (ibuffer-vc-set-filter-groups-by-vc-root)
+     :custom
+     (ibuffer-vc-skip-if-remote 'nil))
+   :custom
+   (ibuffer-formats
+    '((mark modified read-only locked " "
+            (name 35 35 :left :elide)
+            " "
+            (size 9 -1 :right)
+            " "
+            (mode 16 16 :left :elide)
+            " " filename-and-process)
+      (mark " "
+            (name 16 -1)
+            " " filename))))
+ #+end_src
+
+** COMMENT Pdf-Tools
+ #+begin_src elisp
+ (use-package pdf-tools
+   :ensure t
+   :straight t)
+
+ (use-package pdf-tools-install
+   :ensure t
+   :straight t
+   :if (and (display-graphic-p) (not *sys/win32*) (not eaf-env-p))
+   :mode "\\.pdf\\'"
+   :commands (pdf-loader-install)
+   :custom
+   (TeX-view-program-selection '((output-pdf "pdf-tools")))
+   (TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
+   :hook
+   (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
+   :config
+   (pdf-loader-install))
+ #+end_src
+
+** Winner mode
+#+begin_src elisp
+(use-package winner
+  :straight (:type built-in)
+  :custom
+  (winner-boring-buffers
+   '("*Completions*"
+     "*Compile-Log*"
+     "*Fuzzy Completions*"
+     "*Help*"
+     "*Buffer List*"
+     "*Ibuffer*"))
+  :config
+  (winner-mode 1))
+#+end_src
+
+** Undo tree
+#+begin_src elisp
+(use-package undo-tree
+  :ensure t
+  :straight t
+  :init
+  (global-treesit-auto-mode))
+;; :hook (prog-mode . global-undo-tree-mode)
+;; :custom
+;; (undo-tree-visualizer-diff t)
+;; (undo-tree-history-directory-alist `(("." . ,(expand-file-name ".backup" user-emacs-directory))))
+;; (undo-tree-visualizer-timestamps t))
+#+end_src
+
+** Discover My Major
+#+begin_src elisp
+(use-package discover-my-major
+  :ensure t
+  :straight t
+  :bind ("C-h C-m" . discover-my-major))
+#+end_src
+
+** Battery
+#+begin_src elisp
+(use-package battery
+  :ensure t
+  :straight (:type built-in)
+  :custom
+  (display-time-mode 1)
+
+  (display-battery-mode 1))
+#+end_src
+
+** Simple dark theme
+#+begin_src elisp
+(use-package simple-dark
+  :straight (:host github :repo "tek256/simple-dark" :files ("simple-dark-theme.el")))
+
+(setq custom-safe-themes t)
+(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/simple-dark/simple-dark-autoloads.el" user-emacs-directory))
+(load-theme 'simple-dark t)
+#+end_src
+
+** Undo-Tree
+#+begin_src elisp
+(use-package undo-tree
+  :ensure t
+  :straight t
+  :bind ("C-x u" . undo-tree)
+  :hook (text-mode . undo-tree-mode))
 #+end_src
