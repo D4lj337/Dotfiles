@@ -9,7 +9,7 @@ from libqtile.lazy import lazy
 
 dgroups_key_binder = simple_key_binder("mod4")
 mod = "mod4"
-terminal = "alacritty -e tmux"
+terminal = "alacritty"
 browser = "librewolf --profilemanager"
 dmenu = 'dmenu_run -nb "#000000" -nf "#ffffff" -sb "#ffffff" -sf "#000000"'
 filemanager = "thunar"
@@ -19,6 +19,7 @@ ytfzf = "ytfzf -m -D"
 bfg = "#ffffff"  # bar foreground color
 fg = "#ffffff"  # task switcher color
 bg = "#000000"  # bar background color
+f_color = "#ED7014"  # focus color
 
 keys = [
     Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
@@ -185,7 +186,7 @@ keys.extend(
 layout_theme = {
     "border_width": 3,
     "margin": 0,
-    "border_focus": "grey",
+    "border_focus": f_color,
     "grow_amount": 2,
 }
 
@@ -207,9 +208,9 @@ layouts = [
 
 
 widget_defaults = dict(
-    font="UbuntuMono NFM Medium",
+    font="Roboto Mono Medium",
     # font="JetBrainsMono NFM Medium",
-    fontsize=11,
+    fontsize=10,
     padding=5,
     background=bg,
     foreground=fg,
@@ -243,13 +244,13 @@ def init_widgets_list():
             borderwidth=5,
         ),
         widget.Spacer(),
-       widget.GenPollCommand(
-       update_interval=60,
-       cmd="~/.config/qtile/scripts/emacs-daemon.sh",
+        widget.GenPollCommand(
+            update_interval=100,
+            cmd="~/.config/qtile/scripts/emacs-daemon.sh",
             shell=True,
             fmt="[{}]",
         ),
-        #widget.Spacer(),
+        # widget.Spacer(),
         widget.Pomodoro(
             color_break={"ffff00"},
             notification_on=True,
@@ -287,7 +288,7 @@ def init_widgets_list():
             padding=5,
             update_interval=4,
         ),
-        #widget.Spacer(),
+        # widget.Spacer(),
         widget.ThermalSensor(
             tag_sensor="Tctl",
             foreground=bfg,
@@ -302,10 +303,6 @@ def init_widgets_list():
             threshold=80,
             padding=5,
         ),
-        #   widget.Battery(
-        #     foreground=bfg,
-        #     fmt = '[{}]',
-        #        ),
         widget.Battery(
             format="{percent:2.0%} {hour:d}:{min:02d}",
             notify_below=30,  # Show a notification if battery is below 10%
