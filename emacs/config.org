@@ -95,8 +95,6 @@ use-package
 (electric-pair-mode t) ;; auto brackets.
 (electric-indent-mode -1)
                                         ;(blink-cursor-mode -1)
-(recentf-mode 1)
-(winner-mode t)
                                         ;(desktop-save-mode 1)
 #+END_SRC
 
@@ -280,11 +278,6 @@ use-package
 
                                         ; custom-safe-themes t
 
- ;; Prevent unwanted runtime builds; packages are compiled ahead-of-time when
- ;; they are installed and site files are compiled when gccemacs is installed.
- ;; (setq comp-deferred-compilation nil)
- native-comp-jit-compilation t
-
  native-comp-async-report-warnings-errors nil
 
  ;; Prevent unwanted runtime builds in gccemacs (native-comp); packages are
@@ -319,7 +312,7 @@ use-package
 (setq-default prescient-history-length 1000)
 #+END_SRC
 
-** Fonts
+** COMMENT Fonts
 #+BEGIN_SRC elisp :tangle "early-init.el"
 (custom-set-faces
  ;; Default font for all text
@@ -333,9 +326,9 @@ use-package
  ;; Comments italic
  '(font-lock-comment-face ((t (:family "JetBrains Mono" :slant italic))))
  ;;   ;; Keywords, functions, strings, etc. italic with no color change
-    '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
+ '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
  '(font-lock-function-name-face ((t (:family "JetBrains Mono":slant italic))))
-    '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
+ '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
  '(font-lock-variable-name-face ((t (:family "JetBrains Mono":weight bold))))
  ;;   '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
  ;;   '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
@@ -348,29 +341,59 @@ use-package
 ** Straight
 #+BEGIN_SRC elisp
 ;; init.el -*- lexical-binding: t; -*-
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
-(setq straight-use-package-by-default t)
-(setq package-check-signature nil)
+(defvar elpaca-installer-version 0.11)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil :depth 1 :inherit ignore
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (<= emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                  ,@(when-let* ((depth (plist-get order :depth)))
+                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                  ,(plist-get order :repo) ,repo))))
+                  ((zerop (call-process "git" nil buffer t "checkout"
+                                        (or (plist-get order :ref) "--"))))
+                  (emacs (concat invocation-directory invocation-name))
+                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                  ((require 'elpaca))
+                  ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
 
 ;; Compile everything.
-(setq straight-byte-compile t) ;; ensure byte compilation is enabled
-(native-compile-async (expand-file-name "straight/build" straight-base-dir) 'recursively)
+;;(setq straight-byte-compile t) ;; ensure byte compilation is enabled
+;;(native-compile-async (expand-file-name "straight/build" straight-base-dir) 'recursively)
+(setq package-enable-at-startup nil)
 #+END_SRC
 
 ** Use-package
 #+BEGIN_SRC elisp
+(elpaca elpaca-use-package
+  ;; Enable use-package :ensure support for Elpaca.
+  (elpaca-use-package-mode))
+
+(setq elpaca-use-package-by-default t)
+
 (require 'use-package)
 
 (setq use-package-compute-statistics t
@@ -384,7 +407,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
 #+BEGIN_SRC elisp
 (setq native-comp-speed 3)
 
-(native-compile-async "/usr/lib/emacs/30.2/native-lisp" 'recursively)
+(native-compile-async "/usr/local/lib/emacs/31.0.50/native-lisp" 'recursively)
 (setq native-comp-compiler-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
 
 (setq native-comp-driver-options '("-march=znver2" "-Ofast" "-g0" "-fno-finite-math-only" "-fgraphite-identity" "-floop-nest-optimize" "-fdevirtualize-at-ltrans" "-fipa-pta" "-fno-semantic-interposition" "-flto=auto" "-fuse-linker-plugin"))
@@ -412,7 +435,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("C-c w h" . 'my/highlight-word)
    ("C-c i" . 'my/indent-whole-buffer)
    ("C-c v" . view-mode)
-   ("C-x r" . restart-emacs)              ;; restart emacs
+   ("C-c R" . restart-emacs)              ;; restart emacs
    ("C-c r" . recentf)                    ;; recent files list
    ("C-x C-k" . kill-buffer)              ;; kill buffer
    ("C-c p" . dmenu)
@@ -432,16 +455,23 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ("C-c g" . gdb)
    ("M-y" . popup-kill-ring)
    ("C-z" . repeat)
+
+   ;; Project
+                                        ;   ("C-c p p" . project-switch-project)
+                                        ;  ("C-c p f" . project-find-file)
+
    ;; Consult
    ("M-J" . consult-line-multi)
    ("M-j" . consult-line)
    ("M-f" . consult-ripgrep)
    ("M-F" . consult-recent-file)
    ("M-o" . consult-outline)
+
    ;; fzf
    ("C-c f" . fzf-find-in-buffer))
   :custom
   (tab-width 4)
+  (recentf 1)
   (indent-tabs-mode nil)
   (org-startup-indented nil)
   (treesit-font-lock-level 4)
@@ -474,6 +504,16 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
                                         ;  (add-hook 'after-save-hook #'indent-region)
                                         ; (add-hook 'after-save-hook #'my/tangle-config-org-on-save)
 #+END_SRC
+
+** UTF
+#+begin_src elisp
+(setq coding-system-for-read 'utf-8
+      coding-system-for-write 'utf-8
+      default-buffer-file-coding-system 'utf-8
+      locale-coding-system 'utf-8
+      selection-coding-system 'utf-8
+      inhibit-eol-conversion t)
+#+end_src
 
 ** Visible bell
 #+BEGIN_SRC elisp
@@ -702,16 +742,22 @@ Version 2022-05-21"
       (indent-region (point-min) (point-max)))))
 #+end_src
 
-* General  Pacakges
+* General Pacakges
 
-** Dired Async
+** Dired
 Builtin package allows =Dired= operations like copying and renaming files to run asynchronously.
 #+begin_src elisp
-(use-package dired-async
-  :straight (:type built-in)
-  :after dired
-  :config
-  (dired-async-mode 1))
+(use-package dired
+  :ensure nil
+  :hook (dired-mode . dired-hide-details-mode)
+  :custom (dired-listing-switches "-alh --group-directories-first"))
+#+end_src
+
+** Project
+#+begin_src elisp
+(use-package project
+  :ensure nil
+  :commands (project))
 #+end_src
 
 ** Eshell
@@ -719,34 +765,31 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 ;; Load environment variables from bash in Emacs.
 (use-package eshell
-  :ensure t
+  :ensure nil
+  :preface
+  (defun open-mini-eshell ()
+    "Open Eshell in a small window at the bottom of the current frame."
+    (interactive)
+    (let ((height 10)) ; Set mini-buffer like height (in lines)
+      (let ((new-win (split-window (frame-root-window) (- height) 'below)))
+        (select-window new-win)
+        (eshell))))
   :custom
   (exec-path-from-shell-initialize))
-
-(defun open-mini-eshell ()
-  "Open Eshell in a small window at the bottom of the current frame."
-  (interactive)
-  (let ((height 10)) ; Set mini-buffer like height (in lines)
-    (let ((new-win (split-window (frame-root-window) (- height) 'below)))
-      (select-window new-win)
-      (eshell))))
 #+end_src
 
 ** Icons
 #+BEGIN_SRC elisp
 (use-package nerd-icons
   :ensure t
-  :straight t
   :hook  nerd-icons)
 
 (use-package nerd-icons-dired
   :ensure t
-  :straight t
   :hook (dired-mode . nerd-icons-dired-mode))
 
 (use-package nerd-icons-completion
   :ensure t
-  :straight t
   :hook (emacs-startup-hook . nerd-icons-completion-mode))
 #+END_SRC
 
@@ -754,7 +797,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 (use-package kind-icon
   :ensure t
-  :straight t
   :hook (corfu-mode . (lambda ()
                         (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
                         (add-hook 'modus-themes-after-load-theme-hook #'kind-icon-reset-cache)
@@ -769,21 +811,19 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 ** Vterm & vterm-toggle
 #+BEGIN_SRC elisp
 (use-package vterm
-  :ensure t
-  :straight t
-  :commands (vterm))
+  :commands (vterm)
+  :bind (("C-c T" . vterm))
+  :custom
+  (vterm-always-compile-module t))
 
 (use-package vterm-toggle
-  :ensure t
-  :straight t
-  :commands (vterm-toggle))
+  :commands vterm-toggle)
 #+END_SRC
 
 ** Which key
 #+BEGIN_SRC elisp
 (use-package which-key
   :ensure t
-  :straight t
   :hook (after-init . which-key-mode)
   :custom
   (which-key-lighter "")
@@ -807,7 +847,7 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 ** Persistent history.
 #+BEGIN_SRC elisp
 (use-package savehist
-  :straight (:type built-in)
+  :ensure nil
   :hook (emacs-startup-hook . savehist-mode)
   :custom
   (history-length 15))
@@ -817,14 +857,14 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+BEGIN_SRC elisp
 (use-package hardtime
   :ensure t
-  :straight t
-  :custom
+  :preface
   (defun evil-hardtime-check-command ()
     "Return non-nil if the currently executed command should be checked."
     (memq this-command '( next-line previous-line evil-previous-visual-line
                           right-char left-char left-word right-word
                           evil-forward-char evil-backward-char
                           evil-next-line evil-previous-line)))
+  :custom
   (hardtime-predicate #'evil-hardtime-check-command)
   :hook
   (text-mode . hardtime-mode)
@@ -835,7 +875,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 (use-package ace-jump-mode
   :ensure t
-  :straight t
   :hook (emacs-startup . ace-jump-mode)
   :bind
   ("C-c j" . 'ace-jump-mode))
@@ -850,8 +889,8 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 ;; Org mode, if you still want it for notes/tasks
 (use-package org
   :ensure t
-  :straight t
   :mode ("\\.org\\'" . org-mode)
+  :commands (org-agenda org-capture)
   :custom
   (org-agenda-files '("~/Documents/org/"))
   (org-log-done 'time)
@@ -860,19 +899,20 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
   (org-src-fontify-natively t)
   (org-src-tab-acts-natively t)
   (org-pretty-entities t)
-  (org-edit-src-content-indentation 0)
-  :config
-  ;; Org babel
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (python . t)
-     (lisp . t)
-     (shell . t)
-     (lua . t)
-     (calc . t)
-     (sql . t)
-     (C . t))))
+  (org-edit-src-content-indentation 0))
+
+(defun my-org-setup ()
+  (with-eval-after-load 'org
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)
+       (lisp . t)
+       (shell . t)
+       (lua . t)
+       (calc . t)
+       (sql . t)
+       (C . t)))))
 
 (with-eval-after-load 'org
   ;; Org document title color and size
@@ -886,18 +926,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
   (set-face-attribute 'org-level-6 nil :weight 'bold)
   (set-face-attribute 'org-level-7 nil :weight 'bold))
 
-;; (with-eval-after-load 'org
-;;   ;; Org document title color and size
-;;   (set-face-attribute 'org-document-title nil :foreground "#D160A6" :height 2.0 :weight 'bold)
-;;   ;; Org headings levels 1-7 beautiful colors
-;;   (set-face-attribute 'org-level-1 nil :foreground "#D16D9E" :height 1.7 :weight 'bold)
-;;   (set-face-attribute 'org-level-2 nil :foreground "#89B8C2" :height 1.6 :weight 'bold)
-;;   (set-face-attribute 'org-level-3 nil :foreground "#E4B062" :height 1.5 :weight 'bold)
-;;   (set-face-attribute 'org-level-4 nil :foreground "#8FA88C" :height 1.4 :weight 'bold)
-;;   (set-face-attribute 'org-level-5 nil :foreground "#6094AF" :weight 'bold)
-;;   (set-face-attribute 'org-level-6 nil :foreground "#BF9F84" :weight 'bold)
-;;   (set-face-attribute 'org-level-7 nil :foreground "#B86B6B" :weight 'bold))
-
 ;;;; Overcome the problem of 'org-mode' font lock after opening a file.
 (defun my/force-org-font-lock ()
   "Force font-lock to apply to the whole buffer"
@@ -909,7 +937,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 (use-package org-modern
   :ensure t
-  :straight t
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda))
   :custom
@@ -923,7 +950,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 (use-package org-bullets
   :ensure t
-  :straight t
   :hook (org-mode . org-bullets-mode)
   :custom
   (org-bullets-bullet-list
@@ -934,7 +960,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+begin_src elisp
 (use-package olivetti
   :ensure t
-  :straight t
   :commands (olivetti-mode)
   :custom
   ;; Set text width to a comfortable fraction of the window
@@ -955,7 +980,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+BEGIN_SRC elisp
 (use-package evil
   :ensure t
-  :straight t
   :disabled t
   :hook (emacs-startup-hook . evil-mode)
   :custom
@@ -997,7 +1021,6 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+BEGIN_SRC elisp
 (use-package evil-collection
   :ensure t
-  :straight t
   :hook (evil-mode . evil-collection-init))
 #+END_SRC
 
@@ -1005,41 +1028,7 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+BEGIN_SRC elisp
 (use-package evil-tutor
   :ensure t
-  :straight t
   :commands (evil-tutor))
-#+END_SRC
-
-* Theme
-** Catppuccin
-#+BEGIN_SRC elisp
-                                        ;(load-theme 'modus-vivendi-deuteranopia t)
-
-;;    (use-package catppuccin-theme
-;;      :ensure t
-;;      :straight t
-;;      :custom
-;;      (catppuccin-flavor 'mocha)
-;;      :hook
-;;      (emacs-startup . (lambda ()
-;;                         (catppuccin-set-color 'base "#000000")
-;;                         (catppuccin-set-color 'mantle "#000000" 'mocha)
-;;                         (catppuccin-set-color 'crust "#000000" 'mocha)
-;;                         (load-theme 'catppuccin t :no-confirm)
-;;                         (catppuccin-reload))))
-
-
-;;      (use-package catppuccin-theme
-;;        :ensure t
-;;        :straight t
-;;        :config
-;;        (setq catppuccin-flavor 'mocha)
-;;        :custom
-;;        (catppuccin-set-color 'base "#000000")
-;;        (catppuccin-set-color 'mantle "#000000" 'mocha)
-;;        (catppuccin-set-color 'crust "#000000" 'mocha)
-;;        (load-theme 'catppuccin t)
-;;        (catppuccin-reload))
-
 #+END_SRC
 
 * Programming
@@ -1077,18 +1066,12 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 ** GDB
 #+BEGIN_SRC elisp
 (use-package gdb-mi
-  :ensure t
-  :straight (:host github :repo "weirdNox/emacs-gdb" :files ("*.el" "*.c" "*.h" "Makefile"))
+  :ensure (:host github :repo "weirdNox/emacs-gdb" :files ("*.el" "*.c"
+                                                           "*.h" "Makefile"))
   :init
   (fmakunbound 'gdb)
   (fmakunbound 'gdb-enable-debug))
 #+END_SRC
-
-** FzF
-#+begin_src elisp
-(use-package fzf
-  :ensure t)
-#+end_src
 
 * Completion
 
@@ -1096,7 +1079,7 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 Below is a modern Emacs completion system configuration using use-package, leveraging only built-in packages (no Vertico, Ivy, or Helm). This setup uses fido-mode, fido-vertical-mode, and modern completion styles for a smooth, efficient experience:
 #+begin_src elisp
 (use-package minibuffer
-  :straight (:type built-in)
+  :ensure nil
   :ensure nil
   :hook (emacs-startup . (lambda ()
                            (fido-mode 1)
@@ -1121,7 +1104,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package corfu
   :ensure t
-  :straight t
   :hook (minibuffer-setup-hook . (lambda ()
                                    (when (local-variable-p 'completion-at-point-functions)
                                      (setq-local corfu-auto nil)
@@ -1148,7 +1130,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 ;; Corfu Popupinfo for documentation
 (use-package corfu-popupinfo
-  :straight (:host github :repo "minad/corfu" :files ("extensions/corfu-popupinfo.el"))
+  :ensure (:host github :repo "minad/corfu" :files ("extensions/corfu-popupinfo.el"))
   :after corfu
   :hook (corfu-mode . corfu-popupinfo-mode)
   :custom
@@ -1160,7 +1142,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package cape
   :ensure t
-  :straight t
   :hook ((eshell-mode . (lambda ()
                           (setq-local completion-at-point-functions
                                       (list #'cape-file #'pcomplete-completions-at-point))))
@@ -1180,7 +1161,6 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package orderless
   :ensure t
-  :straight t
   :custom
   (completion-styles '(orderless))
   (completion-category-overrides '((file (styles basic partial-completion))))
@@ -1191,7 +1171,7 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package vertico
   :ensure t
-  :hook (emacs-startup . vertico-mode)
+  :hook (elpaca-after-init . vertico-mode)
   :custom
   (vertico-cycle t)          ;; Wrap around candidates
   (vertico-resize nil)
@@ -1279,19 +1259,10 @@ Below is a modern Emacs completion system configuration using use-package, lever
 #+begin_src elisp
 (use-package yasnippet
   :ensure t
-  :straight t
   :demand t
   :config
   (yas-reload-all)
   (yas-global-mode))
-
-;;(use-package yasnippet
-;;  :ensure t
-;;  :straight t
-;;  :hook ((prog-mode . yas-minor-mode)
-;;         (org-mode . yas-minor-mode)
-;;         (text-mode . yas-minor-mode))
-;;  :commands (yas-expand yas-minor-mode))
 #+end_src
 
 *** Source Code block
@@ -1348,21 +1319,21 @@ $0
 ** Lua mode
 #+begin_src elisp
 (use-package lua-mode
-  :straight t
+                                        ;ensure nil
   :mode ("\\.lua\\'" . lua-ts-mode))
 #+end_src
 
 ** Python mode
 #+begin_src elisp
 (use-package lua-mode
-  :straight (:type built-in)
+  :ensure nil
   :mode ("\\.py\\'" . python-ts-mode))
 #+end_src
 
 ** Go
 #+begin_src elisp
 (use-package go-mode
-  :straight (:type built-in)
+  :ensure nil
   :mode ("\\.go\\'" . go-ts-mode))
 #+end_src
 
@@ -1390,7 +1361,6 @@ $0
 ;; Treesit-auto for automatic grammar management
 (use-package treesit-auto
   :ensure t
-  :straight t
   :hook (prog-mode . global-treesit-auto-mode)
   :custom
   (treesit-auto-install t)  ; Prompt before installing grammars
@@ -1399,11 +1369,10 @@ $0
   (global-treesit-auto-mode))
 #+end_src
 
-** LSP mode
+** COMMENT LSP mode
 #+begin_src elisp
 (use-package lsp-mode
   :ensure t
-  :straight t
   :hook ((prog-mode . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration))
   :commands (lsp lsp-deferred)
@@ -1471,7 +1440,6 @@ $0
 ;; LSP UI for additional features
 (use-package lsp-ui
   :ensure t
-  :straight t
   :after lsp-mode
   :custom
   ;; Documentation
@@ -1519,32 +1487,32 @@ $0
 (use-package flycheck
   :ensure t
   :hook ((lsp-mode . flycheck-mode)
-         (eglot . flycheck-mode))
-  :config
-  (with-eval-after-load 'flycheck
-    (setq flycheck-mode-line
-          '(:eval
-            (pcase flycheck-last-status-change
-              (`finished (if flycheck-current-errors
-                             (let ((count (let-alist (flycheck-count-errors flycheck-current-errors)
-                                            (+ (or .error 0) (or .warning 0)))))
-                               (concat
-                                (all-the-icons-faicon "exclamation-triangle" :face 'error)
-                                (format " %d" count)))
-                           (concat (all-the-icons-faicon "check" :face 'success) " OK")))
-              (`running (all-the-icons-faicon "spinner" :face 'warning))
-              (`no-checker (all-the-icons-faicon "question" :face 'warning))
-              (`not-checked (all-the-icons-faicon "ban" :face 'warning))
-              (`errored (all-the-icons-faicon "times-circle" :face 'error))
-              (`interrupted (all-the-icons-faicon "pause" :face 'warning))
-              (_ (all-the-icons-faicon "question" :face 'warning)))))))
+         (prog-mode . flycheck-mode)))
+
+(with-eval-after-load 'flycheck
+  (setq flycheck-mode-line
+        '(:eval
+          (pcase flycheck-last-status-change
+            (`finished (if flycheck-current-errors
+                           (let ((count (let-alist (flycheck-count-errors flycheck-current-errors)
+                                          (+ (or .error 0) (or .warning 0)))))
+                             (concat
+                              (all-the-icons-faicon "exclamation-triangle" :face 'error)
+                              (format " %d" count)))
+                         (concat (all-the-icons-faicon "check" :face 'success) " OK")))
+            (`running (all-the-icons-faicon "spinner" :face 'warning))
+            (`no-checker (all-the-icons-faicon "question" :face 'warning))
+            (`not-checked (all-the-icons-faicon "ban" :face 'warning))
+            (`errored (all-the-icons-faicon "times-circle" :face 'error))
+            (`interrupted (all-the-icons-faicon "pause" :face 'warning))
+            (_ (all-the-icons-faicon "question" :face 'warning))))))
 #+end_src
 
 * Modeline
 #+begin_src elisp
 (use-package doom-modeline
   :ensure t
-  :hook (after-init . doom-modeline-mode)
+  :hook (elpaca-after-init . doom-modeline-mode)
   :custom
   ;; Core appearance
   (doom-modeline-height 28)
@@ -1594,10 +1562,10 @@ $0
 
   ;; Modal editing support
   (doom-modeline-modal-icon t)
-  (doom-modeline-modal-modern-icon t)
+  (doom-modeline-modal-modern-icon t))
 
-  :config
-  ;; Custom segments for enhanced functionality
+;; Custom extensions deferred until doom-modeline is loaded
+(with-eval-after-load 'doom-modeline
   (defun my/doom-modeline-treesit-indicator ()
     "Show tree-sitter status in modeline."
     (when (and (fboundp 'treesit-available-p)
@@ -1605,34 +1573,35 @@ $0
                (treesit-language-at (point)))
       (format " TS[%s]" (treesit-language-at (point)))))
 
-  ;; Add custom segments
   (doom-modeline-def-segment my-treesit
     (my/doom-modeline-treesit-indicator))
 
-  ;; Enhanced LSP segment with more details
   (doom-modeline-def-segment my-lsp-enhanced
-    (when (and (bound-and-true-p lsp-mode)
-               (lsp-workspaces))
-      (concat
-       (doom-modeline-lsp)
-       (when (lsp-workspace-folders)
-         (format " [%d]" (length (lsp-workspace-folders)))))))
+    (when (and (bound-and-true-p eglot--managed-mode)
+               (eglot--workspace))
+      (let ((folders (length (eglot-workspace-folders (eglot--workspace)))))
+        (format " E[%d]" folders))))
 
-  ;; Custom modeline format
+  ;; fall back to flymake diagnostics count if eglot is not active
+  (doom-modeline-def-segment my-flymake-diagnostics
+    (when (bound-and-true-p flymake-mode)
+      (let ((err-count (let-alist (flymake--state flymake-diagnostics)
+                         (length .error))))
+        (when (> err-count 0)
+          (format " F[%d]" err-count)))))
+
   (doom-modeline-def-modeline 'my-main
     '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs my-treesit time))
+    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs my-treesit my-lsp-enhanced my-flymake-diagnostics time))
 
-  ;; Apply custom modeline
   (add-hook 'doom-modeline-mode-hook
             (lambda () (doom-modeline-set-modeline 'my-main 'default))))
 #+end_src
 
-
 ** COMMENT Catppuccin-Theme with modus
 #+begin_src elisp
 (use-package modus-themes
-  :straight (:type built-in)
+  :ensure t
   :defer t
   :custom
   (modus-themes-italic-constructs t)
@@ -1754,178 +1723,111 @@ $0
   (load-theme 'modus-vivendi t))
 #+end_src
 
-** COMMENT Testing
-#+begin_src elisp
-(use-package request
-  :ensure t
-  :straight t)
-(defvar my/dashboard-mode-map (make-sparse-keymap)
-  "Keymap for my scratch dashboard minor mode.")
-
-;; Define minor mode for scratch dashboard
-(define-minor-mode my/dashboard-mode
-  "Minor mode for scratch buffer dashboard."
-  :lighter " Dash"
-  :keymap my/dashboard-mode-map
-  (unless (eq major-mode 'text-mode)
-    (text-mode)))  ;; force text-mode
-
-;; Functions for actions
-(defun my/dashboard-new-org-file ()
-  "Create a new org file in ~/Documents/org/"
-  (interactive)
-  (let ((default-directory (expand-file-name "~/Documents/org/")))
-    (call-interactively 'find-file)
-    (unless (string-suffix-p ".org" (buffer-name))
-      (rename-buffer (concat (buffer-name) ".org") t))
-    (org-mode)))
-
-(defun my/dashboard-new-project ()
-  "Open project inside ~/Documents/Project/"
-  (interactive)
-  (let ((project-dir (expand-file-name "~/Documents/Project/")))
-    (project-find-file nil project-dir)))
-
-(defun my/dashboard-open-agenda ()
-  "Open agenda from ~/Documents/org/agenda/"
-  (interactive)
-  (let ((org-agenda-files (list (expand-file-name "~/Documents/org/agenda/"))))
-    (org-agenda)))
-
-;; Bind keys local to dashboard
-(define-key my/dashboard-mode-map (kbd "C-c d o") 'my/dashboard-new-org-file)
-(define-key my/dashboard-mode-map (kbd "C-c d p") 'my/dashboard-new-project)
-(define-key my/dashboard-mode-map (kbd "C-c d a") 'my/dashboard-open-agenda)
-
-;; Setup dashboard content
-(defun my/scratch-dashboard ()
-  "Setup scratch buffer as dashboard."
-  (with-current-buffer "*scratch*"
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert "Emacs Minimal Dashboard\n\n")
-      (insert "Actions (use C-c d + key):\n")
-      (insert "  o: New org files")
-      (insert "  p: New project")
-      (insert "  a: Open agenda")
-      (insert "Scratch buffer for notes below.\n")
-      (goto-char (point-min))
-      (my/dashboard-mode 1))))
-
-;; Activate dashboard on startup
-(add-hook 'emacs-startup-hook 'my/scratch-dashboard)
-
-;; Ensure the scratch buffer always enables the dashboard mode
-(add-hook 'buffer-list-update-hook
-          (lambda ()
-            (when (string= (buffer-name) "*scratch*")
-              (my/dashboard-mode 1))))
-#+end_src
-
 ** Chess
 #+begin_src elisp
 (use-package chess
   :ensure t
-  :straight t
   :commands (chess))
 #+end_src
 
-** COMMENT Disable line number with large files
+** Disable line number with large files
 #+begin_src elisp
+;; Defer loading of this function until first use (when a file is opened)
+(autoload 'disable-line-numbers-if-large-file "my-line-numbers"
+  "Disable line numbers if the buffer has more than 1000 lines." nil)
+
+;; Define the function in a separate lazy-load file or in your config
 (defun disable-line-numbers-if-large-file ()
   "Disable line numbers if the buffer has more than 1000 lines."
   (when (> (count-lines (point-min) (point-max)) 1000)
     (display-line-numbers-mode 0)))
 
+;; Add the hook lazily after autoload declaration
 (add-hook 'find-file-hook #'disable-line-numbers-if-large-file)
+
 #+end_src
 
 ** COMMENT Mini-essays
 #+begin_src elisp
-(use-package mini-essays
-  :ensure nil
-  :straight (:type built-in)
-  :custom
-  (defvar my/mini-max-chars 1000)
+(defvar my/mini-max-chars 4000)
 
-  (define-minor-mode my/mini-hard-limit-mode
-    "Prevent inserting beyond `my/mini-max-chars`."
-    :init-value nil :lighter " ⛔"
-    (if my/mini-hard-limit-mode
-        (progn
-          (add-hook 'post-self-insert-hook #'my/mini--enforce-limit nil t)
-          (advice-add 'yank :around #'my/mini--yank-guard)
-          (advice-add 'yank-pop :around #'my/mini--yank-guard))
-      (remove-hook 'post-self-insert-hook #'my/mini--enforce-limit t)
-      (advice-remove 'yank #'my/mini--yank-guard)
-      (advice-remove 'yank-pop #'my/mini--yank-guard)))
+(define-minor-mode my/mini-hard-limit-mode
+  "Prevent inserting beyond `my/mini-max-chars`."
+  :init-value nil
+  (if my/mini-hard-limit-mode
+      (progn
+        (add-hook 'post-self-insert-hook #'my/mini--enforce-limit nil t)
+        (advice-add 'yank :around #'my/mini--yank-guard)
+        (advice-add 'yank-pop :around #'my/mini--yank-guard))
+    (remove-hook 'post-self-insert-hook #'my/mini--enforce-limit t)
+    (advice-remove 'yank #'my/mini--yank-guard)
+    (advice-remove 'yank-pop #'my/mini--yank-guard)))
 
-  (defun my/mini--over-limit-p () (> (buffer-size) my/mini-max-chars)
+(defun my/mini--over-limit-p () (> (buffer-size) my/mini-max-chars))
 
-         (defun my/mini--enforce-limit ()
-           (when (and (derived-mode-p 'org-mode)
-                      (buffer-file-name)
-                      (string-match-p "/\\?\\|\\`" (buffer-name)) ; dummy guard; replaced below
-                      (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name))
-                      (my/mini--over-limit-p))
-             (let ((inhibit-read-only t) (inhibit-modification-hooks t))
-               (undo-boundary)
-               (backward-delete-char-untabify 1)
-               (message "Limit %d chars reached" my/mini-max-chars))))
+(defun my/mini--enforce-limit ()
+  (when (and (derived-mode-p 'org-mode)
+             (buffer-file-name)
+             (string-match-p "/\\?\\|\\`" (buffer-name)) ; dummy guard; replaced below
+             (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name))
+             (my/mini--over-limit-p))
+    (let ((inhibit-read-only t) (inhibit-modification-hooks t))
+      (undo-boundary)
+      (backward-delete-char-untabify 1)
+      (message "Limit %d chars reached" my/mini-max-chars))))
 
-         (defun my/mini--yank-guard (orig-fun &rest args)
-           (if (and (derived-mode-p 'org-mode)
-                    (buffer-file-name)
-                    (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
-               (let ((before (buffer-size)))
-                 (apply orig-fun args)
-                 (when (> (buffer-size) my/mini-max-chars)
-                   (let ((excess (- (buffer-size) my/mini-max-chars)))
-                     (delete-region (- (point) excess) (point))
-                     (message "Trimmed yank to %d chars" my/mini-max-chars))))
-             (apply orig-fun args))
+(defun my/mini--yank-guard (orig-fun &rest args)
+  (if (and (derived-mode-p 'org-mode)
+           (buffer-file-name)
+           (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
+      (let ((before (buffer-size)))
+        (apply orig-fun args)
+        (when (> (buffer-size) my/mini-max-chars)
+          (let ((excess (- (buffer-size) my/mini-max-chars)))
+            (delete-region (- (point) excess) (point))
+            (message "Trimmed yank to %d chars" my/mini-max-chars))))
+    (apply orig-fun args)))
 
-           (defun my/org-mini-setup ()
-             (when (and (derived-mode-p 'org-mode)
-                        (buffer-file-name)
-                        (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
-               (setq-local fill-column 72)
-               (auto-fill-mode 1)
-               (display-fill-column-indicator-mode 1)
-               (my/mini-hard-limit-mode 1)))
+(defun my/org-mini-setup ()
+  (when (and (derived-mode-p 'org-mode)
+             (buffer-file-name)
+             (string-match-p "\\(?:/\\|\\`\\)mini[^/]*\\.org\\'" (buffer-file-name)))
+    (setq-local fill-column 72)
+    (auto-fill-mode 1)
+    (display-fill-column-indicator-mode 1)
+    (my/mini-hard-limit-mode 1)))
 
-           (add-hook 'org-mode-hook #'my/org-mini-setup)
-
-           (auto-insert-mode 1)
-           (auto-insert-query nil)
-
-           (define-skeleton my/mini-org-skeleton
-             "Header/template for new mini*.org files."
-             nil
-             "#+title: " (file-name-base (or (buffer-file-name) (buffer-name))) "\n"
-             "#+author: " user-full-name "\n"
-             "#+date: " (format-time-string "%Y-%m-%d") "\n"
-             "#+options: toc:nil num:nil\n"
-             "#+property: reference: " (skeleton-read "Reference (URL, ID, or note): ") "\n"
-             "\n"
-             "* Draft\n"
-             "\n")
-
-           (add-to-list 'auto-insert-alist
-                        '(("\\`\\(.*/\\)?mini[^/]*\\.org\\'" . "mini org")
-                          . my/mini-org-skeleton))
-           )
+;; Lazy loading: delay setup until org-mode loads, then add hook
+(with-eval-after-load 'org
+  (add-hook 'org-mode-hook #'my/org-mini-setup)
+  (auto-insert-mode 1)
+  (setq auto-insert-query nil)
+  (define-skeleton my/mini-org-skeleton
+    "Header/template for new mini*.org files."
+    nil
+    "#+title: " (file-name-base (or (buffer-file-name) (buffer-name))) "\n"
+    "#+author: " user-full-name "\n"
+    "#+date: " (format-time-string "%Y-%m-%d") "\n"
+    "#+options: toc:nil num:nil\n"
+    "#+property: reference: " (skeleton-read "Reference (URL, ID, or note): ") "\n"
+    "\n"
+    "* Draft\n"
+    "\n")
+  (add-to-list 'auto-insert-alist
+               '(("\\`\\(.*/\\)?mini[^/]*\\.org\\'" . "mini org")
+                 . my/mini-org-skeleton)))
 #+end_src
 
 * Disbaled packages
 
-** COMMENT Eglot
+** Eglot
 #+begin_src elisp
 (use-package eglot
   :ensure nil
-  :straight (:type built-in)
-  :hook ((c-mode c++-mode python-mode bash-mode lua-mode sh-mode asm-mode) . eglot-ensure)
-  :config
+  :commands (eglot eglot-ensure)
+  :hook (prog-mode . eglot-ensure)
+                                        ;  :hook ((c-ts-mode c++-ts-mode python-ts-mode bash--tsmode lua-ts-mode sh-mode asm-mode) . eglot-ensure)
+  :custom
   ;; CRITICAL: Disable flymake integration - we use flycheck exclusively
   (add-to-list 'eglot-stay-out-of 'flymake)
   (eglot-sync-connect nil)
@@ -1937,26 +1839,6 @@ $0
   (eglot-extend-to-xref t)                ; Enhanced cross-references
   (eglot-report-progress nil)            ; Disable progress reports for focus
 
-  :custom
-  ;; Server performance optimizations
-  (eglot-events-buffer-config '(:size 0 :format short))
-  (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs
-                 '(c-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
-    (add-to-list 'eglot-server-programs
-                 '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
-    (add-to-list 'eglot-server-programs
-                 '(python-ts-mode . ("python-flake8")))
-    (add-to-list 'eglot-server-programs
-                 '(lua-ts-mode . ("lua-language-server")))
-    (add-to-list 'eglot-server-programs
-                 '(bash-ts-mode . ("bash-language-server" "start" "spellcheck"))))
-
-  ;; Ensure eglot starts with Tree-sitter modes
-  (dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
-    (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
-
-  ;; Key bindings for LSP operations
   :bind (:map eglot-mode-map
               ("C-c l r" . eglot-rename)
               ("C-c l a" . eglot-code-actions)
@@ -1964,13 +1846,29 @@ $0
               ("C-c l d" . eglot-find-declaration)
               ("C-c l i" . eglot-find-implementation)
               ("C-c l t" . eglot-find-typeDefinition)))
+
+;; Configure server programs after eglot is loaded, outside use-package
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(c-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
+  (add-to-list 'eglot-server-programs
+               '(c++-ts-mode . ("clangd" "--offset-encoding=utf-16" "ccls")))
+  (add-to-list 'eglot-server-programs
+               '(python-ts-mode . ("python-flake8")))
+  (add-to-list 'eglot-server-programs
+               '(lua-ts-mode . ("lua-language-server")))
+  (add-to-list 'eglot-server-programs
+               '(bash-ts-mode . ("bash-language-server" "start" "spellcheck"))))
+
+;; Add eglot hooks for the relevant Tree-sitter modes (if not covered by prog-mode)
+(dolist (mode '(python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode lua-ts-mode))
+  (add-hook (intern (format "%s-hook" mode)) #'eglot-ensure))
 #+end_src
 
 ** COMMENT Flymake
 #+begin_src elisp
 (use-package flymake
   :ensure nil
-  :straight (:type built-in)
   :hook (lsp-mode . flymake-mode)
   :custom
   (flymake-indicator-type 'margins)
@@ -1995,7 +1893,6 @@ $0
 #+begin_src elisp
 (use-package doom-themes
   :ensure t
-  :straight t
   :custom
   (doom-themes-enable-bold t)
   (doom-themes-org-config)
@@ -2010,7 +1907,7 @@ $0
 ** COMMENT Eldoc
 #+begin_src elisp
 (use-package eldoc
-  :ensure nil ; built-in
+  :ensure nil
   :custom
   (eldoc-echo-area-use-multiline-p 3)
   (eldoc-echo-area-display-truncation-message nil)
@@ -2030,96 +1927,41 @@ $0
 #+begin_src elisp
 (use-package format-all
   :ensure t
-  :straight t
-  :commands format-all-mode
-  :hook (prog-mode . format-all-mode) ;; Enable format-all in programming modes
-  :config
-  ;; Set default formatters for specific languages
-  (setq-default format-all-formatters
-                '(("C"   (clang-format))
-                  ("Python" (black))
-                  ("JavaScript" (prettier))
-                  ("Shell" (shfmt "-i" "4" "-ci"))))
-  ;; Optional: ensure a formatter is chosen whenever format-all-mode is enabled
+  :hook (prog-mode . format-all-mode) ;; Lazy enable format-all in programming modes
+  :custom
+  (format-all-formatters
+   '(("C"       clang-format)
+     ("Python"  black)
+     ("JavaScript" prettier)
+     ("Shell"   (shfmt "-i" "4" "-ci")))))
+
+;; Setup additional hooks and buffer-local overrides lazily only after format-all loads
+(with-eval-after-load 'format-all
+  ;; Always ensure a formatter is selected when format-all-mode is active
   (add-hook 'format-all-mode-hook #'format-all-ensure-formatter)
 
+  ;; Language-specific buffer-local customizations
   (add-hook 'python-mode-hook
             (lambda ()
-              (setq-local format-all-formatters '(("Python" (black)))))
-            )
+              (setq-local format-all-formatters '(("Python" black)))))
 
-  (add-hook c-mode-hook
+  (add-hook 'c-mode-hook
             (lambda ()
-              (setq-local format-all-formatters '(("clangd" "--offset-encoding=utf-16" "ccls" (black)))))
-            )
+              (setq-local format-all-formatters '(("C" clang-format)))))
+
   (add-hook 'java-mode-hook
             (lambda ()
               (setq-local format-all-formatters '(("Java" (astyle "--mode=java")))))))
 #+end_src
 
-** Lsp bridge
+** COMMENT Lsp bridge
 #+begin_src elisp
-;; (use-package lsp-bridge
-;;   :ensure t
-;;   :straight (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-;;                         :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-;;                         :build (:not compile))
-;;   :hook (lsp-mode . lsp-bridge-mode)
-;;   ;; ;; Enable lsp-bridge globally
-;;   ;; (global-lsp-bridge-mode)
-
-;;   :config
-;;   ;; Custom advanced settings
-;;   (setq
-;;    ;; Enable automatic code formatting on save
-;;    lsp-bridge-enable-auto-format-code t
-
-;;    ;; Show function signature help in minibuffer
-;;    lsp-bridge-enable-signature-help t
-
-;;    ;; Disable debug mode for normal use
-;;    lsp-bridge-enable-debug nil
-
-;;    ;; Disable Emacs backup files for lsp-bridge managed files
-;;    lsp-bridge-disable-backup t
-
-;;    ;; Popup menu for code actions
-;;    lsp-bridge-code-action-enable-popup-menu t
-
-;;    ;; Delay before fetching diagnostics after idle (seconds)
-;;    lsp-bridge-diagnostic-fetch-idle 0.0
-
-;;    ;; Signature display function - minibuffer by default
-;;    lsp-bridge-signature-show-function #'lsp-bridge-signature-show-in-minibuffer
-
-;;    ;; Enable word indexing for searching symbols
-;;    lsp-bridge-enable-search-words t
-
-;;    ;; Org babel language list nil means enable all languages
-;;    lsp-bridge-org-babel-lang-list t
-
-;;    ;; Remote editing options
-;;    lsp-bridge-remote-save-password nil
-;;    lsp-bridge-remote-heartbeat-interval nil
-
-;;    ;; Mode hooks where lsp-bridge activates automatically
-;;    lsp-bridge-default-mode-hooks '(prog-mode python-mode js-mode go-mode c-mode c++-mode)
-
-;;    ;; Enable which-func backend using LSP (default disabled)
-;;    lsp-bridge-symbols-enable-which-func nil))
-
-;; ;; Optional: Customize workspace folder detection
-;; (defun my-get-workspace-folder (project-root)
-;;   "Custom function to get workspace folder for PROJECT-ROOT."
-;;   project-root)
-;; (setq lsp-bridge-get-workspace-folder #'my-get-workspace-folder)
-
 (use-package lsp-bridge
-  :straight (lsp-bridge
-             :type git
-             :host github
-             :repo "manateelazycat/lsp-bridge"
-             :files ("*"))
+  :ensure (lsp-bridge
+           :type git
+           :host github
+           :repo "manateelazycat/lsp-bridge"
+           :files ("*"))
   :defer 1
   :commands (global-lsp-bridge-mode lsp-bridge-mode)
   :custom
@@ -2158,29 +2000,23 @@ $0
 ** Hexl-mode
 #+begin_src elisp
 (use-package hexl
-  :defer t
-  :init
-  (defun my/binary-file-warning ()
-    "Warn before opening binary executable files in hexl-mode."
-    (let ((extensions '("out" "o" "so" "dll" "exe" ""))) ;; add any relevant extensions or empty for no extension
-      (when (and buffer-file-name
-                 (or (member (file-name-extension buffer-file-name) extensions)
-                     ;; You can add magic number checks here if wanted
-                     ))
-        (when (yes-or-no-p (format "Open file %s in hexl-mode? " (file-name-nondirectory buffer-file-name)))
-          (hexl-mode)))))
-  :hook (find-file . my/binary-file-warning))
-
+  :ensure nil
+  :hook (find-file . (lambda ()
+                       (let ((extensions '("out" "o" "so" "dll" "exe" ""))) ;; add relevant extensions
+                         (when (and buffer-file-name
+                                    (member (file-name-extension buffer-file-name)
+                                            extensions))
+                           (when (yes-or-no-p (format "Open file %s in hexl-mode? " (file-name-nondirectory buffer-file-name)))
+                             (hexl-mode)))))))
 #+end_src
 
 ** Dashboard
 #+begin_src elisp
 (use-package minimal-dashboard
-  :straight (:host github :repo "dheerajshenoy/minimal-dashboard.el")
+  :ensure (:host github :repo "dheerajshenoy/minimal-dashboard.el")
   ;; :load-path "<path-to-cloned-directory>" ;; uncomment this line if you have downloaded and don't want to use VC
-  :init
-  (setq initial-buffer-choice #'minimal-dashboard) ;; set initial buffer as dashboard
   :custom
+  (initial-buffer-choice #'minimal-dashboard) ;; set initial buffer as dashboard
 
   (minimal-dashboard-buffer-name "Dashboard")
   ;; (minimal-dashboard-buffer-name #'some-func-that-returns-a-string)
@@ -2220,19 +2056,14 @@ $0
 #+begin_src elisp
 (use-package speed-type
   :ensure t
-  :straight t)
+  :commands (speed-type))
 #+end_src
 
 ** ibuffer
 #+begin_src elisp
 (use-package ibuffer
-  :straight (:type built-in)
+  :ensure nil
   :bind ("C-x C-b" . ibuffer)
-  :init
-  (use-package ibuffer-vc
-    :commands (ibuffer-vc-set-filter-groups-by-vc-root)
-    :custom
-    (ibuffer-vc-skip-if-remote 'nil))
   :custom
   (ibuffer-formats
    '((mark modified read-only locked " "
@@ -2245,33 +2076,35 @@ $0
      (mark " "
            (name 16 -1)
            " " filename))))
+
+(use-package ibuffer-vc
+  :commands (ibuffer-vc-set-filter-groups-by-vc-root)
+  :custom
+  (ibuffer-vc-skip-if-remote nil))
+
+;; Add ibuffer-vc grouping on ibuffer mode hook lazily, after package is loaded
+(with-eval-after-load 'ibuffer-vc
+  (add-hook 'ibuffer-mode-hook #'ibuffer-vc-set-filter-groups-by-vc-root))
 #+end_src
 
-** COMMENT Pdf-Tools
+** Pdf-Tools
 #+begin_src elisp
 (use-package pdf-tools
-  :ensure t
-  :straight t)
+  :commands (pdf-view-mode pdf-tools-install)
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :hook (pdf-view-mode . pdf-tools-enable-minor-modes))
 
-(use-package pdf-tools-install
-  :ensure t
-  :straight t
-  :if (and (display-graphic-p) (not *sys/win32*) (not eaf-env-p))
-  :mode "\\.pdf\\'"
-  :commands (pdf-loader-install)
-  :custom
-  (TeX-view-program-selection '((output-pdf "pdf-tools")))
-  (TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
-  :hook
-  (pdf-view-mode . (lambda () (display-line-numbers-mode -1)))
-  :config
-  (pdf-loader-install))
+(defun pdf-tools-enable-minor-modes ()
+  "Enable useful modes for PDF viewing lazily."
+  (pdf-tools-install)
+  (display-line-numbers-mode -1)
+  (visual-line-mode 1))
 #+end_src
 
 ** Winner mode
 #+begin_src elisp
 (use-package winner
-  :straight (:type built-in)
+  :ensure nil
   :custom
   (winner-boring-buffers
    '("*Completions*"
@@ -2288,77 +2121,101 @@ $0
 #+begin_src elisp
 (use-package undo-tree
   :ensure t
-  :straight t
+  :disabled t
   :hook (text-mode . global-undo-tree-mode)
   :custom
   (undo-tree-visualizer-diff t)
   (undo-tree-history-directory-alist `(("." . ,(expand-file-name "~/.local/share/Trash/files" user-emacs-directory))))
   (undo-tree-visualizer-timestamps t))
+
+
+(use-package vundo
+  :ensure t
+  :bind ("C-x u" . vundo)
+  :custom
+  (vundo-mode)
+  (diff-switches "-u --color=never")
+  (vundo-glyph-alist vundo-unicode-symbols))
 #+end_src
 
 ** Discover My Major
 #+begin_src elisp
 (use-package discover-my-major
   :ensure t
-  :straight t
   :bind ("C-h C-m" . discover-my-major))
 #+end_src
 
 ** Battery
 #+begin_src elisp
 (use-package battery
-  :ensure t
-  :straight (:type built-in)
-    :custom
+  :ensure nil
+  :custom
   (display-time-mode 1)
-
   (display-battery-mode 1))
 #+end_src
 
 ** Simple dark theme
 #+begin_src elisp
 (use-package simple-dark
-  :straight (:host github :repo "tek256/simple-dark" :files ("simple-dark-theme.el")))
+  :ensure (:host github :repo "tek256/simple-dark" :main "simple-dark-theme.el")
+  :hook  (emacs-startup . (lambda () (load-theme 'simple-dark t))))
 
-(setq custom-safe-themes t)
-(add-to-list 'custom-theme-load-path (expand-file-name "straight/build/simple-dark/simple-dark-theme.el" user-emacs-directory))
-(load-theme 'simple-dark t)
+
+
+;; (add-to-list 'custom-theme-load-path
+;;              (expand-file-name "repos/simple-dark" elpaca-directory))
+;; (setq custom-safe-themes t)
+;; (load-theme 'simple-dark t))
 #+end_src
 
-*** Testing
+** Epub
 #+begin_src elisp
-(defun check-command-exists (cmd)
-  "Check if CMD exists in the system executable path."
-  (executable-find cmd))
+(use-package nov
+  :ensure t
+  :mode ("\\.epub\\'" . nov-mode))
+#+end_src
 
-(defun check-python-flake8 ()
-  "Check if flake8 is installed for Python."
-  (unless (check-command-exists "flake8")
-    (display-warning 'flake8-warning
-                     "Warning: flake8 is not installed. Please install it using 'pip install flake8' or your system package manager."
-                     :warning)))
+** Prism
+#+begin_src elisp
+(use-package prism
+  :ensure (:host github :repo "alphapapa/prism.el"))
+#+end_src
 
-(defun check-lsp-server ()
-  "Check if an LSP server is installed for relevant languages.
-This example checks for common LSP executables: pylsp for Python, and rust-analyzer for Rust, etc.
-You can extend it for other languages."
-  (let ((language-lsp-map '(("python-mode" . "pylsp")
-                            ("rust-mode" . "rust-analyzer")
-                            ("typescript-mode" . "typescript-language-server")
-                            ("javascript-mode" . "javascript-typescript-stdio")
-                            ("c-mode" . "clangd")
-                            ("c++-mode" . "clangd"))))
-    (let ((lsp-cmd (assoc-default major-mode language-lsp-map #'string=)))
-      (when (and lsp-cmd (not (check-command-exists lsp-cmd)))
-        (display-warning 'lsp-warning
-                         (format "Warning: LSP server '%s' for %s is not installed." lsp-cmd major-mode)
-                         :warning)))))
+** Hacker News
+#+begin_src elisp
+(use-package hackernews
+  :ensure t
+  :custom
+  (hackernews-default-feed 'top) ;; can be 'ask, 'best, 'new, 'show
+  ;; Make Hacker News buffers open in the same window
+  (display-buffer-alist
+   '((".*\\*hackernews.*\\*" display-buffer-same-window)))
 
-(defun check-lint-and-lsp-on-open ()
-  "Check for linters and LSP servers when opening a file."
-  (cond
-   ((eq major-mode 'python-mode) (check-python-flake8))
-   (t (check-lsp-server))))
+  :bind
+  (("C-c h" . hackernews)               ;; open top stories
+   ("C-c H a" . hackernews-ask-stories) ;; open Ask HN
+   ("C-c H b" . hackernews-best-stories)
+   ("C-c H n" . hackernews-new-stories)
+   ("C-c H s" . hackernews-show-stories)
+   ("C-c H j" . hackernews-job-stories))
 
-(add-hook 'find-file-hook 'check-lint-and-lsp-on-open)
+  :hook
+  (hackernews-mode . visual-line-mode))
+#+end_src
+
+** COMMENT Testing
+#+begin_src elisp
+;; Load the package
+(load-file "~/.config/emacs/mini-essays.el")
+(require 'mini-essays)
+
+;; Auto-enable for mini*.org files
+(add-hook 'org-mode-hook #'mini-essays-setup)
+
+;; Setup auto-insert (call explicitly if needed)
+(mini-essays-setup-auto-insert)
+
+(setq mini-essays-max-chars 2000)
+(setq mini-essays-fill-column 80)
+(setq mini-essays-warning-threshold 75)
 #+end_src
