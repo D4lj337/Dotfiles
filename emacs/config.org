@@ -124,7 +124,7 @@
  tab-line-separator " "
  line-move-visual nil
  site-run-file nil ; unset SRF
-;; scroll
+ ;; scroll
  pixel-scroll-precision-mode t
  pixel-scroll-precision-use-momentum t
  scroll-conservatively 101 ;; scroll line by line.
@@ -218,7 +218,7 @@
  ;; aggressively, so I've set it to 10 to recenter if scrolling too far
  ;; off-screen.
  scroll-conservatively 101
-scroll-preserve-screen-position t
+ scroll-preserve-screen-position t
  scroll-margin 2
  scroll-preserve-screen-position t
  ;; Reduce cursor lag by a tiny bit by not auto-adjusting `window-vscroll'
@@ -279,8 +279,8 @@ scroll-preserve-screen-position t
 ;; Set base faces for all users
 (custom-set-faces
  ;; Default font for all text
- '(default ((t (:family "JetBrains Mono" :height 90))))
- '(fixed-pitch ((t (:family "JetBrains Mono" :height 80))))
+                                        ; '(default ((t (:family "JetBrains Mono" :height 90))))
+                                        ;'(fixed-pitch ((t (:family "JetBrains Mono" :height 80))))
 
  ;; Current line number
  '(line-number-current-line ((t (:foreground "yellow" :inherit line-number))))
@@ -298,11 +298,22 @@ scroll-preserve-screen-position t
  ;;   '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
  )
 
-;; Override font sizes for WarMachine user
-(when (string= (user-login-name) "WarMachine")
+
+(when (string= (system-name) "WarMachine")
   (custom-set-faces
    '(default ((t (:family "JetBrains Mono" :height 100))))
+   '(variable-pitch ((t (:family "Linux Libertine" :height 80))))
    '(fixed-pitch ((t (:family "JetBrains Mono" :height 90))))))
+
+(when (string= (system-name) "Tiffany")
+  (setq doom-modeline-height 20)
+  (setq display-battery-mode nil)
+  (custom-set-faces
+   '(default ((t (:family "JetBrains Mono" :height 90))))
+   '(variable-pitch ((t (:family "Linux Libertine" :height 80))))
+   '(fixed-pitch ((t (:family "JetBrains Mono" :height 80))))))
+
+
 #+end_src
 
 * Package Management
@@ -440,7 +451,7 @@ Look for native-compile-async using variable "C-h v =native-comp-eln-load-path="
    ;; ([remap yank-pop] . consult-yank-pop)
 
    ("C-c M-x" . consult-mode-command)
-;   ("C-c h" . consult-history)
+                                        ;   ("C-c h" . consult-history)
    ("C-c k" . consult-kmacro)
    ("C-c m" . consult-man)
    ("C-c i" . consult-info)
@@ -762,22 +773,6 @@ Version 2022-05-21"
       (indent-region (point-min) (point-max)))))
 #+end_src
 
-** System
-#+begin_src elisp
-(when (string= (system-name) "WarMachine")
-  (custom-set-faces
-   '(default ((t (:family "JetBrains Mono" :height 100))))
-   '(fixed-pitch ((t (:family "JetBrains Mono" :height 90))))))
-
-(when (string= (system-name) "Tiffany")
-  (setq doom-modeline-height 20)
-  (setq display-battery-mode nil)
-  (custom-set-faces
-   '(default ((t (:family "JetBrains Mono" :height 90))))
-   '(fixed-pitch ((t (:family "JetBrains Mono" :height 80))))))
-
-#+end_src
-
 * General Pacakges
 
 ** Dired
@@ -973,7 +968,7 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
   :custom
   (org-agenda-files '("~/Documents/org/"))
   (org-log-done 'time)
-  (org-hide-emphasis-markers t)
+  (org-hide-emphasis-markers t) ;; hide *bold*, /italic/, etc.
   (org-hide-leading-stars t)
   (org-ellipsis "  .")
   (org-src-fontify-natively t)
@@ -981,6 +976,9 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
   (org-src-tab-acts-natively t)
   (org-pretty-entities t)
   (org-edit-src-content-indentation 0)
+  (org-fontify-whole-headline-line t)
+  (org-fontify-done-headline t)
+  (org-fontify-quote-and-verse-blocks t)
   :hook (org-mode . my/force-org-font-lock))
 
 ;;;; Overcome the problem of 'org-mode' font lock after opening a file.
@@ -988,6 +986,15 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
   "Force font-lock to apply to the whole buffer"
   (font-lock-ensure))
 (add-hook 'org-mode-hook #'my/force-org-font-lock)
+
+;; Better list bullets
+(font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+;; Optional: Enhanced list styling
+(setq org-list-demote-modify-bullet
+      '(("+" . "-") ("-" . "+") ("*" . "+")))
 
 (with-eval-after-load 'org
   (org-babel-do-load-languages
@@ -999,18 +1006,27 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
      (lua . t)
      (calc . t)
      (sql . t)
-     (C . t)))
-  (custom-set-faces
-   ;; Org document title size and weight
-   '(org-document-title ((t (:height 2.0 :weight bold))))
-   ;; Org headings levels 1-7 weight and height
-   '(org-level-1 ((t (:height 1.7 :weight bold))))
-   '(org-level-2 ((t (:height 1.6 :weight bold))))
-   '(org-level-3 ((t (:height 1.5 :weight bold))))
-   '(org-level-4 ((t (:height 1.4 :weight bold))))
-   '(org-level-5 ((t (:weight bold))))
-   '(org-level-6 ((t (:weight bold))))
-   '(org-level-7 ((t (:weight bold))))))
+     (C . t))))
+(custom-set-faces
+ '(variable-pitch ((t (:family "Linux Libertine" :height 90))))
+ '(fixed-pitch ((t (:family "JetBrains Mono" :height 90))))
+ ;; Org document title size and weight
+ '(org-document-title ((t (:height 2.0 :weight bold))))
+ ;; Org headings levels 1-7 weight and height
+ '(org-level-1 ((t (:height 1.7 :weight bold))))
+ '(org-level-2 ((t (:height 1.6 :weight bold))))
+ '(org-level-3 ((t (:height 1.5 :weight bold))))
+ '(org-level-4 ((t (:height 1.4 :weight bold))))
+ '(org-level-5 ((t (:weight bold))))
+ '(org-level-6 ((t (:weight bold))))
+ '(org-level-7 ((t (:weight bold))))
+ '(org-block ((t (:inherit fixed-pitch))))
+ '(org-code ((t (:inherit (shadow fixed-pitch)))))
+ '(org-table ((t (:inherit fixed-pitch))))
+ '(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
+ '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+ '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+ '(org-checkbox ((t (:inherit fixed-pitch)))))
 #+end_SRC
 
 *** COMMENT Org Modern
@@ -1234,8 +1250,8 @@ Below is a modern Emacs completion system configuration using use-package, lever
   (add-hook
    'completion-in-region-mode-hook
    (satch-defun +corfu--hide-popupinfo-h ()
-     (when (and (not completion-in-region-mode) (boundp 'corfu-popupinfo--hide))
-       (corfu-popupinfo--hide)))))
+                (when (and (not completion-in-region-mode) (boundp 'corfu-popupinfo--hide))
+                  (corfu-popupinfo--hide)))))
 #+end_src
 
 ** Cape
@@ -1641,7 +1657,7 @@ $0
 (with-eval-after-load 'doom-modeline
   (when (string= (system-name) "WarMachine")
     (setq doom-modeline-height 40))
-  
+
   (when (string= (system-name) "Tiffany")
     (setq doom-modeline-height 20)
     (display-battery-mode -1)))
@@ -2211,7 +2227,7 @@ $0
   :hook (org-mode . mini-essays-setup)
   :custom
   (mini-essays-max-chars 3000))
-;  (mini-essays-fill-column 100))
+                                        ;  (mini-essays-fill-column 100))
 
 ;; Setup auto-insert separately
 (with-eval-after-load 'mini-essays
@@ -2230,10 +2246,10 @@ $0
          ("r" . mini-dashboard-refresh))
   :custom
   (mini-dashboard--render 'center)
-(mini-dashboard-text "Welcome, Hacker!\n\nReady to bend reality with parentheses?")
-;  (mini-dashboard-footer "\"The only way to learn a new programming language is by writing programs in it.\" - Dennis Ritchie")
-(mini-dashboard-footer #'minimal-dashboard--random-stoic-quote)
- (mini-dashboard-ascii-art "
+  (mini-dashboard-text "Welcome, Hacker!\n\nReady to bend reality with parentheses?")
+                                        ;  (mini-dashboard-footer "\"The only way to learn a new programming language is by writing programs in it.\" - Dennis Ritchie")
+  (mini-dashboard-footer #'minimal-dashboard--random-stoic-quote)
+  (mini-dashboard-ascii-art "
     ███████╗███╗   ███╗ █████╗  ██████╗███████╗
     ██╔════╝████╗ ████║██╔══██╗██╔════╝██╔════╝
     █████╗  ██╔████╔██║███████║██║     ███████╗
@@ -2242,33 +2258,33 @@ $0
     ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝
 ")
 
-;; (mini-dashboard-ascii-art "
-;;    ,           ,
-;;   /             \\
-;;  ((__-^^-,-^^-__))
-;;   `-_---' `---_-'
-;;    `--|o` 'o|--'
-;;       \\  `  /
-;;        ): :(
-;;        :o_o:
-;;        \"-\"")
+  ;; (mini-dashboard-ascii-art "
+  ;;    ,           ,
+  ;;   /             \\
+  ;;  ((__-^^-,-^^-__))
+  ;;   `-_---' `---_-'
+  ;;    `--|o` 'o|--'
+  ;;       \\  `  /
+  ;;        ): :(
+  ;;        :o_o:
+  ;;        \"-\"")
 
-;; (mini-dashboard-text
-;;     (lambda ()
-;;       (format "Welcome, %s\n\nEmacs started in %s"
-;;               user-login-name
-;;               (emacs-init-time))))
-(mini-dashboard-footer
-    (lambda ()
-      (format "Emacs %s • %s • Load: %.2f"
-              emacs-version
-              (format-time-string "%H:%M")
-              (car (load-average)))))
+  ;; (mini-dashboard-text
+  ;;     (lambda ()
+  ;;       (format "Welcome, %s\n\nEmacs started in %s"
+  ;;               user-login-name
+  ;;               (emacs-init-time))))
+  (mini-dashboard-footer
+   (lambda ()
+     (format "Emacs %s • %s • Load: %.2f"
+             emacs-version
+             (format-time-string "%H:%M")
+             (car (load-average)))))
   (mini-dashboard-modeline-shown nil)
   (mini-dashboard-enable-resize-handling t)
   (mini-dashboard-vertical-padding 5)
   :config
- (mini-dashboard-setup-initial-buffer))
+  (mini-dashboard-setup-initial-buffer))
 #+end_src
 
 ** Ellama
@@ -2278,9 +2294,9 @@ $0
   :bind ("C-c o" . ellama)
   :config
   (setopt ellama-provider
-    (make-llm-ollama
-     :chat-model "tinyllama"
-     :embedding-model "nomic-embed-text")))
+          (make-llm-ollama
+           :chat-model "tinyllama"
+           :embedding-model "nomic-embed-text")))
 #+end_src
 
 **  System App Launcher
@@ -2311,4 +2327,3 @@ $0
   :hook
   (hackernews-mode . visual-line-mode))
 #+end_src
-
