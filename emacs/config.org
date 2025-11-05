@@ -287,17 +287,27 @@
  '(mode-line ((t (:family "JetBrains Mono" :weight Bold))))
 
  ;; Comments italic
- '(font-lock-comment-face ((t (:family "JetBrains Mono" :slant italic))))
- ;;   ;; Keywords, functions, strings, etc. italic with no color change
- '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
- '(font-lock-function-name-face ((t (:family "JetBrains Mono":slant italic))))
- '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
- '(font-lock-variable-name-face ((t (:family "JetBrains Mono":weight bold))))
- ;;   '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
- ;;   '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
- ;;   '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
- )
+ ;; '(font-lock-comment-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; ;;   ;; Keywords, functions, strings, etc. italic with no color change
+ ;; '(font-lock-keyword-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; '(font-lock-function-name-face ((t (:family "JetBrains Mono":slant italic))))
+ ;; '(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; '(font-lock-variable-name-face ((t (:family "JetBrains Mono":weight bold))))
+ ;; ;;   '(font-lock-constant-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; ;;   '(font-lock-type-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;; ;;   '(font-lock-builtin-face ((t (:family "JetBrains Mono" :slant italic))))
 
+ ;; `(font-lock-builtin-face ((t (:family "JetBrains Mono" :weight bold :slant italic))))
+ ;;     `(font-lock-comment-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;     `(font-lock-constant-face ((t (:family "JetBrains Mono" :weight bold))))
+ ;;     `(font-lock-function-name-face ((t (:family "JetBrains Mono" :weight bold))))
+ ;;     `(font-lock-keyword-face ((t (:family "JetBrains Mono" :weight bold :slant italic))))
+ ;;     `(font-lock-string-face ((t (:family "JetBrains Mono" :slant italic))))
+ ;;     `(font-lock-type-face ((t (:family "JetBrains Mono" :weight bold))))
+ ;;     `(font-lock-variable-name-face ((t (:family "JetBrains Mono" :weight bold))))
+ ;;     `(font-lock-warning-face ((t (:family "JetBrains Mono" :weight bold :underline t))))
+
+ )
 
 (when (string= (system-name) "WarMachine")
   (custom-set-faces
@@ -312,8 +322,6 @@
    '(default ((t (:family "JetBrains Mono" :height 90))))
    '(variable-pitch ((t (:family "Linux Libertine" :height 80))))
    '(fixed-pitch ((t (:family "JetBrains Mono" :height 80))))))
-
-
 #+end_src
 
 * Package Management
@@ -861,7 +869,7 @@ However, Eshell will likely not recognize bash-specific syntax like alias or som
 #+end_src
 
 ** Vterm-Toggle
-#+begin_src
+#+begin_src elisp
 (use-package vterm-toggle
 :ensure t
 :commands vterm-toggle
@@ -2219,11 +2227,18 @@ $0
   :hook  (emacs-startup . (lambda () (load-theme 'simple-dark t))))
 #+end_src
 
-** mini-midnight
+** COMMENT mini-midnight
 #+begin_src elisp
 (use-package mini-midnight
   :ensure (:host github :repo "d4lj337/mini-midnight" :main "mini-midnight-theme.el")
   :hook  (emacs-startup . (lambda () (load-theme 'mini-midnight t))))
+#+end_src
+
+** mini-carbon
+#+begin_src elisp
+(use-package mini-carbon
+  :ensure (:host github :repo "d4lj337/mini-carbon" :main "mini-carbon-theme.el")
+  :hook  (emacs-startup . (lambda () (load-theme 'mini-carbon t))))
 #+end_src
 
 ** mini-essays
