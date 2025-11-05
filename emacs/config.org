@@ -1472,6 +1472,112 @@ $0
   :mode ("\\.el\\'" . emacs-lisp-mode))
 #+end_src
 
+** Assembly
+#+begin_src elisp
+(use-package nasm-mode
+  :mode ("\\.\\(asm\\|s\\|nasm\\)\\'" . nasm-mode)
+  :config
+  (setq nasm-comment-char ?\;)
+  ;; set tab width / indentation
+  (add-hook 'nasm-mode-hook
+            (lambda ()
+              (setq-local tab-width 8)
+              (setq-local indent-tabs-mode nil))))
+
+;; asm-mode: built-in (useful for GAS / AT&T style .s files)
+(use-package asm-mode
+  :ensure nil
+  :defer t
+  :hook ((asm-mode . (lambda ()
+                       (setq-local asm-comment-char ?\; ) ;; set comment char to ';' for NASM files too if you prefer
+                       (setq-local asm-basic-offset 8)))))
+
+
+;; Syntax highlighting additions (registers, common directives, directives)
+(defun my/asm-add-keywords ()
+  "Add extra font-lock keywords for assembly registers and directives."
+  (font-lock-add-keywords
+   nil
+   '(("\\<\\(rax\\|rbx\\|rcx\\|rdx\\|rsi\\|rdi\\|rbp\\|rsp\\|r8\\|r9\\|r10\\|r11\\|r12\\|r13\\|r14\\|r15\\|eip\\|rip\\|eax\\|ebx\\|ecx\\|edx\\|esi\\|edi\\|esp\\|ebp\\)\\>"
+      . font-lock-variable-name-face)
+     ("\\<\\(mov\\|add\\|sub\\|mul\\|div\\|push\\|pop\\|call\\|ret\\|jmp\\|je\\|jne\\|jg\\|jl\\|cmp\\|test\\|lea\\|inc\\|dec\\)\\>"
+      . font-lock-keyword-face)
+     ("\\%?\\(\\.[A-Za-z0-9_]+\\)\\>" . font-lock-constant-face) ;; local labels/directives
+     ("\\<\\(global\\|extern\\|section\\|segment\\|db\\|dw\\|dq\\|equ\\)\\>" . font-lock-builtin-face))))
+(add-hook 'nasm-mode-hook #'my/asm-add-keywords)
+(add-hook 'asm-mode-hook #'my/asm-add-keywords)
+
+
+;; -------------------------
+;; Assemble / Link / Run helpers
+;; -------------------------
+(defun my/nasm-compile-command (file &optional output)
+  "Return a shell command string to assemble and link FILE (nasm -> ld) for x86_64.
+If OUTPUT not provided, uses 'a.out' or basename of FILE without extension."
+  (let* ((f (file-truename file))
+         (dir (file-name-directory f))
+         (base (file-name-base f))
+         (out (or output (concat dir base))))
+    ;; Adjust format/ld flags for 32-bit vs 64-bit as needed
+    (format "nasm -f elf64 %s -o %s.o && ld -o %s %s.o" f out out (concat out ".o"))))
+
+(defun my/assemble-nasm-current-file (&optional run)
+  "Assemble current buffer's file (must be saved). If RUN is non-nil, run the produced binary."
+  (interactive "P")
+  (unless buffer-file-name
+    (error "Buffer not visiting a file"))
+  (save-buffer)
+  (let* ((cmd (my/nasm-compile-command buffer-file-name)))
+    (compile cmd)
+    (when run
+      (let ((exe (concat (file-name-directory buffer-file-name) (file-name-base buffer-file-name))))
+        ;; run after a short delay to allow compile to finish; user can also run manually
+        (run-at-time "1 sec" nil (lambda (e) (async-shell-command (concat e " &")) ) exe)))))
+
+;; Keybindings for quick assemble/run
+(global-set-key (kbd "C-c C-a") #'my/assemble-nasm-current-file)    ;; C-c C-a -> assemble
+(global-set-key (kbd "C-c C-r") (lambda () (interactive) (my/assemble-nasm-current-file t))) ;; assemble+run
+
+;; Convenience compile-command default for asm files
+(add-hook 'nasm-mode-hook
+          (lambda ()
+            (set (make-local-variable 'compile-command)
+                 (my/nasm-compile-command buffer-file-name))))
+
+;; -------------------------
+;; GDB / debugging tweaks
+;; -------------------------
+;; Use GDB with Intel syntax disassembly
+(setq gud-gdb-command-name "gdb --fullname")
+(defun my/gdb-intel ()
+  "Start gdb and set disassembly flavor to intel."
+  (interactive)
+  (call-interactively 'gdb)
+  (gdb-input("-ex" "set disassembly-flavor intel")))
+
+;; If you use realgud or gud, enable these hooks
+;; (use-package realgud :defer t)
+
+;; -------------------------
+;; Useful small helpers
+;; -------------------------
+(defun my/objdump-disasm-current-exe ()
+  "Run objdump -d on the executable named like current buffer base (if exists)."
+  (interactive)
+  (let* ((exe (concat (file-name-directory (buffer-file-name)) (file-name-base (buffer-file-name))))
+         (cmd (format "objdump -d -Mintel %s | less" exe)))
+    (async-shell-command cmd)))
+
+(global-set-key (kbd "C-c C-d") #'my/objdump-disasm-current-exe)
+
+;; -------------------------
+;; Example: set asm flavor for gdb/objdump (intel)
+;; -------------------------
+(setq-default gdb-many-windows t)
+;; Ensure gdb/objdump use intel flavor where possible (user still can change manually)
+#+end_src
+
+
 ** Auto remap
 #+begin_src elisp
 ;; Auto-remap major modes to tree-sitter versions
