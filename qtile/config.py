@@ -51,31 +51,11 @@ keys = [
     # Null Keys
     Key(["control"], "q", lazy.spawn(), desc="Reset all window sizes"),
     # Applications
-    Key(
-        [mod],
-        "x",
-        lazy.spawn(terminal),
-    ),
-    Key(
-        [mod],
-        "b",
-        lazy.spawn(browser),
-    ),
-    Key(
-        [mod],
-        "p",
-        lazy.spawn(dmenu),
-    ),
-    Key(
-        [mod],
-        "f",
-        lazy.spawn(filemanager),
-    ),
-    Key(
-        [mod],
-        "q",
-        lazy.to_screen(1),
-    ),
+    Key([mod], "x", lazy.spawn(terminal)),
+    Key([mod], "b", lazy.spawn(browser)),
+    Key([mod], "p", lazy.spawn(dmenu)),
+    Key([mod], "f", lazy.spawn(filemanager)),
+    Key([mod], "q", lazy.to_screen(1)),
     Key(
         [mod],
         "w",
@@ -103,6 +83,7 @@ keys = [
     Key(["control"], "0", lazy.spawn("amixer -q set Master 1%+")),
     Key(["control"], "m", lazy.spawn("pactl set-sink-mute 0 toggle")),
     Key(["control", "shift"], "1", lazy.spawn("xrandr --output eDP --off")),
+    Key([mod], "k", lazy.spawn("./.config/qtile/scripts/pkill.sh")),
     Key(
         ["control", "shift"],
         "2",
@@ -163,8 +144,10 @@ groups.append(
             DropDown(
                 "emacs",
                 "emacs",
-                width=0.5,
-                height=0.55,
+                # width=0.5,
+                # height=0.55,
+                width=0.68,
+                height=0.77,
                 x=0.26,
                 y=0.1,
                 opacity=1,
@@ -178,7 +161,7 @@ keys.extend(
     [
         Key([mod], "t", lazy.group["scratchpad"].dropdown_toggle("term")),
         Key([mod], "n", lazy.group["scratchpad"].dropdown_toggle("nvim")),
-        Key([mod], "r", lazy.group["scratchpad"].dropdown_toggle("ranger")),
+        Key([mod], "R", lazy.group["scratchpad"].dropdown_toggle("ranger")),
         Key([mod], "e", lazy.group["scratchpad"].dropdown_toggle("emacs")),
     ]
 )
@@ -205,7 +188,6 @@ layouts = [
     # layout.VerticalTile(),
     # layout.Zoomy(),
 ]
-
 
 widget_defaults = dict(
     font="Roboto Mono Medium",
@@ -240,8 +222,8 @@ def init_widgets_list():
             active="#ffffff",
             inactive="#404040",
             disable_drag="False",
-            padding=5,
-            borderwidth=5,
+            padding=10,
+            borderwidth=10,
         ),
         widget.Spacer(),
         widget.GenPollCommand(
@@ -250,7 +232,13 @@ def init_widgets_list():
             shell=True,
             fmt="[{}]",
         ),
-        # widget.Spacer(),
+        widget.Spacer(),
+        widget.GenPollCommand(
+            update_interval=900,
+            cmd="~/.config/qtile/scripts/tlp.sh",
+            shell=True,
+            fmt="[{}]",
+        ),
         widget.Pomodoro(
             color_break={"ffff00"},
             notification_on=True,
@@ -429,8 +417,8 @@ reconfigure_screens = True
 # Autostart
 @hook.subscribe.startup
 def autostart():
-    home = os.path.expanduser("~/.config/qtile/scripts/autostart.sh")
-    subprocess.Popen([home])
+    script = os.path.expanduser("~/.config/qtile/scripts/autostart.sh")
+    subprocess.Popen(["bash", script])
 
 
 # If things like steam games want to auto-minimize themselves when losing
@@ -442,6 +430,8 @@ if qtile.core.name == "x11":
     term = "alacritty"
 elif qtile.core.name == "wayland":
     term = "foot"
+
+
 
 # XXX: Gasp! We're lying here. In fact, nobody really uses or cares about this
 # string besides java UI toolkits; you can see several discussions on the

@@ -1,0 +1,6 @@
+#require("nvim._core.ui2").enable({})
+require("config.remap")
+require("config.plugins")
+require("config.completion")
+require("config.lsp")
+require("config.options")
